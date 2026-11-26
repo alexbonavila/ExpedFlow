@@ -79,3 +79,28 @@ Propuesta de objetivos iniciales a validar en B: cobertura de líneas PHP propia
 ## Evidencia
 
 JUnit, cobertura, informes análisis, trazas/capturas E2E solo con datos sintéticos, resultados k6/ZAP, logs redactados. Registrar comandos, versiones, commit y resultados. No presentar tests planificados como ejecutados.
+
+## Phase B inventory and traceability
+
+The cloud checkout matched `origin/main` at `22528be` before branching. The inventory ran on Debian 13 with PHP 8.4.28 (PDO MySQL, mbstring, DOM/XML and cURL), Composer 2.8.8, Laravel 13.44.1, Node 24.22.3, npm 11.19.1, MySQL 8.4.13, Pest 5.3.7 and Pint 1.32.3. Node 24 LTS is selected for local and CI use. The checked registry metadata supports Node 24 for Vite 8, Vitest 5, the Vue Vite plugin, ESLint 10 and Playwright. macOS developers can use Herd's PHP CLI with the same extensions and the pinned Node version. Linux CI also needs browser system libraries and a privileged isolated runner for the disposable CIFS mount.
+
+Laravel Boost 2.10.4 discovered all four checked-in skills and answered MCP initialization and tool discovery over standard input. The Codex CLI reported no registered MCP servers in this session. Boost documentation search returned a proxy 403, so version-sensitive implementation uses the installed framework and package sources. The cloud test schema `expedflow_test` runs in its own MySQL container. Its `expedtest` account can connect to that schema and has no privileges on the development schema.
+
+The inherited Phase A suite ran two tests and Pint passed. GitHub and Laravel remained reachable through native Git and the local runtime respectively. Vite's baseline build failed because the cloud proxy denied Bunny Fonts. Baseline Xdebug 3.4.5 line coverage reported 2 of 6 executable lines (33.3%) across the three files in the inherited `app/` scope. That result includes the scaffold suite. B02 measures the candidate on its declared first-party scope. The proposed minima are 90% lines, 100% types and 80% mutation score. Any shortfall remains visible until the underlying code is covered or the owner approves a revised criterion.
+
+| Category | Selected tool and planned entry point | Job and frequency | Evidence and criterion |
+| --- | --- | --- | --- |
+| PHP formatting and static analysis | Pint `composer lint`, Larastan `composer analyse` | backend-quality, PR/main/nightly | Check-only exit status, no errors |
+| PHP behavior, architecture and coverage | Pest, PHPUnit and Xdebug, `composer test`, `composer test:coverage`, `composer test:types` | backend-tests, PR/main/nightly | JUnit, Clover and type output, selected thresholds and all suites run |
+| Database | Pest and MySQL 8.4, `composer test:database` | database-tests, PR/main/nightly | Authenticated test-only database and passing integration suite |
+| API contract | OpenAPI schema validation and actual HTTP response validation, `composer test:contract` | api-contract, PR/main/nightly | Valid document and conforming responses |
+| Mutation | Pest's included Mutation plugin, `composer test:mutation` | mutation, nightly/release/manual | Mutant counts and at least 80% killed |
+| Frontend quality | ESLint, Prettier and vue-tsc, `npm run lint`, `npm run format:check`, `npm run typecheck` | frontend-quality, PR/main/nightly | No formatting, lint or type errors |
+| Frontend behavior and build | Vitest, Vue Test Utils and Vite, `npm test`, `npm run build` | frontend-tests and build, PR/main/nightly | Passing component tests and built assets |
+| Browser and accessibility | Playwright and axe, `npm run test:e2e`, `npm run test:a11y` | e2e and accessibility, PR/main/nightly | Chromium, Firefox and WebKit outcomes, axe findings and keyboard interaction |
+| Supply chain | Composer/npm audits, Gitleaks, CodeQL and Dependabot | security, PR/main/nightly | No unresolved high or critical issues, synthetic secret detection |
+| Storage | Isolated Samba server and Linux CIFS mount | storage-integration, PR/main/nightly | Fixture I/O and safe failure without local writes |
+| Performance and dynamic security | k6 smoke and OWASP ZAP baseline | performance and dynamic-security, nightly/release/manual | Measured budgets and triaged findings |
+| Merge gate | GitHub Actions aggregate | quality-gate, PR/main/nightly/release/manual | Required jobs succeed and deliberate failures block integration |
+
+Pest already brings architecture and mutation support. Add the matching type-coverage plugin and Larastan for independent compile-time checks. Use Xdebug as the sole coverage driver. Snapshots are deferred until a stable output needs them. Prefer one frontend runner and one browser runner. GitHub Actions execution, rulesets and the deliberate failure matrix require separate evidence in B05–B07.
