@@ -75,3 +75,27 @@ Todos los checks aplicables ejecutados sobre commit concreto; harnesses reales P
 The backend test job runs each Pest suite once and captures line coverage, type coverage and JUnit. The `database-tests` and `api-contract` jobs verify the nonempty Integration and Contract suite outcomes from that report. Each job that uses MySQL gets a separate service. It provisions a random password for the restricted testing account and passes values to later steps through the GitHub environment file with masking. Keep all credentials and reports scoped to synthetic data. Frontend and browser jobs install from the npm lock. The E2E and accessibility jobs each install all three browser engines. CodeQL analyzes JavaScript and TypeScript in a dedicated job. Laravel PHP gets Larastan, Pest and the dependency audit.
 
 The branch ruleset must require PRs and the observed `quality-gate` status, prevent force pushes and routine bypass, and use a feasible review policy for the repository's contributor count. Verify that code scanning is enabled for the repository and review the alert results independently of workflow completion. Select the code scanning protection rule for unresolved findings at the required severity where the GitHub plan supports it. Scheduled and release results remain part of phase acceptance even when a PR gate passes. Manual dispatch requires the workflow file on the default branch. The owner controls ruleset changes and integration.
+
+## Deliberate failures observed locally
+
+The following runs used the isolated `validation/phase-b-controls` checkout branched from `2c934ab` and a separate test MySQL container. Each defect was restored after its check. For the Gitleaks run the synthetic fixture was committed and reverted inside that local checkout. The synthetic commits were never published. The feature branch was published, but GitHub's API rejected the PR request and run queries with HTTP 403.
+
+| Deliberate fault | Local result |
+| --- | --- |
+| Incorrect assertion in the database guard unit test | Pest exited 1 |
+| Invalid value passed to a PHP string function | Larastan exited 1 with the argument type error |
+| Invalid PHP spacing | Pint exited 1 and identified the affected construct |
+| Exception in a baseline migration | The guarded MySQL suite exited 2 |
+| Debug dump in application code | Pest Architecture exited 1 |
+| Response status value outside the OpenAPI enum | The response validator rejected it and Pest exited 2 |
+| Number-typed Vue ref initialized with a string | vue-tsc exited 2 |
+| Changed confirmation in the Vue component | Vitest exited 1 |
+| Incorrect page title expectation | Playwright Chromium exited 1 |
+| Button with no accessible name | The Chromium axe scan reported `button-name` and exited 1 |
+| Synthetic Gitleaks sentinel | Gitleaks exited 1 and identified the sentinel rule |
+| Unit-only coverage below the 90% gate | The assertions passed, and the coverage minimum caused exit 1 |
+| Required result failed, cancelled or skipped | The local aggregate script returned 1 for each outcome |
+| Missing extended jobs on a scheduled event | The local aggregate script returned 1 |
+| Empty CIFS mount point | The shared copy guard refused the operation and left the underlying directory empty |
+
+The local gate also accepted the expected all-green PR and scheduled result sets. These local inputs exercise the aggregate's logic. Actual failed Actions jobs, blocked PR merge controls, and scheduled, manually dispatched and release runs need GitHub evidence. Run the full CIFS check on an isolated Linux runner with kernel CIFS and permitted mount capabilities. `bash scripts/testing/storage.sh --check-unmounted` exercises only the shared missing-mount guard.

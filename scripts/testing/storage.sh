@@ -4,4 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 image=expedflow-smb-testing
 docker build --secret "id=apt_ca,src=${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt}" --tag "$image" scripts/testing/smb
+if [[ "${1:-}" == --check-unmounted ]]; then
+  exec docker run --rm --network none "$image" --check-unmounted
+fi
 docker run --rm --network none --cap-add SYS_ADMIN --security-opt apparmor=unconfined "$image"
