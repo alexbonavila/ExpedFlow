@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\Process\Process;
 
 test('validation middleware rejects an invalid harness request with a JSON 422', function () {
     Route::post('/api/v1/_phase-b/validate', function (Request $request): JsonResponse {
@@ -29,4 +30,17 @@ test('the web guard rejects an anonymous JSON request and recognizes an authenti
     $this->actingAs($user, 'web')->getJson($url)
         ->assertOk()
         ->assertExactJson(['email' => 'fixture@example.test']);
+});
+
+test('the browser harness is registered only in testing', function () {
+    $this->withoutVite()->get('/_phase-b')->assertOk()->assertSee('ExpedFlow test harness');
+
+    $process = new Process(
+        [PHP_BINARY, 'artisan', 'route:list', '--path=_phase-b', '--json', '--no-interaction'],
+        base_path(),
+        ['APP_ENV' => 'production', 'APP_DEBUG' => 'false'],
+    );
+    $process->mustRun();
+
+    expect(json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR))->toBe([]);
 });
