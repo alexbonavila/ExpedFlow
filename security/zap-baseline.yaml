@@ -1,0 +1,33 @@
+env:
+  contexts:
+    - name: ExpedFlow testing
+      urls:
+        - http://127.0.0.1:8001
+  parameters:
+    failOnError: true
+    failOnWarning: true
+jobs:
+  - type: passiveScan-config
+    parameters:
+      scanOnlyInScope: true
+  - type: spider
+    parameters:
+      context: ExpedFlow testing
+      maxDuration: 1
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 2
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: /zap/wrk
+      reportFile: zap.json
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk
+      reportFile: zap.html
+  - type: exitStatus
+    parameters:
+      errorLevel: High
+      warnLevel: Low

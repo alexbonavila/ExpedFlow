@@ -11,4 +11,5 @@ export APP_ENV=testing APP_DEBUG=false APP_URL=http://127.0.0.1:8001
 export APP_KEY="${APP_KEY:-base64:$(openssl rand -base64 32)}"
 php tests/Support/check-database.php
 php artisan migrate --force --no-interaction
-exec php artisan serve --host=127.0.0.1 --port=8001 --no-reload --no-interaction
+cd public
+exec php -S 127.0.0.1:8001 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php

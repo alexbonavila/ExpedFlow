@@ -32,3 +32,11 @@ Apache document root `public/`, desactivar debug y directory listing, permisos d
 ## Pruebas
 
 Casos negativos para 401/403, CSRF, rate limiting, escalada de roles, IDOR, soft/hard delete, inyección, XSS, CSV, traversal, colisiones, montaje ausente, tokens revocados y datos sensibles no expuestos. Ver TESTING.md. La validación de seguridad final Q no sustituye controles desde B.
+
+## Phase B checks and finding management
+
+Run `composer audit --locked --no-interaction` and `npm audit --audit-level=high` against the checked-in lockfiles. Composer reports package advisories as failures. npm reports all severities and fails for high and critical findings. Use `bash scripts/testing/secrets.sh` for redacted, full-history Gitleaks scanning. Its single fingerprint allowlist entry covers a reviewed documentation row in the original Phase B inventory. The default rules and all other findings remain active. Dependabot checks Composer, npm and GitHub Actions weekly.
+
+Build the frontend and use the guarded testing database before running `bash scripts/testing/zap.sh`. The pinned ZAP image runs the Automation Framework's passive baseline against the loopback Laravel process. The automation plan scopes scanning to this server, stores HTML and JSON under `test-results/zap/`, and exits nonzero on warning-or-higher findings according to its risk thresholds. Review findings by rule, target route and risk. Either remediate and rerun, or obtain owner approval for a documented disposition scoped to the finding. Avoid broad rule exclusions.
+
+The cloud baseline ran ZAP 2.17.0 and exited 2. It reported two medium findings for CSP and anti-clickjacking headers and three low findings for cookie HttpOnly, X-Powered-By and content type sniffing protection. Investigate cookie purpose and deployment headers before disposition. The Composer audit could not query Packagist through the active proxy. npm audit found five moderate transitive findings in the dev-only Vue Test Utils chain, with no high or critical findings. The CLI's proposed forced downgrade changes the test utility's supported range. Reassess when the dependency chain has a compatible fix.
