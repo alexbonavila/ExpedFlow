@@ -1,0 +1,69 @@
+# CI y Quality Gates — fase B
+
+## Objetivo
+
+Configurar GitHub Actions después de crear Laravel/repositorio (A), antes de cualquier migración de negocio (C). Integración automática de comprobaciones PHP, frontend, MySQL, seguridad y E2E; sin despliegues automáticos a instalaciones corporativas. La fase B debe demostrar tanto que el código válido pasa como que errores deliberados son rechazados.
+
+## Workflows propuestos
+
+| Job / workflow | Controles | Activación |
+|---|---|---|
+| backend-quality | Laravel Pint `--test`, PHPStan + Larastan, Composer validate, comprobación tipos | PR, push main, nocturno |
+| backend-tests | Pest/PHPUnit: unit, feature, integración, arquitectura, regresión, cobertura | PR, push main, nocturno |
+| database-tests | MySQL real, migraciones, rollback, modelos, concurrencia y constraints | PR, push main, nocturno |
+| frontend-quality | ESLint, Prettier check, vue-tsc | PR, push main, nocturno |
+| frontend-tests | Vitest, Vue Test Utils | PR, push main, nocturno |
+| api-contract | OpenAPI reproducible y validación de respuesta real | PR, push main, nocturno |
+| security | Composer audit, npm audit, Gitleaks, CodeQL (según configuración aplicable) | PR/push y programación según herramienta |
+| build | `composer install` desde lock y build Vite desde npm ci | PR, push main, nocturno |
+| e2e | Playwright, MySQL, servidor efímero y build de producción; Chromium/Firefox/WebKit | PR, push main, nocturno |
+| accessibility | axe-core sobre páginas reales del harness/app | PR, push main, nocturno |
+| storage-integration | Samba desechable, smoke y pruebas reales cuando existan | PR, push main, nocturno |
+| mutation | Pest Mutation con informe y umbral acordado | Nocturno y release |
+| performance | k6, presupuesto y conjunto de datos sintético | Nocturno y release |
+| dynamic-security | OWASP ZAP contra instancia efímera autorizada | Nocturno y release |
+| quality-gate | Agregador explícito de resultados obligatorios | PR, push main |
+
+Dependabot configurado para Composer, npm y Actions, no es un test. Elegir cantidad de archivos YAML y jobs que mantenga la configuración simple; nombres estables. Los jobs obligatorios no deben desaparecer por filtros de paths que dejen el gate pendiente o falsamente verde. Los controles costosos pueden ejecutarse fuera de PR, pero deben estar configurados, probados y ser obligatorios para aceptación de B/release según su aplicabilidad. No declarar protección configurada sin comprobarla.
+
+## Entorno y reproducibilidad
+
+- Fijar versiones compatibles PHP, Laravel, Composer, Node, npm, MySQL, navegadores, dependencias y Actions; guardar lockfiles. Usar versiones soportadas y comprobar dependencias en el momento de A/B. Runners Linux, MySQL service con health check y credenciales exclusivas de CI; base única/worker cuando aplique.
+- `composer install`, `npm ci`; cachés solo aceleran, no sustituyen instalación. Preparar APP_KEY efímera, config testing, DB de test; migrar desde cero. No usar secretos/infraestructura de empresas ni producción.
+- Servidor E2E real con readiness HTTP y build compilado. Ejecutar tests en navegadores reales; no limitar a test de mock HTML. Configurar artefactos de trazas/capturas y logs al fallar. Validar Apache de referencia en Q/R.
+- Servicio SMB efímero o runner aislado compatible; permisos mínimos, datos sintéticos. Si el montaje no puede ejecutarse en runner hospedado, resolver y verificar alternativa real de CI antes de dar por aceptado ese control; no sustituir silenciosamente por Storage fake.
+- Scripts locales equivalentes a CI (propuesta Composer `test`, `test:coverage`, `analyse`, `lint`; npm `lint`, `typecheck`, `test`, `build`, `test:e2e`). Nombres finales documentados y probados. No depender de pasos manuales invisibles.
+- Permisos GitHub mínimos, `pull_request` sin secretos privilegiados de forks; evitar ejecutar código no confiable con `pull_request_target` y privilegios de escritura. Actions fijadas a revisiones de confianza, timeout, concurrency/cancelación de ejecuciones obsoletas. Artefactos con retención acotada y sin secretos.
+
+## Gate y protección
+
+Configurar ruleset/protección de `main`: PR y checks obligatorios, impedir bypass ordinario y force-push. Gate agregador con `needs` y evaluación incluso tras fallos; falla ante cualquier dependencia obligatoria fallida, cancelada o inesperadamente omitida. No `continue-on-error` en gates bloqueantes. La política de revisión humana debe ser viable con el número de colaboradores; no fingir aprobación independiente.
+
+Umbrales de propuesta: líneas PHP >=90%, cobertura de tipos PHP 100%, mutation >=80%, cero tests fallidos, cero errores de formato/estático/build, cero secretos y vulnerabilidades altas/críticas sin resolver. Validar aplicabilidad y valores en B; documentar exclusiones justificadas, alcance y comandos exactos. No rebajar requisitos unilateralmente. Dependencias con alertas deben evaluarse y resolverse antes del gate o de release según política documentada, sin ocultarlas. La cobertura de escenarios críticos exige casos explícitos. Un informe vacío no cuenta como éxito.
+
+## Validación adversarial de CI (obligatoria en B)
+
+Usar ramas temporales no integradas, cambios controlados y revertibles, sin secretos reales. Verificar que el workflow y el gate fallan por el motivo esperado y que una PR con ese fallo no puede integrarse mediante flujo normal. Restaurar cambios y verificar verde final.
+
+| Fallo deliberado | Control esperado |
+|---|---|
+| Aserción unitaria falsa | backend-tests |
+| Error de tipos PHP | backend-quality |
+| PHP mal formateado | Pint |
+| Migración inválida | database-tests |
+| Regla arquitectónica incumplida | Pest Architecture |
+| Respuesta JSON distinta del esquema | api-contract |
+| Error de tipos/compilación Vue | frontend-quality/build |
+| Aserción de componente falsa | frontend-tests |
+| Aserción E2E falsa en navegador | e2e |
+| Infracción accesible detectable | accessibility |
+| Secreto sintético reconocido por regla de prueba (no credencial real) | Gitleaks |
+| Caída bajo umbral de cobertura | coverage gate |
+| Job obligatorio cancelado/omitido | quality-gate |
+| Samba de prueba inaccesible | storage-integration detecta fallo y no escribe en fallback local |
+
+Guardar referencia a ejecuciones y resultados; no dejar cambios de sabotaje, credenciales sintéticas detectables ni ramas temporales innecesarias en main. Validar también ejecución real de nocturnos/release con `workflow_dispatch` o equivalente, sin esperar a su horario. Comprobar que los informes se generan y que los fallos son visibles.
+
+## Aceptación de B
+
+Todos los checks aplicables ejecutados sobre commit concreto; harnesses reales PHP/MySQL/Vue/browser/contratos/seguridad; comandos locales documentados; programación y protección verificadas; pruebas adversariales con evidencia; main limpio y verde. Documentar las categorías que aún no tienen lógica funcional y sus pruebas futuras. No iniciar C si existen bloqueos de infraestructura o controles obligatorios sin demostrar.
