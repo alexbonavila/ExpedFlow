@@ -15,14 +15,18 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.15",
         "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
         "laravel/pint": "^1.27",
+        "league/openapi-psr7-validator": "^0.24",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "nyholm/psr7": "^1.8",
         "pestphp/pest": "^5.3",
-        "pestphp/pest-plugin-laravel": "^5.0"
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "pestphp/pest-plugin-type-coverage": "^5.1"
     },
     "autoload": {
         "psr-4": {
@@ -71,7 +75,14 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
-        ]
+        ],
+        "lint": "pint --test",
+        "analyse": "phpstan analyse --no-progress --memory-limit=512M",
+        "test:database": "pest --testsuite=Integration",
+        "test:contract": "pest --testsuite=Contract",
+        "test:coverage": "pest --coverage --min=90 --coverage-clover=coverage/clover.xml --log-junit=test-results/phpunit.xml",
+        "test:types": "@php -d memory_limit=512M vendor/bin/pest --type-coverage --min=100 --type-coverage-json=test-results/type-coverage.json",
+        "test:mutation": "pest --mutate --everything --min=80 --no-cache"
     },
     "extra": {
         "laravel": {

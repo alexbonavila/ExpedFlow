@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d4b14c3eb139c72cec2515e532b4aee3",
+    "content-hash": "f9da768677a893d5198013fe55cc2c4d",
     "packages": [
         {
             "name": "brick/math",
@@ -6382,6 +6382,81 @@
             "published-time": "2026-10-29T09:14:11+00:00"
         },
         {
+            "name": "devizzent/cebe-php-openapi",
+            "version": "1.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DEVizzent/cebe-php-openapi.git",
+                "reference": "5a54d8fe11e3acdc8629b672bfadd01da0eef0d2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DEVizzent/cebe-php-openapi/zipball/5a54d8fe11e3acdc8629b672bfadd01da0eef0d2",
+                "reference": "5a54d8fe11e3acdc8629b672bfadd01da0eef0d2",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "justinrainbow/json-schema": "^5.2 || ^6.0",
+                "php": ">=7.1.0",
+                "symfony/yaml": "^3.4 || ^4 || ^5 || ^6 || ^7 || ^8"
+            },
+            "conflict": {
+                "symfony/yaml": "3.4.0 - 3.4.4 || 4.0.0 - 4.4.17 || 5.0.0 - 5.1.9 || 5.2.0"
+            },
+            "replace": {
+                "cebe/php-openapi": "1.7.0"
+            },
+            "require-dev": {
+                "apis-guru/openapi-directory": "1.0.0",
+                "cebe/indent": "*",
+                "mermade/openapi3-examples": "1.0.0",
+                "oai/openapi-specification-3.0": "3.0.3",
+                "phpstan/phpstan": "^0.12.0",
+                "phpunit/phpunit": "^6.5 || ^7.5 || ^8.5 || ^9.4 || ^11.4"
+            },
+            "bin": [
+                "bin/php-openapi"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.6.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "cebe\\openapi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Carsten Brandt",
+                    "email": "mail@cebe.cc",
+                    "homepage": "https://cebe.cc/",
+                    "role": "Creator"
+                },
+                {
+                    "name": "Vicent Valls",
+                    "email": "vizzent@gmail.com"
+                }
+            ],
+            "description": "Read and write OpenAPI yaml/json files and make the content accessable in PHP objects.",
+            "homepage": "https://github.com/DEVizzent/cebe-php-openapi#readme",
+            "keywords": [
+                "openapi"
+            ],
+            "support": {
+                "issues": "https://github.com/DEVizzent/cebe-php-openapi/issues",
+                "source": "https://github.com/DEVizzent/cebe-php-openapi"
+            },
+            "time": "2026-11-06T14:17:44+00:00"
+        },
+        {
             "name": "doctrine/deprecations",
             "version": "1.2.0",
             "source": {
@@ -6429,6 +6504,57 @@
             },
             "time": "2026-11-11T10:04:49+00:00",
             "published-time": "2026-11-11T10:12:24+00:00"
+        },
+        {
+            "name": "entropy/entropy",
+            "version": "0.4.37",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/TomasVotruba/entropy.git",
+                "reference": "57bd06e1652f3c38148944b4880ee3b6e6284da3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/TomasVotruba/entropy/zipball/57bd06e1652f3c38148944b4880ee3b6e6284da3",
+                "reference": "57bd06e1652f3c38148944b4880ee3b6e6284da3",
+                "shasum": ""
+            },
+            "require": {
+                "ext-tokenizer": "*",
+                "php": ">=7.4",
+                "symfony/polyfill-php80": "^1.31"
+            },
+            "require-dev": {
+                "php-parallel-lint/php-parallel-lint": "^1.4",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^9.6",
+                "rector/jack": "^1.0",
+                "rector/rector": "^2.4",
+                "rector/swiss-knife": "^2.4",
+                "shipmonk/composer-dependency-analyser": "^1.8",
+                "shipmonk/dead-code-detector": "^1.4",
+                "symplify/easy-coding-standard": "^13.1",
+                "symplify/phpstan-rules": "^14.10",
+                "tomasvotruba/type-coverage": "^2.2",
+                "tracy/tracy": "^2.12"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Entropy\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "proprietary"
+            ],
+            "description": "Entropy framework",
+            "support": {
+                "issues": "https://github.com/TomasVotruba/entropy/issues",
+                "source": "https://github.com/TomasVotruba/entropy/tree/0.4.37"
+            },
+            "time": "2026-11-14T16:57:42+00:00"
         },
         {
             "name": "fakerphp/faker",
@@ -6686,6 +6812,47 @@
             "published-time": "2026-06-16T10:52:40+00:00"
         },
         {
+            "name": "iamcal/sql-parser",
+            "version": "v0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/iamcal/SQLParser.git",
+                "reference": "610392f38de49a44dab08dc1659960a29874c4b8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/iamcal/SQLParser/zipball/610392f38de49a44dab08dc1659960a29874c4b8",
+                "reference": "610392f38de49a44dab08dc1659960a29874c4b8",
+                "shasum": ""
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "^1.0",
+                "phpunit/phpunit": "^5|^6|^7|^8|^9"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "iamcal\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Cal Henderson",
+                    "email": "cal@iamcal.com"
+                }
+            ],
+            "description": "MySQL schema parser",
+            "support": {
+                "issues": "https://github.com/iamcal/SQLParser/issues",
+                "source": "https://github.com/iamcal/SQLParser/tree/v0.7"
+            },
+            "time": "2026-01-28T22:20:33+00:00"
+        },
+        {
             "name": "jean85/pretty-package-versions",
             "version": "2.1.1",
             "source": {
@@ -6745,6 +6912,166 @@
             },
             "time": "2025-03-19T14:43:43+00:00",
             "published-time": "2025-03-19T14:50:06+00:00"
+        },
+        {
+            "name": "justinrainbow/json-schema",
+            "version": "6.15.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jsonrainbow/json-schema.git",
+                "reference": "24021a898c17193ed7c2111b5fbf1c6486ae85ff"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jsonrainbow/json-schema/zipball/24021a898c17193ed7c2111b5fbf1c6486ae85ff",
+                "reference": "24021a898c17193ed7c2111b5fbf1c6486ae85ff",
+                "shasum": ""
+            },
+            "require": {
+                "ext-filter": "*",
+                "ext-json": "*",
+                "marc-mabe/php-enum": "^4.4",
+                "php": "^7.2 || ^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "3.3.0",
+                "json-schema/json-schema-test-suite": "dev-main",
+                "marc-mabe/php-enum-phpstan": "^2.0",
+                "phpspec/prophecy": "^1.19",
+                "phpstan/phpstan": "^1.12",
+                "phpunit/phpunit": "^8.5"
+            },
+            "bin": [
+                "bin/validate-json"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "6.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "JsonSchema\\": "src/JsonSchema/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Danny van der Sluijs",
+                    "email": "danny.vandersluijs@icloud.com",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "A library to validate a json schema.",
+            "homepage": "https://github.com/jsonrainbow/json-schema",
+            "keywords": [
+                "json",
+                "schema"
+            ],
+            "support": {
+                "issues": "https://github.com/jsonrainbow/json-schema/issues",
+                "source": "https://github.com/jsonrainbow/json-schema/tree/6.15.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/DannyvdSluijs",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-11-24T20:35:12+00:00"
+        },
+        {
+            "name": "larastan/larastan",
+            "version": "v3.15.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/larastan/larastan.git",
+                "reference": "ffb29680700b7e56000183ddacd68fab991f690b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/larastan/larastan/zipball/ffb29680700b7e56000183ddacd68fab991f690b",
+                "reference": "ffb29680700b7e56000183ddacd68fab991f690b",
+                "shasum": ""
+            },
+            "require": {
+                "iamcal/sql-parser": "^0.7.0",
+                "illuminate/console": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/container": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/contracts": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/database": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/http": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/pipeline": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/support": "^11.44.2 || ^12.4.1 || ^13",
+                "php": "^8.2",
+                "phpstan/phpstan": "^2.3.5"
+            },
+            "require-dev": {
+                "doctrine/coding-standard": "^14",
+                "laravel/framework": "^11.44.2 || ^12.7.2 || ^13",
+                "mockery/mockery": "^1.6.12",
+                "nikic/php-parser": "^5.6",
+                "orchestra/canvas": "^v9.2.2 || ^10.0.1 || ^11",
+                "orchestra/testbench-core": "^9.12.0 || ^10.1 || ^11",
+                "phpstan/phpstan-deprecation-rules": "^2.0.1",
+                "phpunit/phpunit": "^10.5.35 || ^11.5.15 || ^12.5.8 || ^13.3.0"
+            },
+            "suggest": {
+                "orchestra/testbench": "Using Larastan for analysing a package needs Testbench",
+                "phpmyadmin/sql-parser": "Install to enable Larastan's optional phpMyAdmin-based SQL parser automatically"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "extension.neon"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-master": "3.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Larastan\\Larastan\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Can Vural",
+                    "email": "can9119@gmail.com"
+                }
+            ],
+            "description": "Larastan - Discover bugs in your code without running it. A phpstan/phpstan extension for Laravel",
+            "keywords": [
+                "PHPStan",
+                "code analyse",
+                "code analysis",
+                "larastan",
+                "laravel",
+                "package",
+                "php",
+                "static analysis"
+            ],
+            "support": {
+                "issues": "https://github.com/larastan/larastan/issues",
+                "source": "https://github.com/larastan/larastan/tree/v3.15.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/canvural",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-11-11T15:06:29+00:00"
         },
         {
             "name": "laravel/agent-detector",
@@ -7257,6 +7584,141 @@
             "published-time": "2026-07-20T09:14:35+00:00"
         },
         {
+            "name": "league/openapi-psr7-validator",
+            "version": "0.24",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/openapi-psr7-validator.git",
+                "reference": "10675b6eb7eb100ebe99378206272a963ed764e7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/openapi-psr7-validator/zipball/10675b6eb7eb100ebe99378206272a963ed764e7",
+                "reference": "10675b6eb7eb100ebe99378206272a963ed764e7",
+                "shasum": ""
+            },
+            "require": {
+                "devizzent/cebe-php-openapi": "^1.0",
+                "ext-json": "*",
+                "league/uri": "^6.3 || ^7.0",
+                "php": ">=7.2",
+                "psr/cache": "^1.0 || ^2.0 || ^3.0",
+                "psr/http-message": "^1.0 || ^2.0",
+                "psr/http-server-middleware": "^1.0",
+                "respect/validation": "^1.1.3 || ^2.0",
+                "riverline/multipart-parser": "^2.0.3",
+                "symfony/polyfill-php80": "^1.27",
+                "webmozart/assert": "^1.4 || ^2.0"
+            },
+            "require-dev": {
+                "doctrine/coding-standard": "^8.0",
+                "guzzlehttp/psr7": "^2.0",
+                "hansott/psr7-cookies": "^3.0.2 || ^4.0",
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "^1",
+                "phpstan/phpstan-phpunit": "^1",
+                "phpstan/phpstan-webmozart-assert": "^1",
+                "phpunit/phpunit": "^7 || ^8 || ^9",
+                "symfony/cache": "^5.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "League\\OpenAPIValidation\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Validate PSR-7 messages against OpenAPI (3.0.2) specifications expressed in YAML or JSON",
+            "homepage": "https://github.com/thephpleague/openapi-psr7-validator",
+            "keywords": [
+                "http",
+                "openapi",
+                "psr7",
+                "validation"
+            ],
+            "support": {
+                "issues": "https://github.com/thephpleague/openapi-psr7-validator/issues",
+                "source": "https://github.com/thephpleague/openapi-psr7-validator/tree/0.24"
+            },
+            "time": "2026-05-08T15:27:06+00:00"
+        },
+        {
+            "name": "marc-mabe/php-enum",
+            "version": "v4.7.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/marc-mabe/php-enum.git",
+                "reference": "bb426fcdd65c60fb3638ef741e8782508fda7eef"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/marc-mabe/php-enum/zipball/bb426fcdd65c60fb3638ef741e8782508fda7eef",
+                "reference": "bb426fcdd65c60fb3638ef741e8782508fda7eef",
+                "shasum": ""
+            },
+            "require": {
+                "ext-reflection": "*",
+                "php": "^7.1 | ^8.0"
+            },
+            "require-dev": {
+                "phpbench/phpbench": "^0.16.10 || ^1.0.4",
+                "phpstan/phpstan": "^1.3.1",
+                "phpunit/phpunit": "^7.5.20 | ^8.5.22 | ^9.5.11",
+                "vimeo/psalm": "^4.17.0 | ^5.26.1"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-3.x": "3.2-dev",
+                    "dev-master": "4.7-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MabeEnum\\": "src/"
+                },
+                "classmap": [
+                    "stubs/Stringable.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Marc Bennewitz",
+                    "email": "dev@mabe.berlin",
+                    "homepage": "https://mabe.berlin/",
+                    "role": "Lead"
+                }
+            ],
+            "description": "Simple and fast implementation of enumerations with native PHP",
+            "homepage": "https://github.com/marc-mabe/php-enum",
+            "keywords": [
+                "enum",
+                "enum-map",
+                "enum-set",
+                "enumeration",
+                "enumerator",
+                "enummap",
+                "enumset",
+                "map",
+                "set",
+                "type",
+                "type-hint",
+                "typehint"
+            ],
+            "support": {
+                "issues": "https://github.com/marc-mabe/php-enum/issues",
+                "source": "https://github.com/marc-mabe/php-enum/tree/v4.7.2"
+            },
+            "time": "2025-09-14T11:18:39+00:00"
+        },
+        {
             "name": "mockery/mockery",
             "version": "1.6.15",
             "source": {
@@ -7496,6 +7958,163 @@
             ],
             "time": "2026-11-10T17:06:52+00:00",
             "published-time": "2026-11-10T17:23:22+00:00"
+        },
+        {
+            "name": "nunomaduro/pokio",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nunomaduro/pokio.git",
+                "reference": "fc7884ebc5b0fabd6e267c0b4e6f750ba69cee5b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nunomaduro/pokio/zipball/fc7884ebc5b0fabd6e267c0b4e6f750ba69cee5b",
+                "reference": "fc7884ebc5b0fabd6e267c0b4e6f750ba69cee5b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.3.0"
+            },
+            "conflict": {
+                "symplify/easy-parallel": "<11.2.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.29.0",
+                "peckphp/peck": "^0.1.3",
+                "pestphp/pest": "^4.5.0",
+                "pestphp/pest-plugin-type-coverage": "^4.0.3",
+                "phpstan/phpstan": "^2.1.46",
+                "symfony/var-dumper": "^7.4.8 || ^8.0.8"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "0.1.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Functions.php"
+                ],
+                "psr-4": {
+                    "Pokio\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "Pokio is a dead simple asynchronous API for PHP that just works",
+            "keywords": [
+                "asynchronous",
+                "library",
+                "php",
+                "pokio"
+            ],
+            "support": {
+                "issues": "https://github.com/nunomaduro/pokio/issues",
+                "source": "https://github.com/nunomaduro/pokio/tree/v1.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/paypalme/enunomaduro",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.patreon.com/nunomaduro",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2026-04-12T12:06:31+00:00"
+        },
+        {
+            "name": "nyholm/psr7",
+            "version": "1.8.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Nyholm/psr7.git",
+                "reference": "26c1581611614447a5ff753a450390a23f3e323e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Nyholm/psr7/zipball/26c1581611614447a5ff753a450390a23f3e323e",
+                "reference": "26c1581611614447a5ff753a450390a23f3e323e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2",
+                "psr/http-factory": "^1.0",
+                "psr/http-message": "^1.1 || ^2.0"
+            },
+            "provide": {
+                "php-http/message-factory-implementation": "1.0",
+                "psr/http-factory-implementation": "1.0",
+                "psr/http-message-implementation": "1.0"
+            },
+            "require-dev": {
+                "http-interop/http-factory-tests": "^0.9",
+                "php-http/message-factory": "^1.0",
+                "php-http/psr7-integration-tests": "^1.0",
+                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.4",
+                "symfony/error-handler": "^4.4"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.8-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Nyholm\\Psr7\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tobias Nyholm",
+                    "email": "tobias.nyholm@gmail.com"
+                },
+                {
+                    "name": "Martijn van der Ven",
+                    "email": "martijn@vanderven.se"
+                }
+            ],
+            "description": "A fast PHP7 implementation of PSR-7",
+            "homepage": "https://tnyholm.se",
+            "keywords": [
+                "psr-17",
+                "psr-7"
+            ],
+            "support": {
+                "issues": "https://github.com/Nyholm/psr7/issues",
+                "source": "https://github.com/Nyholm/psr7/tree/1.8.3"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Zegnat",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nyholm",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-11-26T08:19:16+00:00"
         },
         {
             "name": "pestphp/pest",
@@ -7985,6 +8604,80 @@
             "published-time": "2026-10-07T19:42:16+00:00"
         },
         {
+            "name": "pestphp/pest-plugin-type-coverage",
+            "version": "v5.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pestphp/pest-plugin-type-coverage.git",
+                "reference": "0c1148106bc31d336606d62cc5930a885d8ad9c4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pestphp/pest-plugin-type-coverage/zipball/0c1148106bc31d336606d62cc5930a885d8ad9c4",
+                "reference": "0c1148106bc31d336606d62cc5930a885d8ad9c4",
+                "shasum": ""
+            },
+            "require": {
+                "nunomaduro/pokio": "^1.0.1",
+                "pestphp/pest-plugin": "^5.0.0",
+                "php": "^8.4",
+                "phpstan/phpstan": "^2.3.5",
+                "tomasvotruba/type-coverage": "^2.5.1"
+            },
+            "conflict": {
+                "pestphp/pest": "<5.0.0",
+                "phpstan/phpstan": "<2.2.7",
+                "phpunit/phpunit": "<13.4.1"
+            },
+            "require-dev": {
+                "pestphp/pest": "^5.3.4",
+                "pestphp/pest-dev-tools": "^5.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "pest": {
+                    "plugins": [
+                        "Pest\\TypeCoverage\\Plugin"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Pest\\TypeCoverage\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "The Type Coverage plugin for Pest PHP.",
+            "keywords": [
+                "coverage",
+                "framework",
+                "pest",
+                "php",
+                "plugin",
+                "test",
+                "testing",
+                "type-coverage",
+                "unit"
+            ],
+            "support": {
+                "source": "https://github.com/pestphp/pest-plugin-type-coverage/tree/v5.1.1"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=66BYDWAT92N6L",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-11-16T20:01:45+00:00"
+        },
+        {
             "name": "phar-io/manifest",
             "version": "2.0.4",
             "source": {
@@ -8335,6 +9028,70 @@
             },
             "time": "2026-11-25T13:45:51+00:00",
             "published-time": "2026-11-25T13:46:33+00:00"
+        },
+        {
+            "name": "phpstan/phpstan",
+            "version": "2.3.7",
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/90c91c2498849ab8cc4e873864bbf1cb2bf6ea12",
+                "reference": "90c91c2498849ab8cc4e873864bbf1cb2bf6ea12",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4|^8.0"
+            },
+            "conflict": {
+                "phpstan/phpstan-shim": "*"
+            },
+            "bin": [
+                "phpstan",
+                "phpstan.phar"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ondřej Mirtes"
+                },
+                {
+                    "name": "Markus Staab"
+                },
+                {
+                    "name": "Vincent Langlet"
+                }
+            ],
+            "description": "PHPStan - PHP Static Analysis Tool",
+            "keywords": [
+                "dev",
+                "static analysis"
+            ],
+            "support": {
+                "docs": "https://phpstan.org/user-guide/getting-started",
+                "forum": "https://github.com/phpstan/phpstan/discussions",
+                "issues": "https://github.com/phpstan/phpstan/issues",
+                "security": "https://github.com/phpstan/phpstan/security/policy",
+                "source": "https://github.com/phpstan/phpstan-src"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/ondrejmirtes",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/phpstan",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-11-19T10:31:11+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -8815,6 +9572,352 @@
             ],
             "time": "2026-11-13T11:10:10+00:00",
             "published-time": "2026-11-13T11:11:23+00:00"
+        },
+        {
+            "name": "psr/cache",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/cache.git",
+                "reference": "aa5030cfa5405eccfdcb1083ce040c2cb8d253bf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/cache/zipball/aa5030cfa5405eccfdcb1083ce040c2cb8d253bf",
+                "reference": "aa5030cfa5405eccfdcb1083ce040c2cb8d253bf",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Cache\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for caching libraries",
+            "keywords": [
+                "cache",
+                "psr",
+                "psr-6"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/cache/tree/3.0.0"
+            },
+            "time": "2021-02-03T23:26:27+00:00"
+        },
+        {
+            "name": "psr/http-server-handler",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-server-handler.git",
+                "reference": "84c4fb66179be4caaf8e97bd239203245302e7d4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-server-handler/zipball/84c4fb66179be4caaf8e97bd239203245302e7d4",
+                "reference": "84c4fb66179be4caaf8e97bd239203245302e7d4",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0",
+                "psr/http-message": "^1.0 || ^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Server\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP server-side request handler",
+            "keywords": [
+                "handler",
+                "http",
+                "http-interop",
+                "psr",
+                "psr-15",
+                "psr-7",
+                "request",
+                "response",
+                "server"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-server-handler/tree/1.0.2"
+            },
+            "time": "2023-04-10T20:06:20+00:00"
+        },
+        {
+            "name": "psr/http-server-middleware",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-server-middleware.git",
+                "reference": "c1481f747daaa6a0782775cd6a8c26a1bf4a3829"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-server-middleware/zipball/c1481f747daaa6a0782775cd6a8c26a1bf4a3829",
+                "reference": "c1481f747daaa6a0782775cd6a8c26a1bf4a3829",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0",
+                "psr/http-message": "^1.0 || ^2.0",
+                "psr/http-server-handler": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Server\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP server-side middleware",
+            "keywords": [
+                "http",
+                "http-interop",
+                "middleware",
+                "psr",
+                "psr-15",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "support": {
+                "issues": "https://github.com/php-fig/http-server-middleware/issues",
+                "source": "https://github.com/php-fig/http-server-middleware/tree/1.0.2"
+            },
+            "time": "2023-04-11T06:14:47+00:00"
+        },
+        {
+            "name": "respect/stringifier",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Respect/Stringifier.git",
+                "reference": "e88515f675b373596d5dcdd9dc6103b8504c7ca5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Respect/Stringifier/zipball/e88515f675b373596d5dcdd9dc6103b8504c7ca5",
+                "reference": "e88515f675b373596d5dcdd9dc6103b8504c7ca5",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "malukenho/docheader": "^0.1.7",
+                "phpstan/phpstan": "^1.10",
+                "phpstan/phpstan-deprecation-rules": "^1.1",
+                "phpstan/phpstan-phpunit": "^1.3",
+                "phpstan/phpstan-strict-rules": "^1.5",
+                "phpunit/phpunit": "^10.0",
+                "respect/coding-standard": "^4.0",
+                "squizlabs/php_codesniffer": "^3.7"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/stringify.php"
+                ],
+                "psr-4": {
+                    "Respect\\Stringifier\\": "src/",
+                    "Respect\\Stringifier\\Test\\": "tests/src/",
+                    "Respect\\Stringifier\\Test\\Unit\\": "tests/unit"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Respect/Stringifier Contributors",
+                    "homepage": "https://github.com/Respect/Stringifier/graphs/contributors"
+                }
+            ],
+            "description": "Converts any value to a string",
+            "keywords": [
+                "respect",
+                "stringifier",
+                "stringify"
+            ],
+            "support": {
+                "issues": "https://github.com/Respect/Stringifier/issues",
+                "source": "https://github.com/Respect/Stringifier/tree/1.0.0"
+            },
+            "time": "2023-04-12T20:15:44+00:00"
+        },
+        {
+            "name": "respect/validation",
+            "version": "2.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Respect/Validation.git",
+                "reference": "48254ed1079fc0879eb03fb2b600f92bb4ecb787"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Respect/Validation/zipball/48254ed1079fc0879eb03fb2b600f92bb4ecb787",
+                "reference": "48254ed1079fc0879eb03fb2b600f92bb4ecb787",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "respect/stringifier": "^0.2.0 || ^1.0",
+                "symfony/polyfill-mbstring": "^1.2"
+            },
+            "require-dev": {
+                "egulias/email-validator": "^3.0 || ^4.0",
+                "giggsey/libphonenumber-for-php-lite": "^8.13 || ^9.0",
+                "malukenho/docheader": "^1.0",
+                "mikey179/vfsstream": "^1.6",
+                "phpstan/phpstan": "^1.9",
+                "phpstan/phpstan-deprecation-rules": "^1.1",
+                "phpstan/phpstan-phpunit": "^1.3",
+                "phpunit/phpunit": "^9.6",
+                "psr/http-message": "^1.0",
+                "respect/coding-standard": "^4.0",
+                "squizlabs/php_codesniffer": "^3.7"
+            },
+            "suggest": {
+                "egulias/email-validator": "Improves the Email rule if available",
+                "ext-bcmath": "Arbitrary Precision Mathematics",
+                "ext-fileinfo": "File Information",
+                "ext-mbstring": "Multibyte String Functions",
+                "giggsey/libphonenumber-for-php-lite": "Enables the phone rule if available"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Respect\\Validation\\": "library/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Respect/Validation Contributors",
+                    "homepage": "https://github.com/Respect/Validation/graphs/contributors"
+                }
+            ],
+            "description": "The most awesome validation engine ever created for PHP",
+            "homepage": "http://respect.github.io/Validation/",
+            "keywords": [
+                "respect",
+                "validation",
+                "validator"
+            ],
+            "support": {
+                "issues": "https://github.com/Respect/Validation/issues",
+                "source": "https://github.com/Respect/Validation/tree/2.5.0"
+            },
+            "time": "2026-07-22T15:21:03+00:00"
+        },
+        {
+            "name": "riverline/multipart-parser",
+            "version": "2.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Riverline/multipart-parser.git",
+                "reference": "abec534bc0b17e5a5462f0705e2e331458405595"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Riverline/multipart-parser/zipball/abec534bc0b17e5a5462f0705e2e331458405595",
+                "reference": "abec534bc0b17e5a5462f0705e2e331458405595",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": ">=7.0"
+            },
+            "require-dev": {
+                "laminas/laminas-diactoros": "*",
+                "phpunit/phpunit": "*",
+                "psr/http-message": "*",
+                "symfony/psr-http-message-bridge": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Riverline\\MultiPartParser\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Romain Cambien",
+                    "email": "romain@cambien.net"
+                },
+                {
+                    "name": "Riverline",
+                    "homepage": "http://www.riverline.fr"
+                }
+            ],
+            "description": "One class library to parse multipart content with encoding and charset support.",
+            "keywords": [
+                "http",
+                "multipart",
+                "parser"
+            ],
+            "support": {
+                "issues": "https://github.com/Riverline/multipart-parser/issues",
+                "source": "https://github.com/Riverline/multipart-parser/tree/2.3.0"
+            },
+            "time": "2026-11-05T15:12:49+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -10126,6 +11229,77 @@
             },
             "time": "2026-02-17T17:25:14+00:00",
             "published-time": "2026-02-17T17:26:32+00:00"
+        },
+        {
+            "name": "tomasvotruba/type-coverage",
+            "version": "2.5.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/TomasVotruba/type-coverage.git",
+                "reference": "2d8e722c1776a17f506f6a66cd325e50fbaa12ee"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/TomasVotruba/type-coverage/zipball/2d8e722c1776a17f506f6a66cd325e50fbaa12ee",
+                "reference": "2d8e722c1776a17f506f6a66cd325e50fbaa12ee",
+                "shasum": ""
+            },
+            "require": {
+                "entropy/entropy": "^0.4.23",
+                "php": ">=7.4",
+                "phpstan/phpstan": "^2.2"
+            },
+            "require-dev": {
+                "doctrine/collections": "^2.3",
+                "phpstan/extension-installer": "^1.4",
+                "phpunit/phpunit": "^13.2",
+                "rector/jack": "^1.1",
+                "rector/rector": "^2.5",
+                "shipmonk/composer-dependency-analyser": "^1.8",
+                "shipmonk/dead-code-detector": "^1.4",
+                "symfony/dom-crawler": "^8.1",
+                "symfony/form": "^8.1",
+                "symplify/easy-coding-standard": "^13.2",
+                "tracy/tracy": "^2.12"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "config/extension.neon"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Rector\\TypePerfect\\": "packages/type-perfect/src",
+                    "TomasVotruba\\TypeCoverage\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Measure type coverage of your project",
+            "keywords": [
+                "phpstan-extension",
+                "static analysis"
+            ],
+            "support": {
+                "issues": "https://github.com/TomasVotruba/type-coverage/issues",
+                "source": "https://github.com/TomasVotruba/type-coverage/tree/2.5.1"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.me/rectorphp",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/tomasvotruba",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-10-09T19:09:05+00:00"
         },
         {
             "name": "webmozart/assert",
