@@ -77,4 +77,4 @@ Fase 0 documentada; A–S pendientes. No se han creado repositorio, proyecto Lar
 
 Phase A is closed on the owner's supplied baseline evidence for commit `22528be`. The cloud reran the two inherited tests and Pint and confirmed the base Laravel page. The original cloud Vite configuration depended on a font CDN that the proxy blocked. The Phase B build now bundles the same font from the npm lockfile and ran locally.
 
-Phase B has a tested implementation branch and is pending protected PR integration and default-branch trigger verification. Read the actual execution and open criteria in [CI.md](CI.md), [TESTING.md](TESTING.md) and [SECURITY.md](SECURITY.md). The owner must authorize integration. Phase C requires explicit acceptance of Phase B after the required checks pass on `main`.
+Phase B was integrated through PR #1 at `f33b90f`. The default-branch push and actual manual extended workflow passed. Active main rules and the remaining controlled PR, scheduled and release-event evidence are recorded in [CI.md](CI.md). Phase C remains gated on explicit Phase B acceptance.
