@@ -115,6 +115,10 @@ Run `composer test` for all suites, `composer test:database` for the MySQL suite
 
 The B02 cloud run passed all 27 tests with 94 assertions, including a real InnoDB lock timeout and a JSON contract check. The first measured line result was 657 of 657 executable lines across 26 files. Pest type coverage reported 100% across 24 scanned files, and Pint and Larastan passed. These measurements cover the scaffold and harness. Business authorization, resource contracts and domain concurrency remain scheduled for their implementation phases.
 
+### Mutation baseline and acceptance
+
+The full mutation command generated 647 mutations across 24 files. Pest detected 75, reported 567 surviving and five uncovered, and returned exit 1 at 11.59% against the 80% minimum. Configuration files accounted for 511 survivors, including scaffold defaults outside the selected MySQL workflow. Another 51 survivors were in schema migrations, factories or the seeder. Line and declaration coverage use separate criteria and passed. The mutation threshold remains in effect. Improving the score requires observable tests for supported behavior or an explicit owner decision about the scope. Assertions that only repeat scaffold defaults would not validate application behavior.
+
 ### Frontend and browser workflow
 
 Use the Node version in `.node-version`, install with `npm ci`, then run `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test` and `npm run build`. Vue 3 and its Vite plugin compile the fixture. TypeScript and vue-tsc verify types, ESLint and Prettier verify source quality, and Vitest with Vue Test Utils and jsdom exercises observable form behavior. Instrument Sans comes from the locked Fontsource package, so the build can bundle the same font without an external build-time download.
