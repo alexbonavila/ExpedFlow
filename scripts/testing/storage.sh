@@ -21,8 +21,11 @@ cleanup() {
     rm -rf "$work"
   fi
 }
+report_failure() {
+  printf '::error title=SMB smoke::Stage %s failed with exit %s.\n' "$stage" "$1" >&2
+}
 trap cleanup EXIT
-trap 'status=$?; printf "::error title=SMB smoke::Stage %s failed with exit %s.\n" "$stage" "$status" >&2' ERR
+trap 'report_failure "$?"' ERR
 
 copy_fixture() {
   if ! findmnt --noheadings --mountpoint "$mount_point" --types cifs >/dev/null; then
@@ -57,7 +60,7 @@ for account in writer reader; do
   printf 'username=%s\npassword=%s\n' "$account" "$(openssl rand -hex 24)" > "$credentials/$account"
 done
 
-stage=server-readiness
+stage='server-readiness'
 server=$(docker run -d --rm --network host \
   --mount "type=bind,source=$credentials,target=/run/expedflow-credentials,readonly" "$image")
 for ((attempt=0; attempt<25; attempt++)); do
@@ -73,19 +76,19 @@ mount_share() {
     -o "port=1445,credentials=$credentials/$1,vers=3.1.1,uid=$(id -u),gid=$(id -g),nosuid,nodev,noexec"
 }
 
-stage=writer-mount
+stage='writer-mount'
 mount_share writer
-stage=writer-copy
+stage='writer-copy'
 copy_fixture
 cmp "$mount_point/template/nested/fixture.txt" "$mount_point/copy/nested/fixture.txt"
-stage=writer-write
+stage='writer-write'
 printf '%s\n' 'Client write' > "$mount_point/copy/write.txt"
 test "$(docker exec "$server" cat /srv/expedflow-fixtures/copy/write.txt)" = 'Client write'
 sudo -n umount "$mount_point"
 
-stage=reader-mount
+stage='reader-mount'
 mount_share reader
-stage=reader-permissions
+stage='reader-permissions'
 test "$(cat "$mount_point/template/nested/fixture.txt")" = 'Synthetic template file'
 if touch "$mount_point/reader-write.txt" 2>/dev/null; then
   printf '%s\n' '::error title=SMB permissions::The read-only account unexpectedly wrote a file.' >&2
@@ -95,7 +98,7 @@ sudo -n umount "$mount_point"
 docker stop "$server" >/dev/null
 server=
 
-stage=missing-share
+stage='missing-share'
 if mount_share writer 2>/dev/null; then
   printf '%s\n' '::error title=SMB mount failure::Mount unexpectedly succeeded after the server stopped.' >&2
   exit 1
