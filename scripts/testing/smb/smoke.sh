@@ -20,6 +20,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
+stage=setup
+trap 'status=$?; printf "::error title=SMB smoke::Stage %s failed with exit %s.\n" "$stage" "$status" >&2' ERR
+
 copy_fixture() {
   if ! findmnt --noheadings --mountpoint "$mount_point" --types cifs >/dev/null; then
     printf '%s\n' 'CIFS mount is unavailable.' >&2
@@ -67,6 +70,7 @@ cat > "$work/smb.conf" <<CONFIG
    write list = writer
 CONFIG
 
+stage=server-readiness
 setsid smbd --foreground --no-process-group --configfile "$work/smb.conf" &
 server=$!
 for ((attempt=0; attempt<25; attempt++)); do
@@ -83,17 +87,22 @@ mount_share() {
 }
 
 
+stage=writer-mount
 mount_share writer
+stage=writer-copy
 copy_fixture
 cmp "$mount_point/template/nested/fixture.txt" "$mount_point/copy/nested/fixture.txt"
+stage=writer-write
 printf '%s\n' 'Client write' > "$mount_point/copy/write.txt"
 cmp "$mount_point/copy/write.txt" "$share/copy/write.txt"
 umount "$mount_point"
 
+stage=reader-mount
 mount_share reader
+stage=reader-permissions
 test -r "$mount_point/template/nested/fixture.txt"
 if touch "$mount_point/reader-write.txt" 2>/dev/null; then
-  printf '%s\n' 'The read-only SMB account unexpectedly wrote a file.' >&2
+  printf '%s\n' '::error title=SMB permissions::The read-only account unexpectedly wrote a file.' >&2
   exit 1
 fi
 umount "$mount_point"
@@ -101,8 +110,9 @@ kill "$server"
 wait "$server" || true
 server=
 
+stage=missing-share
 if mount_share writer 2>/dev/null; then
-  printf '%s\n' 'Mount unexpectedly succeeded after the SMB server stopped.' >&2
+  printf '%s\n' '::error title=SMB mount failure::Mount unexpectedly succeeded after the server stopped.' >&2
   exit 1
 fi
 assert_unmounted

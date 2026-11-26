@@ -278,7 +278,18 @@ jobs:
           persist-credentials: false
       - name: Load the Linux CIFS module
         run: sudo modprobe cifs
-      - run: bash scripts/testing/storage.sh
+      - name: Run the isolated CIFS smoke
+        run: |
+          mkdir -p test-results
+          set -o pipefail
+          bash scripts/testing/storage.sh |& tee test-results/storage.log
+      - name: Upload SMB diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: storage-integration
+          path: test-results/storage.log
+          retention-days: 7
 
   mutation:
     runs-on: ubuntu-24.04
