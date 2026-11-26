@@ -82,7 +82,10 @@
         "test:contract": "pest --testsuite=Contract",
         "test:coverage": "pest --coverage --min=90 --coverage-clover=coverage/clover.xml --log-junit=test-results/phpunit.xml",
         "test:types": "@php -d memory_limit=512M vendor/bin/pest --type-coverage --min=100 --type-coverage-json=test-results/type-coverage.json",
-        "test:mutation": "pest --mutate --everything --min=80 --no-cache"
+        "test:mutation": [
+            "Composer\\Config::disableProcessTimeout",
+            "pest --mutate --everything --min=80 --no-cache"
+        ]
     },
     "extra": {
         "laravel": {

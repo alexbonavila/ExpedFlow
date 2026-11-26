@@ -1,0 +1,432 @@
+name: Phase B
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 2 * * *'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase-b-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+
+jobs:
+  backend-quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/php
+      - run: |
+          composer validate --strict --no-check-publish
+          composer lint
+          composer analyse
+
+  backend-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      database: ${{ steps.suites.outputs.integration }}
+      contract: ${{ steps.suites.outputs.contract }}
+    services:
+      mysql:
+        image: mysql@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_HOST: localhost
+          MYSQL_DATABASE: expedflow_test
+        ports:
+          - 127.0.0.1:3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --protocol=tcp --host=127.0.0.1 --silent"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/php
+        with:
+          coverage: xdebug
+      - name: Provision restricted MySQL user
+        env:
+          MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
+        run: bash scripts/testing/ci-mysql.sh "$MYSQL_CONTAINER_ID"
+      - name: Run all Pest suites and line coverage
+        env:
+          XDEBUG_MODE: coverage
+        run: composer test:coverage
+      - name: Capture suite evidence
+        id: suites
+        if: ${{ !cancelled() }}
+        run: python3 scripts/testing/suite-evidence.py
+      - name: Check declaration coverage
+        if: ${{ !cancelled() }}
+        run: composer test:types
+      - name: Upload php-quality
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: php-quality
+          path: |
+            test-results/phpunit.xml
+            test-results/type-coverage.json
+            coverage/clover.xml
+          retention-days: 7
+
+  database-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: backend-tests
+    if: ${{ always() }}
+    steps:
+      - name: Require a nonempty passing database suite
+        env:
+          OUTCOME: ${{ needs.backend-tests.outputs.database }}
+        run: test "$OUTCOME" = passed
+
+  api-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: backend-tests
+    if: ${{ always() }}
+    steps:
+      - name: Require a nonempty passing contract suite
+        env:
+          OUTCOME: ${{ needs.backend-tests.outputs.contract }}
+        run: test "$OUTCOME" = passed
+
+  frontend-quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node
+      - run: |
+          npm run lint
+          npm run format:check
+          npm run typecheck
+
+  frontend-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node
+      - run: |
+          mkdir -p test-results
+          npm test -- --reporter=default --reporter=junit --outputFile.junit=test-results/vitest.xml
+      - name: Upload vitest-junit
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: vitest-junit
+          path: |
+            test-results/vitest.xml
+          retention-days: 7
+
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node
+      - run: npm run build
+      - run: test -s public/build/manifest.json
+
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: ./.github/actions/php
+      - uses: ./.github/actions/node
+      - name: Composer audit
+        if: ${{ !cancelled() }}
+        run: composer audit --locked --no-interaction
+      - name: npm audit
+        if: ${{ !cancelled() }}
+        run: npm audit --audit-level=high
+      - name: Gitleaks
+        if: ${{ !cancelled() }}
+        run: bash scripts/testing/secrets.sh
+
+  codeql:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4
+        with:
+          languages: javascript-typescript
+          build-mode: none
+      - uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4
+
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      mysql:
+        image: mysql@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_HOST: localhost
+          MYSQL_DATABASE: expedflow_test
+        ports:
+          - 127.0.0.1:3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --protocol=tcp --host=127.0.0.1 --silent"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/php
+      - uses: ./.github/actions/node
+      - name: Provision restricted MySQL user
+        env:
+          MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
+        run: bash scripts/testing/ci-mysql.sh "$MYSQL_CONTAINER_ID"
+      - run: |
+          npm run build
+          npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:e2e
+      - name: Upload e2e
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: e2e
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 7
+
+  accessibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      mysql:
+        image: mysql@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_HOST: localhost
+          MYSQL_DATABASE: expedflow_test
+        ports:
+          - 127.0.0.1:3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --protocol=tcp --host=127.0.0.1 --silent"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/php
+      - uses: ./.github/actions/node
+      - name: Provision restricted MySQL user
+        env:
+          MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
+        run: bash scripts/testing/ci-mysql.sh "$MYSQL_CONTAINER_ID"
+      - run: |
+          npm run build
+          npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:a11y
+      - name: Upload accessibility
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: accessibility
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 7
+
+  storage-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Load the Linux CIFS module
+        run: sudo modprobe cifs
+      - run: bash scripts/testing/storage.sh
+
+  mutation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    if: github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    services:
+      mysql:
+        image: mysql@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_HOST: localhost
+          MYSQL_DATABASE: expedflow_test
+        ports:
+          - 127.0.0.1:3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --protocol=tcp --host=127.0.0.1 --silent"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/php
+        with:
+          coverage: xdebug
+      - name: Provision restricted MySQL user
+        env:
+          MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
+        run: bash scripts/testing/ci-mysql.sh "$MYSQL_CONTAINER_ID"
+      - run: |
+          mkdir -p test-results
+          set -o pipefail
+          XDEBUG_MODE=coverage composer test:mutation |& tee test-results/mutation.txt
+      - name: Upload mutation-results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: mutation-results
+          path: |
+            test-results/mutation.txt
+          retention-days: 7
+
+  performance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    if: github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    services:
+      mysql:
+        image: mysql@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_HOST: localhost
+          MYSQL_DATABASE: expedflow_test
+        ports:
+          - 127.0.0.1:3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --protocol=tcp --host=127.0.0.1 --silent"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/php
+      - uses: ./.github/actions/node
+      - name: Provision restricted MySQL user
+        env:
+          MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
+        run: bash scripts/testing/ci-mysql.sh "$MYSQL_CONTAINER_ID"
+      - run: npm run build
+      - run: bash scripts/testing/performance.sh
+      - name: Upload performance
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: performance
+          path: |
+            test-results/performance/
+            test-results/services/
+          retention-days: 7
+
+  dynamic-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    if: github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    services:
+      mysql:
+        image: mysql@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_HOST: localhost
+          MYSQL_DATABASE: expedflow_test
+        ports:
+          - 127.0.0.1:3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --protocol=tcp --host=127.0.0.1 --silent"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/php
+      - uses: ./.github/actions/node
+      - name: Provision restricted MySQL user
+        env:
+          MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
+        run: bash scripts/testing/ci-mysql.sh "$MYSQL_CONTAINER_ID"
+      - run: npm run build
+      - run: bash scripts/testing/zap.sh
+      - name: Upload dynamic-security
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: dynamic-security
+          path: |
+            test-results/zap/
+            test-results/services/
+          retention-days: 7
+
+  quality-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: ${{ always() }}
+    needs:
+      - backend-quality
+      - backend-tests
+      - database-tests
+      - frontend-quality
+      - frontend-tests
+      - api-contract
+      - security
+      - codeql
+      - build
+      - e2e
+      - accessibility
+      - storage-integration
+      - mutation
+      - performance
+      - dynamic-security
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Evaluate every required result
+        env:
+          NEEDS_RESULTS: ${{ toJSON(needs) }}
+        run: bash scripts/testing/quality-gate.sh "$GITHUB_EVENT_NAME"

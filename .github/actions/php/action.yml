@@ -1,0 +1,17 @@
+name: Install PHP dependencies
+description: Install Composer dependencies from the lockfile
+inputs:
+  coverage:
+    description: Coverage extension to enable
+    default: none
+runs:
+  using: composite
+  steps:
+    - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+      with:
+        php-version: '8.4'
+        tools: composer:2.8.8
+        extensions: curl, dom, mbstring, pdo_mysql, xml, zip
+        coverage: ${{ inputs.coverage }}
+    - shell: bash
+      run: composer install --no-interaction --prefer-dist --no-progress
