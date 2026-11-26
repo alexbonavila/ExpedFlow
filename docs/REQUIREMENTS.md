@@ -1,72 +1,72 @@
-# Requisitos de ExpedFlow
+# ExpedFlow requirements
 
-**Fase 0 — línea base funcional.** Los requisitos numerados son los acordados. Las decisiones de implementación indicadas como propuestas se concretan en la fase correspondiente sin ampliar el alcance.
+**Phase 0 — functional baseline.** The numbered requirements are agreed. Finalize the proposed implementation decisions in their respective phases without expanding scope.
 
-## R01. Instalación y alcance
+## R01. Installation and scope
 
-Una instalación independiente por empresa, en servidor propio (rack, RAID y SSD según infraestructura de la empresa). Apache, PHP, Laravel y MySQL. Instalación tradicional; la empresa se encarga de infraestructura, mantenimiento y backups. Repositorio público GitHub. Sin dependencia obligatoria de servicios cloud, sin telemetría externa por defecto. Aplicación web Vue/AdminLTE y futura Android mediante API. No multitenancy, SSO externo ni microservicios.
+Each company runs one independent installation on its own server, with rack, RAID and SSD as appropriate for its infrastructure. Use Apache, PHP, Laravel and MySQL. Use a traditional installation. The company handles infrastructure, maintenance and backups. The GitHub repository is public. Cloud services are optional, and external telemetry is disabled by default. Provide a Vue/AdminLTE web application and a future Android app through the API. Multitenancy, external SSO and microservices are out of scope.
 
-## R02. Identidad, usuarios y permisos
+## R02. Identity, users and permissions
 
-- Inicio y cierre de sesión; recuperación de contraseña por correo SMTP. Sin registro público. Administrador inicial configurado mediante `.env` y creado por procedimiento de instalación seguro; el administrador da de alta al resto.
-- Laravel Sanctum, sesiones/cookies y CSRF para SPA propia; tokens para clientes móviles. Roles y permisos con Spatie Laravel Permission. Administradores crean usuarios y roles; pueden configurar permisos y estados. Todos los usuarios ordinarios autorizados acceden a todos los expedientes, administran plantillas y pueden eliminar lógicamente y restaurar. Solo administradores pueden eliminar definitivamente. No confundir roles configurables con autorización para elevar privilegios.
-- Idioma individual guardado en MySQL: `es`, `ca`, `en`. Zona horaria de instalación definida en `.env`. Interfaz, validaciones, mensajes propios y correo en los tres idiomas. No traducir automáticamente textos escritos por usuarios.
+- Provide login, logout and password recovery by SMTP email. Public registration is disabled. Configure the initial administrator through `.env` and create the account through a secure installation procedure. The administrator creates the remaining users.
+- Use Laravel Sanctum with sessions, cookies and CSRF for the first-party SPA and tokens for mobile clients. Manage roles and permissions with Spatie Laravel Permission. Administrators create users and roles and can configure permissions and statuses. All authorized ordinary users can access all cases, manage templates, soft delete and restore records. Only administrators can permanently delete records. Role configurability does not itself authorize privilege escalation.
+- Store each user's language in MySQL as `es`, `ca` or `en`. Set the installation time zone in `.env`. Provide the interface, validation, application messages and email in all three languages. Keep user-authored text in its original language.
 
-## R03. Clientes
+## R03. Clients
 
-Catálogo de clientes; único campo funcional: nombre obligatorio y único. Cada expediente tiene un cliente solicitante y opcionalmente otro cliente representado, ambos del mismo catálogo. Sin NIF, dirección, teléfono ni correo del cliente. Las reglas técnicas de normalización de nombres se fijarán en C.
+Maintain a client catalog. The required, unique name is its only functional field. Each case has a requesting client and can optionally have a different represented client from the same catalog. The catalog excludes tax ID (NIF), address, phone and email. Define technical name normalization rules in C.
 
-## R04. Tipos, plantillas y expedientes
+## R04. Types, templates and cases
 
-- Tipo de expediente: nombre, código numérico de exactamente dos caracteres (`00`–`99`), único e inmutable una vez asignado, y campos técnicos Laravel. Los tipos sirven como clasificación y base de plantillas. Los usuarios pueden crear y administrar plantillas.
-- Plantillas de tareas de un tipo: nombre, descripción opcional y checklist. No contienen usuarios preasignados ni fechas; al utilizar una plantilla se copian los datos a tareas independientes. Modificar una plantilla no modifica expedientes existentes. La selección del tipo y el uso de su plantilla son conceptos diferenciados.
-- Expediente: código generado, nombre obligatorio, descripción nullable, tipo, cliente solicitante, cliente representado nullable, estado seleccionado por el creador, etiquetas múltiples. Puede tener cero o más tareas.
-- Código: `AAAANNNTT` sin separadores, exactamente nueve dígitos; año de instalación en el momento de asignación (zona horaria configurada), correlativo anual global 001–999 y código del tipo de dos cifras. Ejemplo `202600105` = 2026/001/05. Reinicio anual automático. Correlativo común a todos los tipos, no reutilizar códigos ya asignados aunque se borre un expediente. Al agotarse 999, bloquear nuevas altas y devolver error. Código inmutable; unicidad garantizada también bajo concurrencia.
+- A case type has a name, a unique two-character numeric code (`00`–`99`) that is immutable after assignment, and Laravel technical fields. Types classify cases and provide the basis for templates. Users can create and manage templates.
+- Task templates for a type have a name, optional description and checklist. They have no preassigned users or dates. Using a template copies its data into independent tasks. Editing a template leaves existing cases intact. Type selection and use of that type's template are separate operations.
+- A case has a generated code, required name, nullable description, type, requesting client, nullable represented client, status selected by the creator and multiple tags. It can contain zero or more tasks.
+- Use `AAAANNNTT` without separators, exactly nine digits. The code consists of the year in the configured installation time zone at assignment, the global annual sequence 001–999 and the two-digit type code. Example `202600105` = 2026/001/05. Reset the sequence automatically each year. All types share the sequence. Never reuse an assigned code, even after deleting its case. Once the sequence reaches 999, block new cases and return an error. The code is immutable and unique even under concurrency.
 
-## R05. Tareas, comentarios y checklist
+## R05. Tasks, comments and checklists
 
-- Tarea asociada a un único expediente, con nombre obligatorio, descripción opcional, estado seleccionado por quien crea la tarea, una fecha opcional con hora opcional y orden vertical común dentro de su columna. Asignación a cero, uno o varios usuarios. Todas las tareas activas del expediente son visibles, sin mecanismo de ocultación personal.
-- Comentarios de tarea: contenido, autor y marcas técnicas. Los usuarios pueden modificar y eliminar comentarios de otros usuarios, con registro de la operación y del actor real.
-- Checklist dentro de cada tarea: elementos con nombre, marcado de completado y orden. Ningún elemento tiene fecha funcional. No añadir subtareas con calendario independiente, prioridades o campos no solicitados.
-- Solo las tareas tienen fecha funcional. No hay fechas de inicio/fin separadas, deadline independiente, duración ni recordatorios. Las marcas técnicas Laravel, auditoría e incidencias no son fechas funcionales introducidas por el usuario.
+- Each task belongs to one case. It has a required name, optional description, status selected by its creator, one optional date with an optional time, and a shared vertical order within its column. It can be assigned to zero, one or more users. All active tasks in the case are visible, with no personal hiding mechanism.
+- Task comments have content, an author and technical timestamps. Users can edit and delete other users' comments. Record the operation and the actual actor.
+- Each task has a checklist whose items have a name, completion marker and order. Items have no functional date. Subtasks with a separate calendar, priorities and unrequested fields are out of scope.
+- Only tasks have a functional date. Separate start and end dates, independent deadlines, durations and reminders are out of scope. Laravel, audit and incident timestamps are technical metadata rather than user-entered functional dates.
 
-## R06. Estados compartidos
+## R06. Shared statuses
 
-Un único catálogo para expedientes y tareas. Inicialmente, en el orden indicado: En espera, Pendientes, En curso, Paradas, Para verificar y Finalizadas. Administradores pueden crear, editar, ordenar y eliminar estados; no se puede eliminar un estado mientras haya expedientes o tareas asociados (incluidos los eliminados lógicamente que puedan restaurarse). La selección inicial es explícita al crear; no imponer estado por defecto. Arrastrar entre columnas cambia el estado global. El estado del expediente no se calcula automáticamente a partir de sus tareas.
+Cases and tasks share one catalog. The initial statuses, in order, have the Spanish labels `En espera`, `Pendientes`, `En curso`, `Paradas`, `Para verificar` and `Finalizadas`. Administrators can create, edit, reorder and delete statuses. A status cannot be deleted while cases or tasks reference it, including soft-deleted records that can be restored. Require an explicit initial status at creation, with no default. Dragging across columns changes the global status. Task statuses do not automatically determine case status.
 
-## R07. Kanban y preferencias personales
+## R07. Kanban and personal preferences
 
-- Kanban general: todos los expedientes activos, agrupados por estado. Nuevos expedientes aparecen al final de su columna para todos. Cada usuario puede ordenar verticalmente los expedientes de cada columna de forma privada y ocultarlos solo de su propia vista general. Se pueden volver a mostrar. Ocultar no equivale a borrar ni a restringir autorización. Listado general conserva acceso a expedientes ocultos.
-- Cuando un usuario mueve un expediente a otro estado, para los demás aparece al final de la nueva columna (sin cambiar sus preferencias de visibilidad). El usuario que lo mueve puede colocarlo en la posición elegida. El resto de sus ordenaciones personales se conserva.
-- Kanban de tareas por expediente: orden vertical y estados globales, compartidos por todos; no se ocultan tareas. Arrastrar para ordenar o cambiar de columna.
+- The general Kanban board displays all active cases grouped by status. New cases appear at the bottom of their column for everyone. Each user can privately reorder cases vertically in each column and hide cases from their own general board. Users can show hidden cases again. Hiding affects board visibility only and leaves the case, its authorization and access from the general list intact.
+- When a user moves a case to another status, it appears at the bottom of the new column for everyone else, with their visibility preferences preserved. The actor can place it at a chosen position. The actor's other personal ordering preferences are preserved.
+- The task board for a case uses shared global statuses and vertical ordering. All tasks on the board remain visible. Drag tasks to reorder them or move them between columns.
 
-## R08. Listados, etiquetas y calendario
+## R08. Lists, tags and calendar
 
-Tabla general de expedientes y tablas de administración donde corresponda: búsqueda, filtrado, ordenación, paginación visual y exportación CSV. No paginar las respuestas de API; la paginación de la tabla es cliente. Etiquetas: nombre único y color configurable persistido en MySQL; catálogo reutilizable y creación por usuarios autorizados.
+The general case table and applicable administration tables support search, filtering, sorting, UI pagination and CSV export. The client paginates table data from complete, unpaginated API responses. Tags have a unique name and configurable color stored in MySQL. Authorized users can create tags in a reusable catalog.
 
-Calendario de cada usuario: solo tareas activas que tiene asignadas y tienen fecha. Sin hora: evento de día completo; con hora: evento a esa hora, sin inventar duración persistida. Tarea asignada a varios usuarios aparece en todos sus calendarios. No hay notificaciones, avisos automáticos ni recordatorios.
+Each user's calendar shows only active dated tasks assigned to that user. A task with no time is an all-day event. A task with a time appears at that time, with no invented persisted duration. A task assigned to several users appears on all of their calendars. Notifications, automatic alerts and reminders are out of scope.
 
-## R09. Eliminación y restauración
+## R09. Deletion and restoration
 
-Usuario ordinario: Soft Delete y restauración; administrador: además eliminación definitiva. Eliminar lógicamente expediente implica eliminar lógicamente sus tareas; restaurar expediente restaura las tareas eliminadas por esa misma operación, no las previamente eliminadas por separado. No deben aparecer tareas eliminadas en Kanban ni calendario ordinarios. Las dependencias de tareas (asignaciones, comentarios y checklist) deben conservarse para una restauración coherente; no exponer dependencias de padres eliminados. Eliminación definitiva mantiene integridad relacional y nunca elimina carpetas ni archivos de Samba. Definir alcance de papelera y dependencias de catálogos en C/E sin permitir borrados que rompan referencias.
+Ordinary users can soft delete and restore records. Administrators can also permanently delete them. Soft deletion of a case includes its tasks. Restoring a case restores only tasks deleted by that same operation. Deleted tasks stay out of the ordinary Kanban board and calendar. Preserve assignments, comments and checklists for consistent restoration and keep dependencies of deleted parents inaccessible. Maintain relational integrity on permanent deletion and leave Samba files and folders intact. Define trash and catalog dependencies in C/E, and prevent deletions that break references.
 
 ## R10. Samba
 
-- Al crear expediente, copiar recursivamente la carpeta modelo correspondiente al tipo desde el recurso Samba corporativo a `EXPEDIENTES/<codigo> <nombre del expediente>`. Ejemplo `EXPEDIENTES/202600105 Proyecto eléctrico`. Origen de plantillas y raíz configurables; la carpeta de destino respeta el código y el espacio.
-- API permite subir fotografías y documentos a la carpeta del expediente mediante peticiones multipart. Respuesta JSON. No guardar archivos ni inventario individual en MySQL. No listar, indexar, mostrar, descargar ni navegar Samba desde la web. No implementar gestor documental. No borrar archivos o carpetas Samba desde la aplicación, ni al borrar definitivamente un expediente.
-- Fallo de Samba u operación fallida: registrar incidencia consultable por los usuarios, indicando qué ocurrió, respecto a qué y cuándo. La información debe ser útil y no revelar secretos o rutas sensibles. Sin correo o notificaciones push de incidencias.
+- When creating a case, recursively copy the template folder for its type from the corporate Samba share to `EXPEDIENTES/<codigo> <nombre del expediente>`. Example `EXPEDIENTES/202600105 Proyecto eléctrico`. Make the template source and root configurable. The destination folder must preserve the code and following space.
+- The API allows clients to upload photos and documents to the case folder through multipart requests and returns JSON. Keep files and individual file inventories out of MySQL. The web application cannot list, index, display, download or browse Samba content. Document management is out of scope. The application must never delete Samba files or folders, even during permanent case deletion.
+- On a Samba failure or a failed operation, record an incident users can consult, including what happened, what it affected and when. Provide useful information while protecting secrets and sensitive paths. Incidents generate no email or push notifications.
 
-## R11. Auditoría e incidencias
+## R11. Auditing and incidents
 
-Registrar quién hizo cada modificación relevante, qué se modificó y cuándo; almacenar cambios de campos y no copias completas innecesarias. Historial de auditoría retenido un año y limpieza automatizada. No registrar cada GET, navegación o lectura. Evitar duplicación con logs técnicos. Incidencias operativas en tabla propia con operación, contexto, mensaje y fecha; distinguirlas de auditoría y logs de servidor. No se ha fijado plazo de retención para incidencias.
+Record who made each relevant change, what changed and when. Store field changes and avoid unnecessary full copies. Retain audit history for one year with automated cleanup. Keep routine GET requests, navigation and reads out of the audit history and avoid duplicating technical logs. Store operational incidents in a separate table with operation, context, message and date. Keep them distinct from audit history and server logs. Incident retention remains undecided.
 
-## R12. API, calidad y tecnología
+## R12. API, quality and technology
 
-API REST versionada, JSON para todas las respuestas API, sin paginación de respuestas. API documentada y accesible a clientes autorizados (no implica exposición pública en Internet). Backend completo antes de frontend funcional. AdminLTE en su versión estable compatible más reciente al implementar la UI, en Vue; Kanban, calendario y tablas. Preferir mecanismos Laravel oficiales, después paquetes populares y mantenidos. KISS, DRY, SOLID, YAGNI, DI. Pruebas y CI automatizadas desde B, antes de C. Probar E2E real y utilizar MySQL en integración.
+Use a versioned REST API with JSON for every API response and no response pagination. Document the API and make it available to authorized clients. Internet exposure is not implied. Complete the backend before the functional frontend. When implementing the Vue UI, use the latest compatible stable AdminLTE, with Kanban, calendar and tables. Prefer official Laravel mechanisms, then popular maintained packages. Follow KISS, DRY, SOLID, YAGNI and dependency injection. Automate tests and CI from B, before C. Run real E2E tests and use MySQL for integration.
 
-## Decisiones técnicas propuestas (no nuevas reglas de producto)
+## Proposed technical decisions
 
-- Conservar la ruta Samba original tras renombrar un expediente; guardar solo la referencia operativa necesaria, no archivos. Si falla el aprovisionamiento Samba, conservar el expediente MySQL, registrar incidencia y permitir reintento idempotente sin nuevo correlativo. Validar esta política en I antes de implementar. No permitir sobrescritura ni destrucción de archivos existentes.
-- Resolver en C la representación de fecha/hora, normalización de nombres, modelo de plantilla por tipo, reglas de edición del tipo de expedientes existentes (no cambiar el código), y tratamiento de relaciones históricas. Mantener las reglas confirmadas.
-- Concretar en E/J alcance de auditoría de preferencias personales y retención de incidencias; propuesta: registrar modificaciones de negocio y seguridad, no cambios efímeros de orden/visibilidad personal para evitar ruido, con decisión explícita antes de excluirlos.
-- Definir recuperación de fallos de copia, mecanismo de reintento, límites de carga y política de colisiones en I. No introducir interfaz de exploración Samba.
+- Preserve the original Samba path after renaming a case and store only the operational reference needed. If Samba provisioning fails, retain the MySQL case, record an incident and allow an idempotent retry using the same sequence number. Validate this policy in I before implementation. Prevent overwriting or destroying existing files.
+- Decide the date and time representation, name normalization, template model per type, rules for editing the type of an existing case, and handling of historical relationships in C. Keep the case code unchanged when editing its type and preserve the confirmed rules.
+- Define the audit scope for personal preferences and incident retention in E/J. The proposal is to record business and security changes and omit transient personal ordering and visibility changes to reduce noise. Make an explicit decision before introducing that exclusion.
+- Define copy failure recovery, retry mechanisms, upload limits and collision policy in I. A Samba browser interface is out of scope.

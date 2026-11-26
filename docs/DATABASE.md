@@ -1,68 +1,68 @@
-# Base de datos — diseño lógico previo a C
+# Database — logical design before C
 
-MySQL, InnoDB, utf8mb4, claves foráneas y constraints. Seleccionar versión MySQL soportada en A; CI usa el mismo motor y versión de referencia. Este documento define entidades e invariantes; las migraciones funcionales se implementan únicamente en C. Los nombres y tipos siguientes son propuestas técnicas, salvo los límites funcionales expresos.
+Use MySQL, InnoDB, utf8mb4, foreign keys and constraints. Select a supported MySQL version in A. CI uses the same reference engine and version. This document defines entities and invariants. Functional migrations belong exclusively to C. The following names and types are technical proposals except where functional limits are explicit.
 
-## Catálogo
+## Catalog
 
-| Tabla | Campos lógicos principales / relaciones |
+| Table | Main logical fields / relationships |
 |---|---|
-| `users` | id, name, email único, password hash, locale, campos técnicos; gestión de cuenta |
-| `sessions`, `password_reset_tokens`, `personal_access_tokens` | Migraciones Laravel/Sanctum |
-| `roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions` | Migraciones Spatie; un guard coherente para usuarios |
-| `clients` | id, name único, marcas técnicas |
-| `expedient_types` | id, name, code CHAR(2) único, marcas técnicas |
-| `expedient_sequences` | year clave única, last_number 0–999 |
-| `statuses` | id, nombre, orden global, marcas técnicas; catálogo compartido |
-| `expedients` | id, code CHAR(9) único, year, sequence_number, expedient_type_id, name, description nullable, requester_client_id, represented_client_id nullable, status_id, marcas técnicas y soft delete |
-| `expedient_user_preferences` | user_id, expedient_id, posición personal nullable, hidden, marcas técnicas; UNIQUE(user_id, expedient_id) |
-| `tasks` | id, expedient_id, status_id, name, description nullable, fecha nullable, hora nullable, posición global, marcas técnicas y soft delete |
+| `users` | id, name, unique email, password hash, locale and technical fields for account management |
+| `sessions`, `password_reset_tokens`, `personal_access_tokens` | Laravel/Sanctum migrations |
+| `roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions` | Spatie migrations with a consistent guard for users |
+| `clients` | id, unique name and technical timestamps |
+| `expedient_types` | id, name, unique code CHAR(2) and technical timestamps |
+| `expedient_sequences` | unique year key and last_number 0–999 |
+| `statuses` | id, name, global order and technical timestamps in a shared catalog |
+| `expedients` | id, unique code CHAR(9), year, sequence_number, expedient_type_id, name, nullable description, requester_client_id, nullable represented_client_id, status_id, technical timestamps and soft delete |
+| `expedient_user_preferences` | user_id, expedient_id, nullable personal position, hidden, technical timestamps and UNIQUE(user_id, expedient_id) |
+| `tasks` | id, expedient_id, status_id, name, nullable description, nullable date, nullable time, global position, technical timestamps and soft delete |
 | `task_user` | task_id, user_id, UNIQUE(task_id,user_id) |
-| `task_checklist_items` | id, task_id, name, completed, posición, marcas técnicas; sin fecha funcional |
-| `task_comments` | id, task_id, user_id autor, body, marcas técnicas y estrategia de borrado |
-| `task_templates` | id, expedient_type_id, name, description nullable, posición; sin usuarios ni fechas |
-| `task_template_checklist_items` | id, task_template_id, name, posición |
-| `tags` | id, name único, color configurable, marcas técnicas |
-| `expedient_tag` | expedient_id, tag_id, UNIQUE de la pareja |
-| `activity_log` | esquema del paquete de auditoría; actor, entidad, operación, cambios, fecha |
-| `incidents` | id, user_id nullable, expedient_id nullable, tipo, operación, mensaje, contexto mínimo, created_at; conservar referencia histórica útil |
+| `task_checklist_items` | id, task_id, name, completed, position and technical timestamps, with no functional date |
+| `task_comments` | id, task_id, author user_id, body, technical timestamps and deletion strategy |
+| `task_templates` | id, expedient_type_id, name, nullable description and position, with no users or dates |
+| `task_template_checklist_items` | id, task_template_id, name and position |
+| `tags` | id, unique name, configurable color and technical timestamps |
+| `expedient_tag` | expedient_id, tag_id, with UNIQUE on the pair |
+| `activity_log` | Audit package schema with actor, entity, operation, changes and date |
+| `incidents` | id, nullable user_id, nullable expedient_id, type, operation, message, minimal context and created_at. Retain a useful historical reference |
 
-Incluir tablas auxiliares estándar Laravel solo si son necesarias (p. ej. cache/jobs). En C incorporar esquemas de dependencias de backend sin implementar todavía flujos de autenticación o negocio. No tablas de empresas, documentos, notificaciones ni calendario independiente.
+Include standard Laravel support tables such as cache/jobs only when needed. In C, add the schemas needed by backend dependencies and defer authentication and business flows. The design excludes tables for companies, documents, notifications and a separate calendar.
 
-## Relaciones
+## Relationships
 
 ```mermaid
 erDiagram
-    CLIENTS ||--o{ EXPEDIENTS : solicita
-    CLIENTS o|--o{ EXPEDIENTS : representado
-    EXPEDIENT_TYPES ||--o{ EXPEDIENTS : clasifica
-    EXPEDIENT_TYPES ||--o{ TASK_TEMPLATES : define
-    TASK_TEMPLATES ||--o{ TASK_TEMPLATE_CHECKLIST_ITEMS : contiene
-    STATUSES ||--o{ EXPEDIENTS : estado
-    STATUSES ||--o{ TASKS : estado
-    EXPEDIENTS ||--o{ TASKS : contiene
-    TASKS ||--o{ TASK_USER : asigna
-    USERS ||--o{ TASK_USER : recibe
-    TASKS ||--o{ TASK_COMMENTS : contiene
-    USERS ||--o{ TASK_COMMENTS : autor
-    TASKS ||--o{ TASK_CHECKLIST_ITEMS : contiene
-    USERS ||--o{ EXPEDIENT_USER_PREFERENCES : personaliza
-    EXPEDIENTS ||--o{ EXPEDIENT_USER_PREFERENCES : personaliza
-    TAGS ||--o{ EXPEDIENT_TAG : identifica
-    EXPEDIENTS ||--o{ EXPEDIENT_TAG : clasifica
-    EXPEDIENTS o|--o{ INCIDENTS : referencia
+    CLIENTS ||--o{ EXPEDIENTS : requests
+    CLIENTS o|--o{ EXPEDIENTS : "is represented in"
+    EXPEDIENT_TYPES ||--o{ EXPEDIENTS : classifies
+    EXPEDIENT_TYPES ||--o{ TASK_TEMPLATES : defines
+    TASK_TEMPLATES ||--o{ TASK_TEMPLATE_CHECKLIST_ITEMS : contains
+    STATUSES ||--o{ EXPEDIENTS : "sets status for"
+    STATUSES ||--o{ TASKS : "sets status for"
+    EXPEDIENTS ||--o{ TASKS : contains
+    TASKS ||--o{ TASK_USER : "has assignments"
+    USERS ||--o{ TASK_USER : "receives assignments"
+    TASKS ||--o{ TASK_COMMENTS : contains
+    USERS ||--o{ TASK_COMMENTS : authors
+    TASKS ||--o{ TASK_CHECKLIST_ITEMS : contains
+    USERS ||--o{ EXPEDIENT_USER_PREFERENCES : customizes
+    EXPEDIENTS ||--o{ EXPEDIENT_USER_PREFERENCES : "has preferences"
+    TAGS ||--o{ EXPEDIENT_TAG : identifies
+    EXPEDIENTS ||--o{ EXPEDIENT_TAG : "has tag links"
+    EXPEDIENTS o|--o{ INCIDENTS : references
 ```
 
-## Invariantes y criterios de diseño
+## Invariants and design criteria
 
-- Código de tipo: dos dígitos ASCII preservando ceros; código expediente: nueve dígitos. Validar en aplicación y DB cuando sea viable. Índice único en code y `(year, sequence_number)`; campos inmutables tras asignación. Año según zona horaria de instalación. La fila de secuencia no se elimina al borrar expedientes. Definir transacción con `SELECT ... FOR UPDATE` (Eloquent `lockForUpdate`), alta concurrente segura de nueva fila anual y reintento acotado de deadlock; bloquear al superar 999. No reutilizar números de expedientes ya confirmados.
-- Nombres únicos clientes y etiquetas: decidir collation y normalización (espacios, mayúsculas y acentos) explícitamente en C; testear según semántica seleccionada. No reutilizar claves de catálogo de forma que se pierda identidad histórica.
-- Fecha/hora: propuesta `scheduled_date DATE NULL`, `scheduled_time TIME NULL`, constraint de hora solo con fecha. Representa una única fecha funcional; distinguir día completo de medianoche. No añadir fechas a expedientes, checklist o plantillas. Marcas técnicas en UTC donde corresponda; interpretar fecha/hora funcional en zona de instalación.
-- Estados: FK restrictiva, también para filas soft deleted. No eliminar estado usado. Orden de columnas configurable. Seed inicial estable e idempotente que no restaure ni sobrescriba estados modificados por el usuario; definir traducciones de estados iniciales sin duplicar catálogos ni romper personalizaciones.
-- Kanban expedientes: preferencias dispersas, sin fila por cada pareja al crear. Orden base determinista de entrada en columna (no basta `created_at` al mover); nueva entrada al final de cada orden personal. Implementar mediante claves de orden/versión de columna y preferencias vigentes, o actualización transaccional equivalente; invalidar posición antigua al cambiar estado y conservar `hidden`. Probar movimientos simultáneos, usuarios nuevos, tarjetas ocultas y ausencia de colisiones. Tareas: orden único por expediente/estado con desempate determinista.
-- Soft Delete: distinguir las tareas eliminadas en cascada lógica por expediente de las borradas previamente (marcador de operación o FK auxiliar). Restaurar solo las primeras. Dependencias conservadas mientras se pueda restaurar el padre. Hard delete autorizado en backend, cascadas SQL o acciones explícitas documentadas; proteger catálogos referenciados. No asociar FK de borrado con operaciones Samba.
-- Auditoría: diferencias relevantes, actor y referencia histórica; no incluir password/token ni contenido binario. Retención de un año con índice por fecha y limpieza programada. Incidencias no desaparecen por borrar expediente: referencia histórica segura y FK nullable si procede.
-- Samba: propuesta ruta relativa original y estado operativo mínimo en expediente o entidad técnica dedicada, no inventario documental. No persistir rutas absolutas sensibles ni credenciales.
+- A type code has two ASCII digits and preserves leading zeroes. A case code has nine digits. Validate in the application and database where feasible. Use unique indexes on code and `(year, sequence_number)`. These fields are immutable after assignment. Determine the year in the installation's time zone. Retain the sequence row when cases are deleted. Define a transaction with `SELECT ... FOR UPDATE` (Eloquent `lockForUpdate`), safe concurrent creation of a new annual row and bounded deadlock retries. Block numbering beyond 999 and do not reuse numbers from committed cases.
+- For unique client and tag names, explicitly choose the collation and normalization of whitespace, case and accents in C. Test the selected semantics. Reuse catalog keys only if historical identity can be preserved.
+- The proposed date and time fields are `scheduled_date DATE NULL` and `scheduled_time TIME NULL`, with a constraint allowing a time only when a date is present. They represent one functional date. Distinguish all-day values from midnight. Cases, checklists and templates have no dates. Use UTC for technical timestamps where appropriate and interpret functional date and time values in the installation's time zone.
+- Use restrictive status foreign keys, including for soft-deleted records. Prevent deletion of statuses in use. Make column order configurable. Use a stable, idempotent initial seed that preserves user-modified statuses and their deletion state. Define initial status translations without duplicating catalogs or breaking customizations.
+- Store case Kanban preferences sparsely and avoid creating a row for every pair at creation time. Use a deterministic base order for column entry. `created_at` alone cannot order moves. Place new entries at the end of each personal order. Use ordering keys and column versions with current preferences, or an equivalent transactional update. Invalidate the old position on a status change and retain `hidden`. Test simultaneous moves, new users, hidden cards and the absence of collisions. Task order is unique per case and status, with a deterministic tie-breaker.
+- For soft deletion, distinguish tasks deleted by a case's logical cascade from previously deleted tasks using an operation marker or auxiliary foreign key. Restore only tasks from that cascade. Keep dependencies while the parent can be restored. Authorize hard deletion in the backend, document SQL cascades or explicit actions, and protect referenced catalogs. Keep deletion foreign keys independent of Samba operations.
+- Audit relevant differences, the actor and a historical reference. Omit passwords, tokens and binary content. Retain history for one year with a date index and scheduled cleanup. Preserve incidents after case deletion using a safe historical reference and a nullable foreign key where appropriate.
+- For Samba, the proposal is to store the original relative path and minimal operational state on the case or a dedicated technical entity. Keep file inventories, sensitive absolute paths and credentials out of the database.
 
-## Fase C — entregables
+## Phase C deliverables
 
-Diccionario definitivo de campos, tipos, nulabilidad, valores por defecto, índices, unicidad, FKs y reglas de borrado. Migraciones reversibles cuando sea razonable, modelos, relaciones, casts, factories, seeders idempotentes, fixtures sintéticas y pruebas. Verificar instalación vacía, migrate/rollback/migrate, restricciones DB directamente, relaciones, fechas, traducciones y catálogos. Casos de lógica de negocio que dependan de servicios posteriores se agregan cuando se implementen, sin fingir cobertura en C. No ejecutar `migrate:fresh` en producción.
+Deliver the final dictionary of fields, types, nullability, defaults, indexes, uniqueness, foreign keys and deletion rules. Include reversible migrations where reasonable, models, relationships, casts, factories, idempotent seeders, synthetic fixtures and tests. Verify installation from an empty database, migrate/rollback/migrate, constraints directly in the database, relationships, dates, translations and catalogs. Add business logic cases that depend on later services when those services are implemented and report only coverage achieved in C. Never run `migrate:fresh` in production.

@@ -1,61 +1,61 @@
-# Arquitectura
+# Architecture
 
-## Modelo
+## Model
 
-Monolito modular Laravel, API First, una instalación por empresa. Un repositorio y despliegue; separación lógica del frontend y backend. No servicios distribuidos ni base de datos compartida entre empresas.
+An API-first modular Laravel monolith with one installation per company. A single repository and deployment retain a logical separation between frontend and backend. Companies do not share a database, and the application uses no distributed services.
 
 ```mermaid
 flowchart TD
-    W[Vue + AdminLTE] -->|HTTPS sesión y CSRF| A[Laravel API v1]
-    M[Android futuro] -->|HTTPS token Sanctum| A
-    A --> P[Policies, permisos y validación]
-    P --> D[Acciones de negocio y Eloquent]
+    W[Vue + AdminLTE] -->|HTTPS session and CSRF| A[Laravel API v1]
+    M[Future Android app] -->|HTTPS Sanctum token| A
+    A --> P[Policies, permissions and validation]
+    P --> D[Business actions and Eloquent]
     D --> B[(MySQL)]
-    D --> S[Disco Laravel Storage / montaje Samba]
-    A --> E[SMTP recuperación de contraseña]
+    D --> S[Laravel Storage disk / Samba mount]
+    A --> E[SMTP password recovery]
 ```
 
-## Stack y dependencias
+## Stack and dependencies
 
-| Capa | Decisión / propuesta |
+| Layer | Decision / proposal |
 |---|---|
-| Servidor | Apache, PHP, MySQL; instalación tradicional |
-| Backend | Laravel estable y soportado; seleccionar versión exacta en A, PHP compatible y extensiones oficiales |
-| Identidad | Sanctum (confirmado); Fortify para autenticación sin UI propia, propuesta |
-| Roles | Spatie Laravel Permission (confirmado) |
-| Auditoría | Spatie Laravel Activitylog, propuesta a validar |
-| Frontend | Vue 3 + AdminLTE estable más reciente compatible, TypeScript y Vite propuestos; Vue Router, Pinia solo si se justifica |
-| UI | SortableJS para arrastre, FullCalendar, Tabulator u opción mantenida con soporte Vue, a validar en L |
-| API | REST JSON v1; OpenAPI, Scramble como candidato |
-| Tests/CI | Pest/PHPUnit, Vitest, Playwright, GitHub Actions; ver TESTING y CI |
+| Server | Apache, PHP and MySQL with a traditional installation |
+| Backend | Stable, supported Laravel. Select its exact version in A, with compatible PHP and official extensions |
+| Identity | Sanctum is confirmed. Fortify is proposed for authentication without its own UI |
+| Roles | Spatie Laravel Permission is confirmed |
+| Audit | Evaluate the proposed Spatie Laravel Activitylog package |
+| Frontend | Vue 3 with the latest compatible stable AdminLTE. TypeScript and Vite are proposed. Use Vue Router or Pinia only when justified |
+| UI | Evaluate SortableJS for dragging, FullCalendar, and Tabulator or a maintained Vue-compatible alternative in L |
+| API | REST JSON v1 with OpenAPI. Scramble is a candidate |
+| Tests/CI | Pest/PHPUnit, Vitest, Playwright and GitHub Actions. See TESTING and CI |
 
-No instalar paquetes solo por aparecer en esta tabla. Comprobar compatibilidad real, versiones soportadas, mantenimiento, vulnerabilidades, dependencias y coste. Registrar versiones exactas y lockfiles. La variante Vue de AdminLTE requiere verificación efectiva en L; no asumir que una versión concreta está estable. No anticipar funcionalidades frontend en B: solo infraestructura y una página mínima para verificar el harness.
+Install a package only when it is justified. Check actual compatibility, supported versions, maintenance, vulnerabilities, dependencies and cost. Record exact versions and lockfiles. Verify the Vue variant of AdminLTE in L before relying on any particular version's stability. Limit B frontend work to infrastructure and a minimal page for verifying the test harness.
 
-## Organización Laravel
+## Laravel organization
 
-- `routes/api.php`: endpoints versionados, agrupados por recursos y middleware.
-- `app/Models`: Eloquent, relaciones, casts y scopes simples.
-- `app/Http/Controllers/Api/V1`: adaptación HTTP, sin lógica compleja.
-- `app/Http/Requests`: autorización/validación según convención; `app/Http/Resources`: representación JSON explícita.
-- `app/Policies`: permisos y acceso; Spatie para catálogo y asignación.
-- `app/Actions` o servicios concretos: operaciones multientidad, numeración, creación desde plantilla, movimiento, eliminación/restauración, copia Samba. Crear solo cuando exista lógica que lo justifique.
-- `app/Console/Commands`: inicialización administrativa, limpieza y tareas operativas necesarias; scheduler de Laravel.
-- `database`: migraciones, factories, seeders; `lang/es`, `lang/ca`, `lang/en`; `resources/js`: SPA, componentes, vistas y cliente API.
+- `routes/api.php` contains versioned endpoints grouped by resource and middleware.
+- `app/Models` contains Eloquent models, relationships, casts and simple scopes.
+- `app/Http/Controllers/Api/V1` adapts HTTP requests without complex logic.
+- `app/Http/Requests` handles authorization and validation according to convention. `app/Http/Resources` defines explicit JSON representations.
+- `app/Policies` handles permissions and access. Spatie manages the permission catalog and assignments.
+- `app/Actions` or specific services handle multi-entity operations, numbering, creation from templates, moves, deletion and restoration, and Samba copies. Add these only when actual logic justifies them.
+- `app/Console/Commands` handles administrative initialization, cleanup and necessary operational tasks with the Laravel scheduler.
+- `database` contains migrations, factories and seeders. `lang/es`, `lang/ca` and `lang/en` contain translations. `resources/js` contains the SPA, components, views and API client.
 
-Evitar repositorios genéricos sobre Eloquent, buses, CQRS, Event Sourcing y capas ceremoniales. Usar transacciones para invariantes multitabla, consultas eficientes, eventos solo cuando aporten valor. Inyectar dependencias por constructor o método; usar interfaces en límites reales como almacenamiento si facilitan el test sin duplicar Storage. No acoplar modelos a HTTP ni a Vue.
+Avoid generic repositories over Eloquent, buses, CQRS, Event Sourcing and ceremonial layers. Use transactions for invariants spanning multiple tables, write efficient queries and emit events only when they add value. Inject dependencies through constructors or methods. Use interfaces at real boundaries such as storage when they make testing easier without duplicating Storage. Keep models independent of HTTP and Vue.
 
-## Identidad y acceso
+## Identity and access
 
-SPA y API en mismo origen preferentemente; cookies de sesión seguras, CSRF y Sanctum stateful. Android usa tokens revocables. Los permisos se comprueban en cada endpoint; capacidades de token no sustituyen Policies. El rol administrativo permite gestión sensible y eliminación definitiva. Roles adicionales no pueden soslayar restricciones administrativas. Bootstrap del administrador por comando controlado, no por cada arranque.
+Prefer a same-origin SPA and API with secure session cookies, CSRF and stateful Sanctum. Android uses revocable tokens. Check permissions on every endpoint and enforce Policies regardless of token abilities. The administrator role allows sensitive management and permanent deletion. Additional roles must respect administrative restrictions. Initialize the administrator through a controlled command separate from application startup.
 
-## Consistencia y concurrencia
+## Consistency and concurrency
 
-MySQL/InnoDB, claves foráneas, constraints e índices. Numeración anual mediante fila de secuencia bloqueada en transacción, nunca `MAX()+1`. Movimientos Kanban atómicos; distinguir estado global, orden personal y visibilidad. Restaurar solo tareas borradas por la operación de borrado del expediente. Auditoría de cambios mediante actor explícito y diferencias, incluido trabajo asíncrono si existe.
+Use MySQL/InnoDB, foreign keys, constraints and indexes. Allocate annual numbers within a transaction using a locked sequence row. Do not use `MAX()+1`. Keep Kanban moves atomic and distinguish global status, personal ordering and visibility. Restore only tasks deleted by the case deletion operation. Audit changes with an explicit actor and field differences, including asynchronous work where applicable.
 
 ## Samba
 
-Montaje SMB gestionado por el sistema operativo; Laravel Filesystem sobre raíz configurada fuera de `public/`. Validar disponibilidad real del montaje (no solo existencia del directorio), evitar fallback al disco local si se desmonta, permisos mínimos. Copia recursiva de plantilla y subida en streaming. Propuesta: persistir ruta relativa original e indicadores mínimos de aprovisionamiento; mantener expediente MySQL ante fallo externo y registrar incidencia, con reintento idempotente. No hay transacción distribuida MySQL/Samba: diseñar recuperación de fallos parciales en I. No borrar contenidos Samba, ni exponer rutas o listados al cliente. Una incidencia no debe confundirse con operación completada correctamente.
+The operating system manages the SMB mount. Laravel Filesystem uses a configured root outside `public/`. Verify the mount itself because its directory can exist while it is unmounted. Prevent local disk fallback and use least privilege. Copy templates recursively and stream uploads. The proposal is to persist the original relative path and minimal provisioning indicators, retain the MySQL case when the external operation fails, and record an incident with an idempotent retry. MySQL and Samba do not share a distributed transaction. Design partial-failure recovery in I. Keep Samba contents intact and withhold paths and listings from clients. Report incidents separately from successful operations.
 
-## Despliegue
+## Deployment
 
-Document root Apache `public/`, HTTPS, configuración `.env` privada, `APP_DEBUG=false`, scheduler por cron, SMTP corporativo. Recursos de red interna o VPN para clientes según empresa. Backups y restauración de MySQL, configuración y Samba a cargo de la empresa; documentar requisitos y procedimiento de actualización. CI produce y valida código/build, nunca despliega a servidores de usuarios automáticamente.
+Use `public/` as the Apache document root, HTTPS, private `.env` configuration, `APP_DEBUG=false`, a cron-driven scheduler and corporate SMTP. Clients may need internal network or VPN access depending on the company. The company is responsible for MySQL, configuration and Samba backups and restoration. Document the requirements and upgrade procedure. CI builds and validates code and artifacts. Automatic deployment to user servers is out of scope.
