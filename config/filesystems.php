@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\PublicStorageUrl;
+
 return [
 
     /*
@@ -41,7 +43,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'url' => PublicStorageUrl::from(env('APP_URL')),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

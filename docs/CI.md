@@ -67,3 +67,56 @@ Guardar referencia a ejecuciones y resultados; no dejar cambios de sabotaje, cre
 ## Aceptación de B
 
 Todos los checks aplicables ejecutados sobre commit concreto; harnesses reales PHP/MySQL/Vue/browser/contratos/seguridad; comandos locales documentados; programación y protección verificadas; pruebas adversariales con evidencia; main limpio y verde. Documentar las categorías que aún no tienen lógica funcional y sus pruebas futuras. No iniciar C si existen bloqueos de infraestructura o controles obligatorios sin demostrar.
+
+## Phase B workflow configuration
+
+`phase-b.yml` runs on pull requests, pushes to `main` and the Phase B feature branch, a daily schedule, release publication and manual dispatch. The schedule follows GitHub's UTC cron. All events require the core jobs. Scheduled, release and manual events also require mutation, performance and passive ZAP checks. On PR and push events the gate expects those three jobs to be skipped. The feature-branch push trigger allows CI evidence while authenticated PR access is unavailable. The aggregate gate fails if any required job fails, is skipped or is cancelled, or if the configured job list differs from the gate's list.
+
+The backend test job runs each Pest suite once and captures line coverage, type coverage and JUnit. The `database-tests` and `api-contract` jobs verify the nonempty Integration and Contract suite outcomes from that report. Each job that uses MySQL gets a separate service. It provisions a random password for the restricted testing account and passes values to later steps through the GitHub environment file with masking. Keep all credentials and reports scoped to synthetic data. Frontend and browser jobs install from the npm lock. The E2E and accessibility jobs each install all three browser engines. CodeQL analyzes JavaScript and TypeScript in a dedicated job. Laravel PHP gets Larastan, Pest and the dependency audit.
+
+The branch ruleset must require PRs and the observed `quality-gate` status, prevent force pushes and routine bypass, and use a feasible review policy for the repository's contributor count. Verify that code scanning is enabled for the repository and review the alert results independently of workflow completion. Select the code scanning protection rule for unresolved findings at the required severity where the GitHub plan supports it. Scheduled and release results remain part of phase acceptance even when a PR gate passes. Manual dispatch requires the workflow file on the default branch. The owner controls ruleset changes and integration.
+
+## Deliberate failures observed locally
+
+The following runs used the isolated `validation/phase-b-controls` checkout branched from `2c934ab` and a separate test MySQL container. Each defect was restored after its check. For the Gitleaks run the synthetic fixture was committed and reverted inside that local checkout. The synthetic commits were never published. The feature branch was published, but GitHub's API rejected the PR request and run queries with HTTP 403.
+
+| Deliberate fault | Local result |
+| --- | --- |
+| Incorrect assertion in the database guard unit test | Pest exited 1 |
+| Invalid value passed to a PHP string function | Larastan exited 1 with the argument type error |
+| Invalid PHP spacing | Pint exited 1 and identified the affected construct |
+| Exception in a baseline migration | The guarded MySQL suite exited 2 |
+| Debug dump in application code | Pest Architecture exited 1 |
+| Response status value outside the OpenAPI enum | The response validator rejected it and Pest exited 2 |
+| Number-typed Vue ref initialized with a string | vue-tsc exited 2 |
+| Changed confirmation in the Vue component | Vitest exited 1 |
+| Incorrect page title expectation | Playwright Chromium exited 1 |
+| Button with no accessible name | The Chromium axe scan reported `button-name` and exited 1 |
+| Synthetic Gitleaks sentinel | Gitleaks exited 1 and identified the sentinel rule |
+| Unit-only coverage below the 90% gate | The assertions passed, and the coverage minimum caused exit 1 |
+| Required result failed, cancelled or skipped | The local aggregate script returned 1 for each outcome |
+| Missing extended jobs on a scheduled event | The local aggregate script returned 1 |
+| Empty CIFS mount point | The shared copy guard refused the operation and left the underlying directory empty |
+
+The local gate also accepted the expected all-green PR and scheduled result sets. These local inputs exercise the aggregate's logic. The contract-drift push on the temporary validation branch produced a real hosted failure. The backend suite exited 2, the contract check exited 1, and the aggregate exited 1 in [run 45819680432](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819680432). Actual PR merge blocking and scheduled, manually dispatched and release events still need evidence. Run the full CIFS check on an isolated Linux runner with kernel CIFS and permitted mount capabilities. `bash scripts/testing/storage.sh --check-unmounted` exercises only the shared missing-mount guard.
+
+## Candidate verification and acceptance
+
+The local runtime checks ran against the code at `a8d5ab6`. Composer validation, Pint, Larastan, ESLint, Prettier, vue-tsc, Vite and actionlint passed. Pest executed 28 tests with 97 assertions, including four MySQL integration tests and one contract test. Line coverage was 662 of 662 executable lines across 26 source files, and the declaration-coverage report found zero uncovered lines across its 24 scanned files. Vitest passed one component test. Chromium passed the interaction and axe tests, and the production harness request returned HTTP 404. The workflow's MySQL provisioning script authenticated correctly in a local reproduction of the Actions service.
+
+The repository's public branch inventory reported `protectedByBranchProtections=false` and no ruleset for `main`. The public ruleset list was empty. Authenticated GitHub API operations returned HTTP 403 through the cloud proxy. The feature branch push is authorized through the Git proxy. Branch rule administration and draft PR creation require authenticated access. Before integration, open the PR, verify the observed required check name and enforce it through the `main` ruleset with required PRs, force-push blocking and a feasible review count. Run and record scheduled, manual and release checks when the workflow is present on the default branch. Use an authorized owner review for integration.
+
+The first two feature-branch runs ([45818569120](https://github.com/alexbonavila/ExpedFlow/actions/runs/45818569120) and [45819062188](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819062188)) passed the backend, frontend, dependency audits, CodeQL execution, three-engine E2E and accessibility jobs. The container-side CIFS check returned exit 2 in both runs and the required aggregate returned exit 1. The push policy skipped mutation, performance and ZAP as expected. The second run used Composer 2.11.2, resolving the first run's warning about the upstream Composer 2.8.8 binary.
+
+The revised hosted workflow passed every core job, including the real CIFS mount and aggregate, in [run 45819539665](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819539665) and in the subsequent [run 45820590297](https://github.com/alexbonavila/ExpedFlow/actions/runs/45820590297) at `e791611`. The separate extended [push verification run 45819755815](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819755815) exercised the same performance and passive security steps used for the scheduled jobs. Performance passed. Mutation exited 1, the passive scan exited 2, and the aggregate exited 1. The matching local mutation run measured 75 of 647 detected (11.59%), below the 80% minimum. The temporary branches were restored after both validation runs. Schedule, manual dispatch and release events still require direct verification.
+
+The restricted behavioral mutation scope and the focused security disposition are documented in [TESTING.md](TESTING.md) and [SECURITY.md](SECURITY.md). The 80% mutation minimum and Low ZAP warning threshold remain in effect. Feature-branch pushes verify the core workflow. The temporary extended validation branch exercises all extended jobs through a push. Actual scheduled, manual and release events still require direct evidence. Domain models, business APIs, permission scenarios and operational storage integration remain in their assigned later phases.
+
+### Repository owner integration procedure
+
+1. Open the comparison from `feat/testing-ci-infrastructure` into `main` and create the PR. Match the advertised head SHA to the candidate verification. Wait for the actual PR workflow.
+2. In GitHub, open **Settings → Rules → Rulesets** and create an active branch ruleset targeting the default branch `main`. Require a pull request before merging, require status checks, require the branch to be up to date, and block force pushes and deletion. Keep the bypass list empty. Configure reviews in line with repository ownership.
+3. Require the GitHub Actions check named `quality-gate` from the `Phase B` workflow. GitHub may display it as `Phase B / quality-gate`. The database, contract, browser, accessibility and storage checks are required by this aggregate. Keep CodeQL alert review enabled where available.
+4. Confirm the rule applies to `main` and verify an actual failing PR check prevents integration. Record the PR workflow and rule evidence, then obtain explicit owner authorization before integrating.
+5. After authorized integration, verify the protected `main` push. Run the manual extended workflow from the default branch, observe the actual scheduled workflow and record release-event verification when an authorized release occurs.
+6. Review both `validation/` branches against their recorded implementation base. Preserve run URLs and any needed review history. The temporary trigger and deliberate fault can be reverted on their branches. Retire the remote branches only after owner authorization.

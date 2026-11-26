@@ -79,3 +79,67 @@ Propuesta de objetivos iniciales a validar en B: cobertura de líneas PHP propia
 ## Evidencia
 
 JUnit, cobertura, informes análisis, trazas/capturas E2E solo con datos sintéticos, resultados k6/ZAP, logs redactados. Registrar comandos, versiones, commit y resultados. No presentar tests planificados como ejecutados.
+
+## Phase B inventory and traceability
+
+The cloud checkout matched `origin/main` at `22528be` before branching. The inventory ran on Debian 13 with PHP 8.4.28 (PDO MySQL, mbstring, DOM/XML and cURL), Composer 2.8.8, Laravel 13.44.1, Node 24.22.3, npm 11.19.1, MySQL 8.4.13, Pest 5.3.7 and Pint 1.32.3. Node 24 LTS is selected for local and CI use. The checked registry metadata supports Node 24 for Vite 8, Vitest 5, the Vue Vite plugin, ESLint 10 and Playwright. macOS developers can use Herd's PHP CLI with the same extensions and the pinned Node version. Linux CI also needs browser system libraries and a privileged isolated runner for the disposable CIFS mount.
+
+Laravel Boost 2.10.4 discovered all four checked-in skills and answered MCP initialization and tool discovery over standard input. The Codex CLI reported no registered MCP servers in this session. Boost documentation search returned a proxy 403, so version-sensitive implementation uses the installed framework and package sources. The cloud test schema `expedflow_test` runs in its own MySQL container. Its `expedtest` account can connect to that schema and has no privileges on the development schema.
+
+The inherited Phase A suite ran two tests and Pint passed. GitHub and Laravel remained reachable through native Git and the local runtime respectively. Vite's baseline build failed because the cloud proxy denied Bunny Fonts. Baseline Xdebug 3.4.5 line coverage reported 2 of 6 executable lines (33.3%) across the three files in the inherited `app/` scope. That result includes the scaffold suite. B02 measures the candidate on its declared first-party scope. The proposed minima are 90% lines, 100% types and 80% mutation score. Any shortfall remains visible until the underlying code is covered or the owner approves a revised criterion.
+
+| Category | Selected tool and planned entry point | Job and frequency | Evidence and criterion |
+| --- | --- | --- | --- |
+| PHP formatting and static analysis | Pint `composer lint`, Larastan `composer analyse` | backend-quality, PR/main/nightly | Check-only exit status, no errors |
+| PHP behavior, architecture and coverage | Pest, PHPUnit and Xdebug, `composer test`, `composer test:coverage`, `composer test:types` | backend-tests, PR/main/nightly | JUnit, Clover and type output, selected thresholds and all suites run |
+| Database | Pest and MySQL 8.4, `composer test:database` | database-tests, PR/main/nightly | Authenticated test-only database and passing integration suite |
+| API contract | OpenAPI schema validation and actual HTTP response validation, `composer test:contract` | api-contract, PR/main/nightly | Valid document and conforming responses |
+| Mutation | Pest's included Mutation plugin, `composer test:mutation` | mutation, nightly/release/manual | Mutant counts and at least 80% killed |
+| Frontend quality | ESLint, Prettier and vue-tsc, `npm run lint`, `npm run format:check`, `npm run typecheck` | frontend-quality, PR/main/nightly | No formatting, lint or type errors |
+| Frontend behavior and build | Vitest, Vue Test Utils and Vite, `npm test`, `npm run build` | frontend-tests and build, PR/main/nightly | Passing component tests and built assets |
+| Browser and accessibility | Playwright and axe, `npm run test:e2e`, `npm run test:a11y` | e2e and accessibility, PR/main/nightly | Chromium, Firefox and WebKit outcomes, axe findings and keyboard interaction |
+| Supply chain | Composer/npm audits, Gitleaks, CodeQL and Dependabot | security, PR/main/nightly | No unresolved high or critical issues, synthetic secret detection |
+| Storage | Isolated Samba server and Linux CIFS mount | storage-integration, PR/main/nightly | Fixture I/O and safe failure without local writes |
+| Performance and dynamic security | k6 smoke and OWASP ZAP baseline | performance and dynamic-security, nightly/release/manual | Measured budgets and triaged findings |
+| Merge gate | GitHub Actions aggregate | quality-gate, PR/main/nightly/release/manual | Required jobs succeed and deliberate failures block integration |
+
+Pest already brings architecture and mutation support. Add the matching type-coverage plugin and Larastan for independent compile-time checks. Use Xdebug as the sole coverage driver. Snapshots are deferred until a stable output needs them. Prefer one frontend runner and one browser runner. GitHub Actions execution, rulesets and the deliberate failure matrix require separate evidence in B05–B07.
+
+### Local PHP and MySQL workflow
+
+Use a dedicated, disposable MySQL 8.4 instance. Create the `expedflow_test` schema and an `expedtest` account with schema-only privileges. With MySQL's default `partial_revokes=OFF`, escape the underscore in the schema privilege grant (`expedflow\_test`); an unescaped underscore is a wildcard. Keep the account password in the ignored `.env.testing`, copied from `.env.testing.example`. Generate a testing application key with `APP_ENV=testing php artisan key:generate --no-interaction`. Use the instance's TCP port and the loopback host. Do not use Laravel's parallel test flag with this single schema.
+
+From the checkout, run `APP_ENV=testing php tests/Support/check-database.php` to verify the effective Laravel connection and authenticated MySQL grants. The integration suite repeats that check before each migration reset. The guard rejects a connection URL, read/write overrides and sockets. Shell variables have precedence, so unset conflicting values when using the testing file. On a failed guard, check the selected environment, account, grant scope and port before retrying.
+
+Run `composer test` for all suites, `composer test:database` for the MySQL suite and `composer test:contract` for the OpenAPI fixture and its actual Laravel response. `composer lint` checks formatting and `composer analyse` runs Larastan at level 8. With Xdebug loaded, use `XDEBUG_MODE=coverage composer test:coverage` and `XDEBUG_MODE=coverage composer test:mutation`. Use `composer test:types` for declaration coverage. Reports go to ignored `coverage/` and `test-results/`. Type coverage reports the directory entries in PHPUnit's source configuration. Larastan and line coverage also check the two explicitly listed bootstrap files.
+
+The B02 cloud run passed all 27 tests with 94 assertions, including a real InnoDB lock timeout and a JSON contract check. The first measured line result was 657 of 657 executable lines across 26 files. Pest type coverage reported 100% across 24 scanned files, and Pint and Larastan passed. These measurements cover the scaffold and harness. Business authorization, resource contracts and domain concurrency remain scheduled for their implementation phases.
+
+### Mutation scope and acceptance
+
+`composer test:mutation` applies the 80% gate to all of `app/`, all of `routes/` and executable application bootstrap in `bootstrap/app.php`. New application classes and routes enter this scope automatically. The command uses the default mutators and reports uncovered mutations. The user model and console route remain in scope alongside custom application behavior.
+
+The excluded paths are declarative `config/` settings, `lang/` dictionaries, the scaffold migrations, factories and seeder under `database/`, and the provider registration list in `bootstrap/providers.php`. The project-specific public storage URL computation now lives under `app/` and is mutated. Keep new executable application behavior under the measured paths or extend the scope when adding a new application entry point. The test runner and fixtures under `scripts/testing/` and `tests/` serve as verification tooling. The existing full-suite, line, type, MySQL integration, concurrency and OpenAPI checks retain their original scope and thresholds.
+
+| Run | Total | Detected | Survived | Uncovered | Score | Gate |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Original whole-source baseline | 647 | 75 | 567 | 5 | 11.59% | Failed |
+| Behavioral scope with regression tests | 35 | 30 | 0 | 5 | 85.71% | Passed |
+
+The five uncovered mutants alter PHP attribute declarations on the scaffold user model. They remain in the denominator. The browser harness tests now reject a request outside testing even if the route was previously registered. The model tests exercise the verification timestamp and withheld authentication fields. Storage URL tests cover custom, missing and non-string values.
+
+### Frontend and browser workflow
+
+Use the Node version in `.node-version`, install with `npm ci`, then run `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test` and `npm run build`. Vue 3 and its Vite plugin compile the fixture. TypeScript and vue-tsc verify types, ESLint and Prettier verify source quality, and Vitest with Vue Test Utils and jsdom exercises observable form behavior. Instrument Sans comes from the locked Fontsource package, so the build can bundle the same font without an external build-time download.
+
+Install Playwright's Chromium, Firefox and WebKit with `npx playwright install chromium firefox webkit`. On Linux CI add `--with-deps` for browser libraries. Start with compiled assets and the test MySQL configuration above. `npm run test:e2e` and `npm run test:a11y` start their own guarded Laravel process on port 8001 and exercise all three browser projects unless a project is explicitly selected. Axe runs against a visible validation error, and the interaction spec exercises keyboard navigation and submission. Keep port 8001 free. Test failures retain screenshots and traces in `test-results/playwright/`. Playwright also writes an HTML report.
+
+The cloud ran the component test, Vite build, lint, formatting and type checks. Chromium 156 from the system installation passed the browser and axe specifications using `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium`. Requests to the browser harness under `APP_ENV=production` returned HTTP 404. A temporary incorrect confirmation string produced a Vitest assertion failure and was restored. The cloud proxy denied Playwright's browser downloads. Playwright-managed Firefox and WebKit still require an execution environment with access to the browser distribution.
+
+### Performance and SMB smoke checks
+
+With built assets and the testing database available, run `bash scripts/testing/performance.sh`. This Linux Docker check sends three virtual users to the ephemeral Laravel welcome page for five seconds. The baseline observed 56 requests, no errors and a p95 of 266.48 ms. The gate uses a p95 below 500 ms, fewer than 1% HTTP errors and at least 99% successful status and content assertions. A concurrent workload run exceeded p95 at 1.33 s and correctly failed. The subsequent run observed 60 requests, no errors, 120 passing assertions and a p95 of 299.11 ms. Run it on a dedicated runner without simultaneous mutation or image builds. Reports go to `test-results/performance/`.
+
+Use `bash scripts/testing/storage.sh` on an isolated Linux runner with Docker, passwordless sudo, `cifs-utils` and kernel CIFS support. The GitHub-hosted job installs the helper and loads the kernel module. Samba runs in a disposable container with an SMB3 listener bound to loopback. The runner mounts the test share using generated writer and reader accounts, verifies I/O and permissions, stops Samba, then checks that an unavailable share leaves the underlying directory empty. For the guard alone, run `bash scripts/testing/storage.sh --check-unmounted`. macOS developers need an isolated Linux VM or a hosted runner for a real CIFS mount.
+
+The first two hosted attempts used a container-side mount. The managed cloud rejected the container mount capability, and the hosted CIFS smoke returned exit 2. The revised implementation performs the mount on the isolated Linux runner and preserves stage diagnostics. Its loopback Samba server and missing-mount guard were exercised locally. The revised full mount check passed in [GitHub Actions run 45819539665](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819539665).

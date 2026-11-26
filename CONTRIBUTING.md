@@ -1,21 +1,19 @@
-# Contribución y flujo de desarrollo
+# Contributing to ExpedFlow
 
-## Flujo Git
+## Git workflow
 
-Propuesta operativa: rama principal `main` protegida; ramas cortas `feat/...`, `fix/...`, `test/...`, `docs/...` o `chore/...`; pull request por cambio coherente. Commits descriptivos (preferentemente Conventional Commits). No force-push a ramas compartidas ni integrar cambios con CI obligatoria fallida. Configurar las protecciones efectivas en B y dejar evidencia de su funcionamiento.
+Work on a focused branch such as `feat/...`, `fix/...`, `test/...`, `docs/...` or `chore/...`. Use descriptive commits and a pull request for each coherent change. Keep shared branches free of force pushes. Verify the effective required checks before integration. The owner approves phase acceptance and integration.
 
-## Antes de contribuir
+## Local changes
 
-Leer `AGENTS.md`, los requisitos y la fase activa. No incorporar funcionalidades de fases posteriores. Trabajar con entornos aislados, `.env` local excluido de Git y datos sintéticos. Instalar dependencias desde los lockfiles, no mediante actualizaciones indiscriminadas. Los comandos efectivos de instalación, pruebas y compilación se documentarán en A/B y se mantendrán sincronizados con CI.
+Read `AGENTS.md`, the product requirements and the current phase. Keep development and testing environments isolated. Install from the checked-in lockfiles and use synthetic test data. Keep `.env`, `.env.testing`, credentials and generated reports out of Git. Follow [TESTING.md](docs/TESTING.md) for the current setup and executable checks.
 
-## Pull request
+## Pull requests and review
 
-Incluir objetivo y fase, alcance, cambios de datos/API, pruebas nuevas, comandos y resultados, documentación actualizada, impacto de seguridad y limitaciones. Para cambios de UI, comprobar ES/CA/EN y accesibilidad. Para migraciones, explicar actualización, rollback y posible pérdida de datos. Para correcciones, añadir una regresión reproducible cuando sea posible.
+Describe the phase, scope, API and data impact, commands and actual outcomes, documentation, security implications and any known limitations. Verify accessibility and ES/CA/EN for user-facing changes. Explain migration and rollback behavior where applicable. Add a reproducible regression test for a correction when possible.
 
-## Revisión
+Review scope, simplicity, authorization, validation, transactions, contracts, error handling and exposure of sensitive data. Look for skipped coverage, flaky tests and trivial assertions. Give each analysis exclusion a specific reason for review.
 
-Comprobar alcance, simplicidad, autorizaciones, validaciones, transacciones, compatibilidad de contratos, tratamiento de errores y ausencia de secretos. No aceptar cambios exclusivamente porque aumenta un porcentaje de cobertura. No aprobar silenciosamente pruebas omitidas, flaky o con aserciones triviales. Las exclusiones de análisis requieren justificación concreta y revisión.
+## Phase acceptance
 
-## Entrega de fase
-
-Registrar rama/commit, lista de criterios de aceptación, comprobaciones ejecutadas y resultados, fallos pendientes y decisiones tomadas. No afirmar que un workflow se ejecutó si solo se validó su YAML localmente. Las versiones estables se publicarán con instrucciones de actualización y comprobaciones, sin desplegar automáticamente en instalaciones de empresas.
+Record the branch and commit, acceptance criteria, executed checks and results, outstanding failures, and decisions. Distinguish results from workflow definitions. Use [CI.md](docs/CI.md) to verify check names, branches, schedule and evidence. Stable releases require installation and upgrade instructions. Company deployments are managed separately.

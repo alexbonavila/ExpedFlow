@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "expedflow-ci-sentinel"
+description = "Synthetic value used to verify the Gitleaks pipeline"
+regex = '''EXPEDFLOW_CI_SENTINEL_[a-f0-9]{32}'''

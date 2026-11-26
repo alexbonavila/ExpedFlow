@@ -1,41 +1,44 @@
 # ExpedFlow
 
-Sistema autohospedado de gestión de expedientes, tareas y flujos de trabajo empresariales.
+Self-hosted case, task and business workflow management system.
 
-**Estado:** documentación de fase 0. No contiene todavía una instalación Laravel, código funcional ni workflows ejecutados.
+ExpedFlow is an internal Laravel application designed for self-managed Apache, PHP and MySQL installations. It will expose a versioned JSON API shared by its Vue web client and future Android client. The product will use an organization's Samba share for its files.
 
-## Objetivo
+Phase A established the Laravel scaffold. Phase B adds test infrastructure and CI. Integration and acceptance remain pending. See the [Phase B verification record](docs/CI.md) for execution results and open criteria.
 
-Aplicación interna de empresa, instalada en un servidor propio con Apache, PHP y MySQL. Una instalación por empresa. Backend Laravel con API REST JSON versionada y frontend Vue con AdminLTE. La futura aplicación Android consumirá la misma API. Los documentos se guardarán en el recurso Samba corporativo, sin convertir ExpedFlow en un gestor documental.
+## Development setup
 
-## Orden obligatorio de arranque
+Use PHP 8.4 with PDO MySQL, Composer, MySQL 8.4, and the Node LTS version in `.node-version`.
 
-1. Fase A: crear Laravel y el repositorio GitHub; incorporar esta documentación; comprobar el arranque básico.
-2. Fase B: configurar y validar todas las capas de testing, análisis estático, seguridad y GitHub Actions; comprobar que los controles detectan fallos deliberados.
-3. Solo con A y B aceptadas: fase C, base de datos funcional completa.
-4. Backend y contratos API completos y validados antes de desarrollar el frontend funcional.
-5. Frontend, validación integral, instalación tradicional y, posteriormente, Android.
+```sh
+composer install --no-interaction
+npm ci
+npm run build
+```
 
-## Documentación
+For local development, copy `.env.example` to `.env`, set your local database connection and generate an application key. Follow the separate [testing database setup and guard](docs/TESTING.md) before running database tests. Use synthetic data in the disposable test services.
 
-| Documento | Contenido |
-|---|---|
-| [AGENTS.md](AGENTS.md) | Instrucciones obligatorias para agentes de desarrollo |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Flujo de trabajo y entregas |
-| [Requisitos](docs/REQUIREMENTS.md) | Alcance y reglas funcionales |
-| [Arquitectura](docs/ARCHITECTURE.md) | Stack, responsabilidades e integración |
-| [Base de datos](docs/DATABASE.md) | Diseño lógico e invariantes |
-| [API](docs/API.md) | Convenciones y contratos preliminares |
-| [Estándares](docs/CODING_STANDARDS.md) | Calidad y diseño del código |
-| [Testing](docs/TESTING.md) | Matriz de pruebas, criterios y herramientas |
-| [CI](docs/CI.md) | Workflows, quality gates y verificación |
-| [Seguridad](docs/SECURITY.md) | Controles de seguridad |
-| [Plan](docs/DEVELOPMENT_PLAN.md) | Fases A–S, dependencias y aceptación |
+```sh
+composer lint
+composer analyse
+composer test
+npm run lint
+npm run format:check
+npm run typecheck
+npm test
+```
 
-## Descripciones internacionales
+The [test guide](docs/TESTING.md) also covers coverage, mutation, three-engine Playwright testing, accessibility, performance and the disposable CIFS mount. The [CI guide](docs/CI.md) describes job frequency, gate behavior and the branch rules. The [security guide](docs/SECURITY.md) describes the audits and passive ZAP baseline.
 
-- ES: Sistema autohospedado de gestión de expedientes, tareas y flujos de trabajo empresariales.
-- CA: Sistema autoallotjat de gestió d’expedients, tasques i fluxos de treball empresarials.
-- EN: Self-hosted case, task and business workflow management system.
+## Project documentation
 
-La guía de instalación ejecutable, versiones efectivas y comandos definitivos se incorporarán en las fases correspondientes. No utilizar este paquete como si fuera una aplicación lista para desplegar.
+| Document | Contents |
+| --- | --- |
+| [Agent instructions](AGENTS.md) | Repository rules for development agents |
+| [Contributing](CONTRIBUTING.md) | Local validation, Git workflow and review |
+| [Requirements](docs/REQUIREMENTS.md) | Confirmed product scope |
+| [Architecture](docs/ARCHITECTURE.md) | Stack, responsibilities and integration |
+| [Database](docs/DATABASE.md) | Planned schema and invariants |
+| [API](docs/API.md) | Conventions and preliminary contracts |
+| [Coding standards](docs/CODING_STANDARDS.md) | Quality and design conventions |
+| [Development plan](docs/DEVELOPMENT_PLAN.md) | Phases, dependencies and acceptance criteria |

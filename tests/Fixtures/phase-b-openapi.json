@@ -1,0 +1,33 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ExpedFlow testing contract",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/_phase-b/status": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "The test-only Laravel handler is ready.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["status"],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["ready"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
