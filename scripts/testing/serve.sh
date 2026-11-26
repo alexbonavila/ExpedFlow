@@ -7,9 +7,8 @@ if [[ ! -s public/build/manifest.json || -e public/hot ]]; then
   exit 1
 fi
 
-export APP_ENV=testing APP_DEBUG=false APP_URL=http://127.0.0.1:8001
+export APP_ENV=testing APP_DEBUG=false SESSION_SECURE_COOKIE=false APP_URL=http://127.0.0.1:8001
 export APP_KEY="${APP_KEY:-base64:$(openssl rand -base64 32)}"
 php tests/Support/check-database.php
 php artisan migrate --force --no-interaction
-cd public
-exec php -S 127.0.0.1:8001 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+exec php -d expose_php=Off -S 127.0.0.1:8001 -t public scripts/testing/router.php

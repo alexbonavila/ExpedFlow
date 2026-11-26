@@ -6,6 +6,15 @@ test('loads the compiled harness and submits through the keyboard', async ({
 }) => {
     const navigation = await page.goto('/_phase-b')
     expect(navigation?.status()).toBe(200)
+    expect(navigation?.headers()['content-security-policy']).toContain(
+        "frame-ancestors 'none'",
+    )
+    expect(navigation?.headers()['x-powered-by']).toBeUndefined()
+
+    const asset = await page.request.get('/favicon.ico')
+    expect(asset.status()).toBe(200)
+    expect(asset.headers()['x-content-type-options']).toBe('nosniff')
+    expect(asset.headers()['x-powered-by']).toBeUndefined()
     await expect(page).toHaveTitle('ExpedFlow test harness')
     const label = page.getByRole('textbox', { name: 'Test label' })
 

@@ -10,6 +10,15 @@ jobs:
   - type: passiveScan-config
     parameters:
       scanOnlyInScope: true
+  - type: alertFilter
+    alertFilters:
+      - ruleId: 10010
+        newRisk: False Positive
+        context: ExpedFlow testing
+        url: '^http://127\.0\.0\.1:8001/?$'
+        urlRegex: true
+        parameter: XSRF-TOKEN
+        parameterRegex: false
   - type: spider
     parameters:
       context: ExpedFlow testing

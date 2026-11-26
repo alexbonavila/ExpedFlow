@@ -35,6 +35,9 @@ test('the web guard rejects an anonymous JSON request and recognizes an authenti
 test('the browser harness is registered only in testing', function () {
     $this->withoutVite()->get('/_phase-b')->assertOk()->assertSee('ExpedFlow test harness');
 
+    $this->app->instance('env', 'production');
+    $this->get('/_phase-b')->assertNotFound();
+
     $process = new Process(
         [PHP_BINARY, 'artisan', 'route:list', '--path=_phase-b', '--json', '--no-interaction'],
         base_path(),

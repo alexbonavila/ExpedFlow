@@ -115,9 +115,18 @@ Run `composer test` for all suites, `composer test:database` for the MySQL suite
 
 The B02 cloud run passed all 27 tests with 94 assertions, including a real InnoDB lock timeout and a JSON contract check. The first measured line result was 657 of 657 executable lines across 26 files. Pest type coverage reported 100% across 24 scanned files, and Pint and Larastan passed. These measurements cover the scaffold and harness. Business authorization, resource contracts and domain concurrency remain scheduled for their implementation phases.
 
-### Mutation baseline and acceptance
+### Mutation scope and acceptance
 
-The full mutation command generated 647 mutations across 24 files. Pest detected 75, reported 567 surviving and five uncovered, and returned exit 1 at 11.59% against the 80% minimum. Configuration files accounted for 511 survivors, including scaffold defaults outside the selected MySQL workflow. Another 51 survivors were in schema migrations, factories or the seeder. Line and declaration coverage use separate criteria and passed. The mutation threshold remains in effect. Improving the score requires observable tests for supported behavior or an explicit owner decision about the scope. Assertions that only repeat scaffold defaults would not validate application behavior.
+`composer test:mutation` applies the 80% gate to all of `app/`, all of `routes/` and executable application bootstrap in `bootstrap/app.php`. New application classes and routes enter this scope automatically. The command uses the default mutators and reports uncovered mutations. The user model and console route remain in scope alongside custom application behavior.
+
+The excluded paths are declarative `config/` settings, `lang/` dictionaries, the scaffold migrations, factories and seeder under `database/`, and the provider registration list in `bootstrap/providers.php`. The project-specific public storage URL computation now lives under `app/` and is mutated. Keep new executable application behavior under the measured paths or extend the scope when adding a new application entry point. The test runner and fixtures under `scripts/testing/` and `tests/` serve as verification tooling. The existing full-suite, line, type, MySQL integration, concurrency and OpenAPI checks retain their original scope and thresholds.
+
+| Run | Total | Detected | Survived | Uncovered | Score | Gate |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Original whole-source baseline | 647 | 75 | 567 | 5 | 11.59% | Failed |
+| Behavioral scope with regression tests | 35 | 30 | 0 | 5 | 85.71% | Passed |
+
+The five uncovered mutants alter PHP attribute declarations on the scaffold user model. They remain in the denominator. The browser harness tests now reject a request outside testing even if the route was previously registered. The model tests exercise the verification timestamp and withheld authentication fields. Storage URL tests cover custom, missing and non-string values.
 
 ### Frontend and browser workflow
 
