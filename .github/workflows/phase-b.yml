@@ -3,7 +3,7 @@ name: Phase B
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, feat/testing-ci-infrastructure]
   schedule:
     - cron: '17 2 * * *'
   release:

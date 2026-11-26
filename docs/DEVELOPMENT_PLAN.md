@@ -72,3 +72,9 @@ Entregar inventario de herramientas, comandos, suites y workflows, resultados re
 ## Estado de este documento
 
 Fase 0 documentada; A–S pendientes. No se han creado repositorio, proyecto Laravel, dependencias ni CI mediante este paquete. Las decisiones técnicas de implementación se cerrarán cuando correspondan, respetando los requisitos confirmados.
+
+## Phase A and B status
+
+Phase A is closed on the owner's supplied baseline evidence for commit `22528be`. The cloud reran the two inherited tests and Pint and confirmed the base Laravel page. The original cloud Vite configuration depended on a font CDN that the proxy blocked. The Phase B build now bundles the same font from the npm lockfile and ran locally.
+
+Phase B is pending integration and acceptance. Read the actual execution and open criteria in [CI.md](CI.md), [TESTING.md](TESTING.md) and [SECURITY.md](SECURITY.md). The owner must authorize integration. Phase C requires explicit acceptance of Phase B after the required checks pass on `main`.
