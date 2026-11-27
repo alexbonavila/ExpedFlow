@@ -17,9 +17,10 @@ function mutationIdentity(Mutation $mutation): array
     }
 
     $file = substr($path, strlen($root));
+    $site = $mutation instanceof LocatedMutation ? "\0".$mutation->sourceOffset : '';
 
     return [
-        'id' => hash('sha256', $file."\0".$mutation->mutator."\0".$mutation->modifiedSource()),
+        'id' => hash('sha256', $file."\0".$mutation->mutator."\0".$mutation->modifiedSource().$site),
         'file' => $file,
         'mutator' => $mutation->mutator,
         'start' => $mutation->startLine,

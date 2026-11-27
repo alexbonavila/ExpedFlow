@@ -2,12 +2,13 @@ import copy
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
 
-from mutation import aggregate, combine, context, decode, identity_index, partition, write_json
+from mutation import ROOT, SUPPORT, aggregate, combine, context, decode, identity_index, partition, write_json
 
 
 class MutationAggregationTest(unittest.TestCase):
@@ -156,6 +157,98 @@ class MutationAggregationTest(unittest.TestCase):
         for content in ('{"result":"none","result":"tested"}', '{"seconds":NaN}'):
             with self.subTest(content=content), self.assertRaises(ValueError):
                 decode(content)
+
+    def test_unexpected_generated_or_outcome_id_fails(self):
+        for field in ("generated", "outcomes"):
+            with self.subTest(field=field):
+                old_record = self.reports[2][field][0]
+                self.reports[2][field][0] = old_record | {"id": "f" * 64}
+                with self.assertRaisesRegex(ValueError, "complete assignment|unexpected outcomes"):
+                    self.reconcile()
+                self.reports[2][field][0] = old_record
+
+
+class NativeMutationIdentityTest(unittest.TestCase):
+    source = """<?php
+function sameLine(): array { return [null, null]; }
+function differentLines(): array {
+    return [
+        false,
+        false,
+    ];
+}
+"""
+
+    worker_probe = r"""
+    require 'scripts/testing/mutation/bootstrap.php';
+
+    $container = Pest\Support\Container::getInstance();
+    $container->add(Psr\SimpleCache\CacheInterface::class, new Pest\Mutate\Cache\NullStore);
+    $generator = $container->get(Pest\Mutate\Support\MutationGenerator::class);
+    $file = new Symfony\Component\Finder\SplFileInfo('app/Collision.php', 'app', 'app/Collision.php');
+    $operators = Pest\Mutate\Mutators\Sets\DefaultSet::mutators();
+    $native = (new Pest\Mutate\Support\MutationGenerator)->generate($file, $operators);
+    $resolved = $generator->generate($file, $operators);
+    $suite = new Pest\Mutate\MutationSuite;
+    foreach ($resolved as $mutation) {
+        $suite->repository->add($mutation);
+    }
+    Pest\Mutate\Event\Facade::instance()->emitter()->finishMutationGeneration($suite);
+    echo json_encode([
+        'native' => array_map(fn ($mutation) => mutationIdentity($mutation) + ['native' => $mutation->id], $native),
+        'resolved' => array_map(fn ($mutation) => mutationIdentity($mutation) + [
+            'native' => $mutation->id, 'offset' => $mutation instanceof LocatedMutation ? $mutation->sourceOffset : null,
+        ], $resolved),
+    ], JSON_THROW_ON_ERROR);
+    """
+
+    def run_php(self, checkout, *arguments, **environment):
+        process = subprocess.run(
+            ["php", "-d", "display_errors=stderr", *arguments], cwd=checkout,
+            env=dict(os.environ, **environment), capture_output=True,
+        )
+        self.assertEqual(process.returncode, 0, process.stderr.decode())
+        return decode(process.stdout)
+
+    def test_preserves_same_line_sites_and_the_worker_matches_portable_planning(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            inventories = []
+            for checkout_name in ("planner", "independent-worker-path"):
+                checkout = Path(temporary) / checkout_name
+                for directory in ("app", "routes", "bootstrap", "evidence"):
+                    (checkout / directory).mkdir(parents=True)
+                shutil.copytree(SUPPORT, checkout / "scripts/testing/mutation")
+                (checkout / "vendor").symlink_to(ROOT / "vendor", target_is_directory=True)
+                (checkout / "app/Collision.php").write_text(self.source, encoding="utf-8")
+                (checkout / "bootstrap/app.php").write_text("<?php\n", encoding="utf-8")
+
+                inventory = self.run_php(checkout, "scripts/testing/mutation/inventory.php")
+                self.assertEqual(inventory, self.run_php(checkout, "scripts/testing/mutation/inventory.php"))
+                inventories.append(identity_index(inventory))
+                evidence = checkout / "evidence"
+                selected = [row["id"] for row in inventory if row["mutator"].endswith("\\RemoveArrayItem")]
+                write_json(evidence / "selection.json", {"inventory": sorted(inventories[-1]), "assigned": selected})
+                result = self.run_php(checkout, "-r", self.worker_probe, EXPEDFLOW_MUTATION_EVIDENCE_DIR=str(evidence))
+                native, resolved = result["native"], result["resolved"]
+                self.assertEqual(len(native), len(inventory))
+                self.assertEqual(len({row["native"] for row in resolved}), len(native))
+                self.assertEqual(identity_index(resolved), inventories[-1])
+                self.assertEqual(set(identity_index(decode((evidence / "generated.json").read_bytes()))), set(selected))
+
+                removed = [row for row in native if row["mutator"].endswith("\\RemoveArrayItem")]
+                self.assertEqual([row["start"] for row in removed], [2, 2, 5, 6])
+                self.assertEqual(removed[0]["id"], removed[1]["id"])
+                self.assertEqual(removed[0]["native"], removed[1]["native"])
+                self.assertEqual(removed[2]["id"], removed[3]["id"])
+                self.assertEqual(removed[2]["native"], removed[3]["native"])
+                offsets = [row["offset"] for row in resolved if row["id"] in selected]
+                first = self.source.index("null")
+                self.assertEqual(offsets, [
+                    first, self.source.index("null", first + 1),
+                    self.source.index("false"), self.source.rindex("false"),
+                ])
+
+            self.assertEqual(*inventories)
 
 
 class WorkflowGateTest(unittest.TestCase):

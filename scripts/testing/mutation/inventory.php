@@ -5,16 +5,16 @@ declare(strict_types=1);
 use Pest\Mutate\Cache\NullStore;
 use Pest\Mutate\Mutators\Sets\DefaultSet;
 use Pest\Mutate\Support\FileFinder;
-use Pest\Mutate\Support\MutationGenerator;
 use Pest\Support\Container;
 use Psr\SimpleCache\CacheInterface;
 
 require dirname(__DIR__, 3).'/vendor/autoload.php';
 require __DIR__.'/identity.php';
+require __DIR__.'/generator.php';
 
 requireSupportedMutationPlugin();
 Container::getInstance()->add(CacheInterface::class, new NullStore);
-$generator = new MutationGenerator;
+$generator = new LocatedMutationGenerator;
 $mutators = DefaultSet::mutators();
 $inventory = [];
 
