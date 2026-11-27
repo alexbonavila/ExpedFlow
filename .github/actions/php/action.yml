@@ -4,6 +4,9 @@ inputs:
   coverage:
     description: Coverage extension to enable
     default: none
+  memory-limit:
+    description: PHP CLI memory limit for the selected job
+    default: ''
 runs:
   using: composite
   steps:
@@ -13,5 +16,6 @@ runs:
         tools: composer:2.11.2
         extensions: curl, dom, mbstring, pdo_mysql, xml, zip
         coverage: ${{ inputs.coverage }}
+        ini-values: ${{ inputs.memory-limit && format('memory_limit={0}', inputs.memory-limit) || '' }}
     - shell: bash
       run: composer install --no-interaction --prefer-dist --no-progress

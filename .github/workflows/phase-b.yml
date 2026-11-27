@@ -9,6 +9,12 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      mutation_shards:
+        description: Number of isolated mutation runners
+        type: choice
+        options: ['4', '8']
+        default: '4'
 
 permissions:
   contents: read
@@ -27,6 +33,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/php
       - run: |
+          python3 -B -m unittest discover -s scripts/testing -p test_mutation.py
           composer validate --strict --no-check-publish
           composer lint
           composer analyse
@@ -294,10 +301,41 @@ jobs:
           path: test-results/storage.log
           retention-days: 7
 
-  mutation:
+  mutation-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    if: github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/php
+        with:
+          memory-limit: 512M
+      - id: plan
+        env:
+          SHARD_COUNT: ${{ inputs.mutation_shards || '4' }}
+        run: |
+          mkdir -p test-results/mutation
+          python3 scripts/testing/mutation.py plan test-results/mutation/plan.json "$SHARD_COUNT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: mutation-plan
+          path: test-results/mutation/plan.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+  mutation-shards:
     runs-on: ubuntu-24.04
     timeout-minutes: 50
+    needs: mutation-plan
     if: github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.mutation-plan.outputs.matrix) }}
     services:
       mysql:
         image: mysql@sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
@@ -319,22 +357,70 @@ jobs:
       - uses: ./.github/actions/php
         with:
           coverage: xdebug
+          memory-limit: 512M
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: mutation-plan
+          path: test-results/mutation-plan
       - name: Provision restricted MySQL user
         env:
           MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
         run: bash scripts/testing/ci-mysql.sh "$MYSQL_CONTAINER_ID"
-      - run: |
-          mkdir -p test-results
+      - name: Execute assigned mutations with the full Pest suite
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p test-results/mutation-logs
           set -o pipefail
-          XDEBUG_MODE=coverage composer test:mutation |& tee test-results/mutation.txt
-      - name: Upload mutation-results
+          python3 scripts/testing/mutation.py run test-results/mutation-plan/plan.json "$SHARD" test-results/mutation-shard |& tee test-results/mutation-logs/pest.log
+      - name: Upload structured mutation evidence and diagnostics
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: mutation-results
+          name: mutation-shard-${{ matrix.shard }}
           path: |
-            test-results/mutation.txt
+            test-results/mutation-shard/report.json
+            test-results/mutation-shard/generated.json
+            test-results/mutation-shard/outcomes.json
+            test-results/mutation-logs/pest.log
+          if-no-files-found: error
           retention-days: 7
+          overwrite: true
+
+  mutation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch') }}
+    needs: [mutation-plan, mutation-shards]
+    steps:
+      - name: Require a successful plan and every matrix runner
+        env:
+          PLAN_RESULT: ${{ needs.mutation-plan.result }}
+          SHARD_RESULT: ${{ needs.mutation-shards.result }}
+        run: test "$PLAN_RESULT" = success && test "$SHARD_RESULT" = success
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: mutation-plan
+          path: test-results/mutation-plan
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: mutation-shard-*
+          path: test-results/mutation-matrix
+      - name: Enforce the global mutation score
+        run: |
+          python3 scripts/testing/mutation.py aggregate test-results/mutation-plan/plan.json test-results/mutation-matrix test-results/mutation-summary.json
+      - name: Upload aggregated mutation results
+        if: ${{ !cancelled() && hashFiles('test-results/mutation-summary.json') != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: mutation-results
+          path: test-results/mutation-summary.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
 
   performance:
     runs-on: ubuntu-24.04
@@ -433,6 +519,8 @@ jobs:
       - e2e
       - accessibility
       - storage-integration
+      - mutation-plan
+      - mutation-shards
       - mutation
       - performance
       - dynamic-security
