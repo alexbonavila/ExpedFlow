@@ -16,7 +16,7 @@ final class EffectivePermissions
     /** @return list<string> */
     public function for(User $user): array
     {
-        $roles = $user->roles()->getQuery()->where('roles.guard_name', AuthorizationCatalog::GUARD)->select('roles.id');
+        $roles = $user->roles()->getQuery()->whereRaw('CAST(roles.guard_name AS BINARY) = ?', [AuthorizationCatalog::GUARD])->select('roles.id');
         $admin = (clone $roles)->whereRaw('CAST(roles.name AS BINARY) = ?', [User::ADMIN_ROLE]);
         $direct = $user->permissions()->getQuery()->select('permissions.id');
         $active = User::query()->whereKey($user->id)->whereNull('disabled_at');

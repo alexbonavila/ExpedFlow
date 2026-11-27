@@ -10,10 +10,16 @@ final class RoleAssignments
 {
     public function __construct(private readonly AdministrativeWrite $write) {}
 
+    public function assignDefault(User $account): void
+    {
+        $role = AuthorizationCatalog::roles()->where('name', AuthorizationCatalog::ORDINARY_ROLE)->firstOrFail();
+        $account->assignRole($role);
+    }
+
     /** @param list<int> $ids */
     public function replace(User $actor, User $target, array $ids): User
     {
-        return $this->write->run($actor, PermissionKey::AssignRoles, function (Role $admin, User $account) use ($actor, $ids): User {
+        return $this->write->run($actor, PermissionKey::AssignRoles, function (User $account, Role $admin) use ($actor, $ids): User {
             $roles = AuthorizationCatalog::roles()->whereIntegerInRaw('id', $ids)->orderBy('id')->lockForUpdate()->get();
             if ($roles->count() !== count($ids)) {
                 throw ValidationException::withMessages(['role_ids' => __('identity.unknown_roles')]);
@@ -26,7 +32,7 @@ final class RoleAssignments
                 AdministrativeWrite::assertRemovableAdministrator($admin, $account);
             }
 
-            $otherGuards = $account->roles()->where('roles.guard_name', '!=', AuthorizationCatalog::GUARD)->pluck('roles.id')->all();
+            $otherGuards = $account->roles()->whereRaw('CAST(roles.guard_name AS BINARY) <> ?', [AuthorizationCatalog::GUARD])->pluck('roles.id')->all();
             $account->roles()->sync([...$roles->modelKeys(), ...$otherGuards]);
 
             return $account;

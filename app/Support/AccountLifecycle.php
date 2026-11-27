@@ -14,7 +14,7 @@ final class AccountLifecycle
 
     public function disable(User $actor, User $target): User
     {
-        return $this->write->run($actor, PermissionKey::ManageUsers, function (Role $role, User $account) use ($actor): User {
+        return $this->write->run($actor, PermissionKey::ManageUsers, function (User $account, Role $role) use ($actor): User {
             if ($actor->is($account)) {
                 throw new IdentityError(409, 'self_disable');
             }
@@ -32,7 +32,7 @@ final class AccountLifecycle
 
     public function enable(User $actor, User $target): User
     {
-        return $this->write->run($actor, PermissionKey::ManageUsers, function (Role $role, User $account): User {
+        return $this->write->run($actor, PermissionKey::ManageUsers, function (User $account): User {
             $account->forceFill(['disabled_at' => null])->save();
 
             return $account;

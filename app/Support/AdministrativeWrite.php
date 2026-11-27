@@ -15,7 +15,7 @@ final class AdministrativeWrite
     /**
      * @template TResult
      *
-     * @param  Closure(Role, User): TResult  $operation
+     * @param  Closure(User, Role): TResult  $operation
      * @return TResult
      */
     public function run(User $actor, PermissionKey $permission, Closure $operation, ?User $target = null): mixed
@@ -31,7 +31,7 @@ final class AdministrativeWrite
             }
             Gate::forUser($account)->allowIf(fn (User $user): bool => $this->permissions->allows($user, $permission));
 
-            return $operation($adminRole, $accounts->findOrFail($targetId));
+            return $operation($accounts->findOrFail($targetId), $adminRole);
         }, 3);
     }
 

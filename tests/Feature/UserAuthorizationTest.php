@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Support\EffectivePermissions;
 use Database\Seeders\AuthorizationSeeder;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\Support\AuthorizationHttp;
 use Tests\Support\RefreshGuardedMySql;
@@ -110,4 +111,22 @@ test('a browser requires real CSRF to replace memberships and can inspect disabl
     $this->spa('PUT', "$path/roles", ['role_ids' => [$role->id]])->assertOk()
         ->assertJsonPath('data.roles.0.name', 'admin')->assertJsonPath('data.permissions', []);
     expect($disabled->fresh()->disabled_at)->not->toBeNull();
+});
+
+test('a guard variant never confers authority or enters the web assignment surface', function (): void {
+    $actor = $this->authorizationAdmin();
+    $account = User::factory()->create()->givePermissionTo('tasks.view');
+    $foreign = Role::query()->create(['name' => 'Foreign guard role', 'guard_name' => 'WEB']);
+    $grant = Permission::findByName('expedients.view', 'web');
+    $foreign->permissions()->attach($grant->id);
+    $account->roles()->attach($foreign->id);
+    $headers = $this->authorizationBearer($actor);
+
+    $this->api('GET', '/api/v1/me', headers: $this->authorizationBearer($account))->assertOk()
+        ->assertJsonPath('data.permissions', []);
+    $this->api('GET', "/api/v1/roles/{$foreign->id}", headers: $headers)->assertNotFound();
+    $this->api('PUT', "/api/v1/users/{$account->id}/roles", ['role_ids' => [$foreign->id]], $headers)->assertUnprocessable();
+    $this->api('PUT', "/api/v1/users/{$account->id}/roles", ['role_ids' => []], $headers)->assertOk()
+        ->assertJsonPath('data.roles', []);
+    expect($account->roles()->sole()->is($foreign))->toBeTrue();
 });

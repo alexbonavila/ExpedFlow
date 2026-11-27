@@ -87,13 +87,15 @@ final class AuthorizationCatalog
     /** @return Builder<Role> */
     public static function roles(): Builder
     {
-        return Role::query()->where('guard_name', self::GUARD);
+        return Role::query()->where('guard_name', self::GUARD)
+            ->whereRaw('CAST(roles.guard_name AS BINARY) = ?', [self::GUARD]);
     }
 
     /** @return Builder<Permission> */
     public static function permissions(): Builder
     {
         return Permission::query()->where('guard_name', self::GUARD)
+            ->whereRaw('CAST(permissions.guard_name AS BINARY) = ?', [self::GUARD])
             ->whereIn('name', array_column(PermissionKey::cases(), 'value'));
     }
 

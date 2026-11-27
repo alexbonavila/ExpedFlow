@@ -10,7 +10,7 @@ arch('application models are Eloquent models')
     ->expect('App\Models')
     ->toExtend(Model::class);
 
-arch('identity controllers leave role assignment to the explicit bootstrap command')
+arch('HTTP controllers delegate role persistence to authorization services')
     ->expect('App\Http\Controllers')
     ->not->toUse('Spatie\Permission\Models\Role');
 

@@ -6,11 +6,11 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\AccountLifecycle;
 use App\Support\AdministrativeWrite;
-use App\Support\AuthorizationCatalog;
 use App\Support\IdentityError;
 use App\Support\IdentityInput;
 use App\Support\PermissionKey;
 use App\Support\RevokeCredentials;
+use App\Support\RoleAssignments;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +18,6 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Spatie\Permission\Models\Role;
 
 final class UserManagementController extends Controller
 {
@@ -34,7 +33,7 @@ final class UserManagementController extends Controller
         return new UserResource($user);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, RoleAssignments $assignments): JsonResponse
     {
         $input = IdentityInput::validate($request->all(), [
             'name' => IdentityInput::nameRules(),
@@ -45,10 +44,9 @@ final class UserManagementController extends Controller
         $input['password'] = Hash::make(Arr::string($input, 'password'));
         /** @var User $actor */
         $actor = $request->user();
-        $user = $this->write->run($actor, PermissionKey::ManageUsers, function () use ($input): User {
-            $role = AuthorizationCatalog::roles()->where('name', AuthorizationCatalog::ORDINARY_ROLE)->firstOrFail();
+        $user = $this->write->run($actor, PermissionKey::ManageUsers, function () use ($input, $assignments): User {
             $account = $this->save(new User, $input + ['locale' => 'es']);
-            $account->assignRole($role);
+            $assignments->assignDefault($account);
 
             return $account;
         });
@@ -66,7 +64,7 @@ final class UserManagementController extends Controller
 
         /** @var User $actor */
         $actor = $request->user();
-        $account = $this->write->run($actor, PermissionKey::ManageUsers, function (Role $role, User $account) use ($input): User {
+        $account = $this->write->run($actor, PermissionKey::ManageUsers, function (User $account) use ($input): User {
             if (isset($input['email']) && $input['email'] !== $account->email) {
                 Password::deleteToken($account);
                 $account->email_verified_at = null;
@@ -85,7 +83,7 @@ final class UserManagementController extends Controller
         ]);
         /** @var User $actor */
         $actor = $request->user();
-        $this->write->run($actor, PermissionKey::ManageUsers, function (Role $role, User $account) use ($input, $credentials): void {
+        $this->write->run($actor, PermissionKey::ManageUsers, function (User $account) use ($input, $credentials): void {
             $credentials->replacePassword($account, Arr::string($input, 'password'));
         }, $user);
 
