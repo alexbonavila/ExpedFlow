@@ -17,7 +17,7 @@ final class IdentityError extends HttpException
         parent::__construct($status);
     }
 
-    public static function render(Throwable $exception, Request $request): ?JsonResponse
+    public static function response(Throwable $exception, Request $request): ?JsonResponse
     {
         if (! $request->is('api/v1/*')) {
             return null;
@@ -43,7 +43,8 @@ final class IdentityError extends HttpException
             default => 'server_error',
         };
 
-        $body = ['message' => __('identity.'.$code), 'code' => $code];
+        $locale = $request->attributes->get('identity.locale');
+        $body = ['message' => __('identity.'.$code, locale: is_string($locale) ? $locale : null), 'code' => $code];
         if ($exception instanceof ValidationException) {
             $body['errors'] = $exception->errors();
         }

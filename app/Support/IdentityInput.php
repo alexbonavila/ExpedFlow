@@ -11,6 +11,15 @@ final class IdentityInput
 {
     public const array LOCALES = ['es', 'ca', 'en'];
 
+    /** @return array<string, list<string>> */
+    public static function credentials(): array
+    {
+        return [
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required', 'string', 'max:4096'],
+        ];
+    }
+
     public static function email(string $email): string
     {
         return Str::lower(Str::trim($email));

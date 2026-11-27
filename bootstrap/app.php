@@ -18,10 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append([SecurityHeaders::class, IdentityResponse::class]);
         $middleware->statefulApi();
+        $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/');
         $middleware->trimStrings(except: ['name']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(IdentityError::render(...));
+        $exceptions->render(IdentityError::response(...));
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

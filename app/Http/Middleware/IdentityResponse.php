@@ -18,11 +18,10 @@ final class IdentityResponse
         }
 
         $previous = app()->getLocale();
-        $locale = $request->getLanguages() === []
-            ? $previous
-            : $request->getPreferredLanguage(IdentityInput::LOCALES);
-
-        app()->setLocale(in_array($locale, IdentityInput::LOCALES, true) ? $locale : 'en');
+        $fallback = in_array($previous, IdentityInput::LOCALES, true) ? $previous : 'en';
+        $locale = $request->getPreferredLanguage([$fallback, ...IdentityInput::LOCALES]) ?? $fallback;
+        $request->attributes->set('identity.locale', $locale);
+        app()->setLocale($locale);
 
         try {
             if (! $request->isSecure() && ! app()->environment('testing')) {
