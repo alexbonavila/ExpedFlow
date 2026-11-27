@@ -96,3 +96,51 @@ test('PATCH requires reorder only for a status change and appends in the new cas
     $this->api('PATCH', $path, ['name' => 'Rejected'], $headers)->assertForbidden();
     expect($case->refresh()->status_id)->not->toBe($destination->id);
 });
+
+test('shared moves insert by visible index and preserve other cases, columns and deleted rows', function (): void {
+    $actor = User::factory()->create();
+    $actor->assignRole(Role::create(['name' => 'task-orderer', 'guard_name' => 'web'])
+        ->givePermissionTo(['expedients.view', 'tasks.view', 'tasks.reorder']));
+    $headers = $this->authorizationBearer($actor);
+    $case = Expedient::factory()->create();
+    $status = Status::factory()->create();
+    $a = Task::factory()->for($case)->for($status)->create(['position' => 2]);
+    $b = Task::factory()->for($case)->for($status)->create(['position' => 6]);
+    $c = Task::factory()->for($case)->for($status)->create(['position' => 8]);
+    $deleted = Task::factory()->for($case)->for($status)->create(['position' => 3]);
+    $deleted->delete();
+    $unrelated = Task::factory()->for($status)->create(['position' => 10]);
+    $move = "/api/v1/tasks/{$c->id}/move";
+    $input = ['status_id' => $status->id];
+    $this->api('POST', $move, ['position' => 3] + $input, $headers)->assertOk()->assertJsonPath('data.position', 8);
+    $this->api('POST', $move, ['position' => 4] + $input, $headers)->assertUnprocessable()->assertJsonValidationErrors('position');
+    $this->api('POST', $move, ['position' => 1] + $input, $headers)->assertOk()->assertJsonPath('data.position', 1);
+    $this->api('POST', "/api/v1/tasks/{$b->id}/move", ['position' => 2] + $input, $headers)
+        ->assertOk()->assertJsonPath('data.position', 2);
+    $this->api('GET', "/api/v1/expedients/{$case->id}/tasks", headers: $headers)->assertOk()
+        ->assertJsonPath('data.0.id', $c->id)->assertJsonPath('data.1.id', $b->id)->assertJsonPath('data.2.id', $a->id);
+    $this->api('POST', $move, $input, $headers)->assertOk()->assertJsonPath('data.position', 4);
+    $this->api('POST', $move, ['status_id' => $case->status_id], $headers)->assertOk()
+        ->assertJsonPath('data.position', 1)->assertJsonPath('data.status_id', $case->status_id);
+    expect($deleted->fresh()->position)->toBe(3)->and($unrelated->fresh()->position)->toBe(10)
+        ->and($b->fresh()->position)->toBe(2)->and($case->fresh()->status_id)->not->toBe($status->id);
+});
+
+test('order exhaustion and a failed second pass leave the entire MySQL column unchanged', function (): void {
+    $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $a = Task::factory()->create(['position' => PHP_INT_MAX - 1]);
+    $b = Task::factory()->for($a->expedient)->for($a->status)->create(['position' => 1]);
+    $move = "/api/v1/tasks/{$a->id}/move";
+    $input = ['status_id' => $a->status_id, 'position' => 1];
+    $this->api('POST', $move, $input, $headers)->assertConflict()->assertJsonPath('code', 'task_order_exhausted');
+    expect($a->fresh()->position)->toBe(PHP_INT_MAX - 1)->and($b->fresh()->position)->toBe(1);
+
+    $a->forceFill(['position' => 4])->save();
+    Task::updating(function (Task $task) use ($b): void {
+        if ($task->is($b) && $task->position === 2) {
+            throw new RuntimeException('Synthetic order write failure.');
+        }
+    });
+    $this->api('POST', $move, $input, $headers)->assertInternalServerError()->assertJsonPath('code', 'server_error');
+    expect($a->fresh()->position)->toBe(4)->and($b->fresh()->position)->toBe(1);
+});

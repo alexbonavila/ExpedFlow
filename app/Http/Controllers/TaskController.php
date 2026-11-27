@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TaskMoveRequest;
 use App\Http\Requests\TaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Expedient;
@@ -9,6 +10,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
+use App\Support\EffectivePermissions;
 use App\Support\ExpedientLifecycle;
 use App\Support\IdentityError;
 use App\Support\PermissionKey;
@@ -73,6 +75,9 @@ final class TaskController extends Controller
             $case = $this->scope->lockParent($id);
             $observed = $case->tasks()->findOrFail($id, ['status_id'])->status_id;
             $destination = Arr::integer($input, 'status_id', $observed);
+            if ($destination !== $observed) {
+                Gate::forUser($actor)->allowIf(app(EffectivePermissions::class)->allows($actor, PermissionKey::ReorderTasks));
+            }
             $this->ordering->lockStatuses($observed, $destination);
             $gate = Gate::forUser($actor);
             $columns = $this->ordering->lockColumns($case, $observed, $destination);
@@ -85,14 +90,38 @@ final class TaskController extends Controller
             $fields = $this->schedule(Arr::except($input, 'status_id'), $record);
             if ($destination !== $observed) {
                 $gate->authorize('reorder', [$record, $case]);
-                $column = $columns->where('status_id', $destination);
-                $fields += ['status_id' => $destination, 'position' => $this->ordering->appendPosition($column)];
+                $this->ordering->move($record, $columns, $destination, null);
             }
             if (! $record->forceFill($fields)->save()) {
                 throw new RuntimeException('Task update did not complete.');
             }
 
             return $record->refresh()->load(TaskResource::RELATIONS);
+        });
+
+        return new TaskResource($record);
+    }
+
+    public function move(TaskMoveRequest $request, string $task): TaskResource
+    {
+        $id = AuthorizationInput::identifier($task);
+        $input = $request->validated();
+        $destination = Arr::integer($input, 'status_id');
+        $position = isset($input['position']) ? Arr::integer($input, 'position') : null;
+        $record = $this->write->run($request, PermissionKey::ReorderTasks, function (User $actor) use ($id, $destination, $position): Task {
+            $case = $this->scope->lockParent($id);
+            $observed = $case->tasks()->findOrFail($id, ['status_id'])->status_id;
+            $this->ordering->lockStatuses($observed, $destination);
+            $columns = $this->ordering->lockColumns($case, $observed, $destination);
+            $record = $columns->find($id) ?? throw new IdentityError(404, 'not_found');
+            Gate::forUser($actor)->authorize('reorder', [$record, $case]);
+            if ($record->status_id !== $observed) {
+                throw new IdentityError(409, 'task_status_changed');
+            }
+
+            $this->ordering->move($record, $columns, $destination, $position);
+
+            return $record->load(TaskResource::RELATIONS);
         });
 
         return new TaskResource($record);

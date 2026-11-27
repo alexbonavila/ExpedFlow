@@ -55,4 +55,5 @@ return [
     'task_time_requires_date' => 'Indica una data abans de proporcionar una hora.',
     'task_order_exhausted' => 'No hi ha cap posició disponible per a la tasca.',
     'task_status_changed' => 'L’estat de la tasca ha canviat. Actualitza i torna-ho a provar.',
+    'task_position_invalid' => 'Tria una posició dins de la columna de destinació.',
 ];

@@ -55,4 +55,5 @@ return [
     'task_time_requires_date' => 'Set a date before providing a time.',
     'task_order_exhausted' => 'No task position is available.',
     'task_status_changed' => 'The task status changed. Refresh and try again.',
+    'task_position_invalid' => 'Choose a position within the destination column.',
 ];
