@@ -169,3 +169,19 @@ Run the existing guarded `composer test:database` suite on a dedicated MySQL 8.4
 | Samba harness | The missing-mount guard passed. The full smoke needs the isolated Linux runner with sudo and CIFS helpers. |
 
 The existing **Phase B** workflow validates this candidate through a pull request to `main`. For extended candidate CI, open **Actions → Phase B → Run workflow**, choose `feat/database-schema-c` in the branch menu and select **Run workflow**. Verify that the selected head SHA matches the candidate and confirm both the extended jobs and the aggregate gate.
+
+## Phase D identity verification
+
+Activate the Codex toolchain in each Bash shell before running PHP or project tests. The existing MySQL guard runs before schema resets in the new integration and HTTP suites. HTTP fixtures carry genuine encrypted cookies and CSRF tokens. They use the database session driver and simulate a production application environment for native CSRF enforcement on HTTPS. The contention tests use an independent Laravel process and signal when it reaches a locking query. The parent holds the real MySQL transaction until that signal and releases it without a timed sleep. Do not run the database suites in parallel against one test schema.
+
+| Requirement | Verification |
+|---|---|
+| Upgrade, rollback and safe defaults | `PhaseDUpgradeTest` upgrades the accepted Phase C schema, preserves the original user row and task assignment, rolls back and migrates again. |
+| Explicit administrator | `AdministratorBootstrapTest` covers input policy, ordinary-account collision, reserved role conflicts, a repeatable initializer and rollback on persistence failure. `ConcurrentIdentityTest` exercises a competing initializer. |
+| SPA and CSRF | `SessionIdentityTest` exercises the native XSRF cookie, rejection of missing and wrong tokens, real database sessions, cookie attributes, session rotation, logout, old password compatibility, HTTPS and named rate limits. |
+| Mobile bearer | `PersonalTokenTest` verifies expiring hash-only storage, real bearer requests, isolated current-token logout, malformed tokens and separation from SPA authentication. |
+| Recovery | `PasswordRecoveryTest` covers generic responses, async dispatch, authorized SMTP and URL configuration, fake mail, fragments, broker expiry, single use, invalid input and invalidation of sessions/tokens. `ConcurrentIdentityTest` exercises a competing reset. |
+| Account management | `UserManagementTest` verifies unauthenticated and ordinary-user denial on each action, reserved-role precedence, safe resources, field limits, normalized duplicate emails, explicit actions, self-deactivation and stale sessions after re-enable. `ConcurrentIdentityTest` races two administrator disables and a token issue against disablement. |
+| Localization and contract | `IdentityLocalizationTest` covers locale storage, the authenticated message language, translation key parity and the recipient's email language. `IdentityContractTest` validates actual v1 responses against the Phase D OpenAPI document and checks debug-safe errors. |
+
+Run `composer test`, `composer test:database`, `composer test:contract`, `XDEBUG_MODE=coverage composer test:coverage`, `composer test:types` and `XDEBUG_MODE=coverage composer test:mutation` from the activated checkout. Use the existing CI workflow for the complete gates. HTTP fixtures use synthetic credentials and fake mail. SMTP delivery and the functional recovery screen belong to later phases.

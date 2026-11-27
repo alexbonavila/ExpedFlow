@@ -65,7 +65,7 @@ test('identity, validation and recovery mail translations have equivalent keys',
 
 test('recovery mail uses the recipient locale independently of the requested response language', function () {
     Notification::fake();
-    config(['app.url' => 'https://trusted.example']);
+    config(['app.url' => 'https://trusted.example', 'mail.default' => 'smtp']);
     $user = User::factory()->create(['locale' => 'ca']);
 
     $this->api('POST', '/api/v1/auth/forgot-password', ['email' => $user->email], ['Accept-Language' => 'es'])

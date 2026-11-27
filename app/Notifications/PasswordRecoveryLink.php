@@ -22,7 +22,7 @@ final class PasswordRecoveryLink extends Notification
     public function toMail(User $notifiable): MailMessage
     {
         $query = http_build_query(['token' => $this->token, 'email' => $notifiable->email], encoding_type: PHP_QUERY_RFC3986);
-        $url = rtrim($this->origin, '/').'/reset-password?'.$query;
+        $url = rtrim($this->origin, '/').'/reset-password#'.$query;
 
         return (new MailMessage)
             ->subject(__('identity.recovery_subject'))

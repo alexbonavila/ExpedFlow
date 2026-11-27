@@ -27,6 +27,7 @@ function managementAdmin(): User
 
 test('every management route denies unauthenticated and ordinary clients', function () {
     $ordinary = User::factory()->create();
+    $ordinary->givePermissionTo(Permission::findOrCreate('manage-accounts', 'web'));
     $target = User::factory()->create();
     $bearer = ['Authorization' => 'Bearer '.$ordinary->createToken('Ordinary client', ['*'])->plainTextToken];
     foreach ([
@@ -155,4 +156,24 @@ test('an already admitted stale administrative operation cannot disable the last
         fn (IdentityError $exception) => expect($exception->errorCode)->toBe('unauthenticated')
     );
     expect($ordinary->fresh()->disabled_at)->toBeNull();
+});
+
+test('management validates account name, email and password boundaries before saving', function () {
+    $admin = managementAdmin();
+    $auth = ['Authorization' => 'Bearer '.$admin->createToken('Admin fixture')->plainTextToken];
+    $valid = ['name' => 'Synthetic account', 'email' => 'limit@example.test', 'password' => 'synthetic long password'];
+    foreach ([
+        ['name' => str_repeat('a', 256)],
+        ['name' => []],
+        ['name' => '   '],
+        ['email' => 'invalid'],
+        ['email' => str_repeat('a', 240).'@long-example.test'],
+        ['email' => []],
+        ['password' => []],
+    ] as $override) {
+        $this->api('POST', '/api/v1/users', $override + $valid, $auth)
+            ->assertUnprocessable()->assertJsonValidationErrors(array_keys($override));
+    }
+    $this->api('POST', '/api/v1/users', [], $auth)->assertUnprocessable()->assertJsonValidationErrors(['name', 'email', 'password']);
+    $this->assertDatabaseCount('users', 1);
 });

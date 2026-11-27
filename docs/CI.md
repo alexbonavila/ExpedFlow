@@ -155,3 +155,7 @@ The owner accepted Phase B for progression to Phase C from `430c9a4`. Actual sch
 ## Integrated Phase C
 
 The owner accepted Phase C after integration at `942e5cdc416947a586ac4167a9a3c5a76197e100` through [PR #10](https://github.com/alexbonavila/ExpedFlow/pull/10). The [core run 45959448962](https://github.com/alexbonavila/ExpedFlow/actions/runs/45959448962), [extended run 45959904640](https://github.com/alexbonavila/ExpedFlow/actions/runs/45959904640) and [main run 45960606761](https://github.com/alexbonavila/ExpedFlow/actions/runs/45960606761) each passed. The Phase B schedule event, published release event and independent CodeQL alert inventory review remain operational follow-up.
+
+## Phase D candidate delivery
+
+Use one regular pull request from `feat/authentication-users-d` to `main`. The existing **Phase B** workflow runs core checks automatically on the PR. Select the same branch from **Actions → Phase B → Run workflow** to exercise the extended mutation, dynamic security and performance checks on the candidate. Match both runs to the reviewed head SHA. Record the candidate and its actual run conclusions in the PR and proceed only after owner authorization.

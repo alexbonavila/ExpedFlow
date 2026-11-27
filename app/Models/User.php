@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\Contracts\HasAbilities;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -37,6 +38,12 @@ class User extends Authenticatable
             'auth_version' => 'integer',
             'password' => 'hashed',
         ];
+    }
+
+    /** Sanctum uses both a transient browser credential and a persisted bearer credential. */
+    public function currentAccessToken(): ?HasAbilities
+    {
+        return $this->accessToken;
     }
 
     /** @return BelongsToMany<Task, $this> */

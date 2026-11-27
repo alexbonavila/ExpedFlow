@@ -4,7 +4,7 @@ Self-hosted case, task and business workflow management system.
 
 ExpedFlow is an internal Laravel application designed for self-managed Apache, PHP and MySQL installations. It will expose a versioned JSON API shared by its Vue web client and future Android client. The product will use an organization's Samba share for its files.
 
-Phase A established the Laravel scaffold. Phase B integrated the test infrastructure and CI on protected `main`. The acceptance closeout and outstanding verification items are documented. See the [Phase B verification record](docs/CI.md) for execution results and open criteria.
+Phase A established the Laravel scaffold. Phase B integrated the test infrastructure and CI on protected `main`. Phase C delivered the functional database and was accepted by the owner. Phase D adds the authentication and account management API for review. The acceptance closeout and outstanding verification items are documented. See the [Phase B verification record](docs/CI.md) for execution results and open criteria.
 
 ## Development setup
 
@@ -16,7 +16,7 @@ npm ci
 npm run build
 ```
 
-For local development, copy `.env.example` to `.env`, set your local database connection and generate an application key. Follow the separate [testing database setup and guard](docs/TESTING.md) before running database tests. Use synthetic data in the disposable test services.
+In Codex, source `/workspace/.expedflow-runtime/activate.sh` in each Bash shell before running PHP, Composer, Artisan or project tests. For local development, copy `.env.example` to `.env`, set your local database connection and generate an application key. Follow the separate [testing database setup and guard](docs/TESTING.md) before running database tests. Use synthetic data in the disposable test services.
 
 ```sh
 composer lint
@@ -29,6 +29,8 @@ npm test
 ```
 
 The [test guide](docs/TESTING.md) also covers coverage, mutation, three-engine Playwright testing, accessibility, performance and the disposable CIFS mount. The [CI guide](docs/CI.md) describes job frequency, gate behavior and the branch rules. The [security guide](docs/SECURITY.md) describes the audits and passive ZAP baseline.
+
+The [security guide](docs/SECURITY.md#initialize-the-first-administrator) covers administrator initialization and the SMTP recovery worker. The [identity contract](docs/API.md#phase-d-identity-contract) describes session and bearer integration.
 
 ## Project documentation
 

@@ -18,7 +18,7 @@ uses(IdentityHttp::class, RefreshGuardedMySql::class);
 
 beforeEach(function () {
     $this->identityHttp();
-    config(['app.url' => 'https://trusted.example']);
+    config(['app.url' => 'https://trusted.example', 'mail.default' => 'smtp']);
 });
 
 test('recovery has one public response and only delivers a trusted link to an eligible account', function () {
@@ -38,12 +38,13 @@ test('recovery has one public response and only delivers a trusted link to an el
     Notification::assertSentTo($active, PasswordRecoveryLink::class, function (PasswordRecoveryLink $notice, array $channels) use ($active): bool {
         $mail = $notice->toMail($active);
         $url = parse_url($mail->actionUrl);
-        parse_str($url['query'], $query);
+        parse_str($url['fragment'], $query);
         expect($channels)->toBe(['mail'])
             ->and($notice->locale)->toBe('ca')
             ->and($url['scheme'])->toBe('https')
             ->and($url['host'])->toBe('trusted.example')
             ->and($url['path'])->toBe('/reset-password')
+            ->and($url)->not->toHaveKey('query')
             ->and($query['email'])->toBe($active->email)
             ->and(Password::broker()->tokenExists($active, $query['token']))->toBeTrue();
 
@@ -78,8 +79,10 @@ test('mail transport failure and an insecure recovery origin expose no account d
     Log::shouldHaveReceived('warning')->with('Password recovery requires a valid HTTPS application URL.')->once();
     $this->assertDatabaseEmpty('password_reset_tokens');
 
-    config(['app.url' => 'https://']);
-    $this->api('POST', '/api/v1/auth/forgot-password', ['email' => $user->email])->assertOk();
+    foreach (['https://', 'https://fixture@trusted.example/', 'https://trusted.example/?other=value'] as $unsafeOrigin) {
+        config(['app.url' => $unsafeOrigin]);
+        $this->api('POST', '/api/v1/auth/forgot-password', ['email' => $user->email])->assertOk();
+    }
     $this->assertDatabaseEmpty('password_reset_tokens');
 });
 
@@ -140,4 +143,17 @@ test('recovery rejects invalid reset input and rate limits normalized identities
     $this->api('POST', '/api/v1/auth/forgot-password', ['email' => 'RECOVERY@example.test'])->assertTooManyRequests()
         ->assertJsonPath('code', 'rate_limited');
     Queue::assertPushed(SendPasswordRecovery::class, 5);
+});
+
+test('a log mailer cannot create a recovery token or receive the recovery message', function () {
+    Log::spy();
+    Notification::fake();
+    $user = User::factory()->create();
+    config(['mail.default' => 'log']);
+
+    $this->api('POST', '/api/v1/auth/forgot-password', ['email' => $user->email])
+        ->assertOk()->assertJsonPath('code', 'recovery_requested');
+    $this->assertDatabaseEmpty('password_reset_tokens');
+    Notification::assertNothingSent();
+    Log::shouldHaveReceived('warning')->with('Password recovery requires an SMTP mailer.')->once();
 });

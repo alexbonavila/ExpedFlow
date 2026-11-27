@@ -23,7 +23,48 @@ Use JSON requests except for native CSRF authentication and multipart uploads. S
 
 ## Authentication
 
-Use Sanctum. The first-party SPA uses sessions and CSRF protection. Android uses bearer tokens with defined expiration and revocation. Public registration is disabled. Use Laravel/Fortify mechanisms for login, logout, recovery and password reset. Document identity endpoints and prevent account enumeration. `GET /api/v1/me` returns identity, language and the necessary permissions. It omits credentials. Managing users, roles and permissions requires privileges. Policies and middleware are mandatory even when the frontend or token indicates permission.
+Use Sanctum. The first-party SPA uses sessions and CSRF protection. Android uses bearer tokens with defined expiration and revocation. Public registration is disabled. Phase D uses Laravel sessions and the native password broker with Sanctum. Document identity endpoints and prevent account enumeration. `GET /api/v1/me` returns identity, language and the necessary permissions. It omits credentials. Managing users, roles and permissions requires privileges. Policies and middleware are mandatory even when the frontend or token indicates permission.
+
+## Phase D identity contract
+
+All paths in the table are beneath `/api/v1`. Use HTTPS. First-party browser requests use the same origin as `APP_URL`, with host-only cookies and no cross-origin CORS access. First call the native `GET /sanctum/csrf-cookie`. Send cookies and the decoded `XSRF-TOKEN` cookie value as `X-XSRF-TOKEN` on writes. Keep the session cookie HttpOnly and omit bearer credentials from browser storage. Mobile clients send a single `Authorization: Bearer <token>` header without browser cookies. Browser state takes priority when a request supplies both kinds of credentials.
+
+| Method and path | Guard and input | Success |
+|---|---|---|
+| `POST /auth/login` | First-party session with CSRF. `email`, `password`. | 200 identity, regenerated session ID |
+| `POST /auth/logout` | Active first-party session with CSRF. Empty body. | 200 `logged_out` |
+| `POST /auth/token` | Email and password must be supplied even when already signed in. Also supply `device_name` of at most 100 characters. | 201 `{"data":{"token":"<issued-once>","expires_at":"<UTC timestamp>"}}` |
+| `DELETE /auth/token` | Active bearer credential. Empty body. | 200 `token_revoked`, current token only |
+| `POST /auth/forgot-password` | Public. `email`. | 200 `recovery_requested` for all validly formatted addresses |
+| `POST /auth/reset-password` | Public. `email`, `token`, `password`, `password_confirmation`. | 200 `password_reset`, all previous sign-ins revoked |
+| `GET /me` | Active session or bearer. | 200 identity |
+| `PATCH /me/locale` | Active session or bearer. `locale` is `es`, `ca` or `en`. | 200 updated identity |
+| `GET /users` | Active admin session or bearer. | 200 complete array of accounts in ascending ID order |
+| `POST /users` | Active admin. `name`, `email`, `password`, optional `locale`. | 201 ordinary account, Spanish locale if omitted |
+| `GET /users/{user}` | Active admin. Numeric account ID. | 200 account |
+| `PATCH /users/{user}` | Active admin. Supplied fields can include `name`, `email`, `locale`. | 200 account |
+| `PATCH /users/{user}/password` | Active admin. `password`, `password_confirmation`. | 200 `password_replaced` |
+| `POST /users/{user}/disable` | Active admin. Empty body. | 200 disabled account |
+| `POST /users/{user}/enable` | Active admin. Empty body. | 200 active account |
+
+An account has `id`, `name`, `email`, `locale` and Boolean `active`. The identity adds `permissions`, a sorted list of effective permission names. Resources are wrapped in `data`. Actions return `message` and `code`. Unknown input fields are ignored. Names and emails are bounded at 255 characters. Emails are normalized before lookup or storage. New passwords require at least 12 characters, with a maximum of 72 bytes when using bcrypt. A bearer token defaults to 30 days and uses the `identity` ability. Server authorization still applies.
+
+Identity responses send `Cache-Control: no-store`. Errors return `message`, `code` and optional field `errors`. All v1 errors are JSON even without `Accept: application/json`. An active authenticated user's locale controls messages. Public requests negotiate `Accept-Language` among ES, CA and EN and fall back to the configured application locale, then English. Error codes are stable across languages.
+
+| HTTP | Error codes |
+|---|---|
+| 400 | `bad_request` |
+| 401 | `unauthenticated`, `invalid_credentials` |
+| 403 | `forbidden`, `https_required`, `session_required`, `bearer_required` |
+| 404 | `not_found` |
+| 405 | `method_not_allowed` |
+| 409 | `email_conflict`, `self_disable`, `last_active_admin` |
+| 419 | `csrf_mismatch` |
+| 422 | `validation_failed`, `invalid_reset_token` |
+| 429 | `rate_limited`, with retry information |
+| 500 or 503 | `server_error` or `unavailable` respectively |
+
+Login and token issuance share one rate-limit bucket. Recovery and reset share a separate bucket. Each defaults to 5 attempts per minute per normalized identity and IP, plus 30 per minute per IP. Recovery uses the native 60-second issuance throttle and 60-minute expiry. The future SPA consumes the token and email from the URL fragment at `/reset-password#token=<token>&email=<email>` and posts both fields with the new password. Fragments stay out of HTTP requests. The SMTP worker builds links from trusted `APP_URL`. The Phase D OpenAPI fixture covers these operations. [Identity OpenAPI](../tests/Fixtures/phase-d-openapi.json)
 
 ## Preliminary endpoint map
 
@@ -49,7 +90,7 @@ Phases D–K define the exact routes and schemas for this planned API. CRUD mean
 | `/calendar/tasks` | Dated tasks assigned to the current user, with an optional date-range filter |
 | `/expedients/{id}/uploads` | Multipart POST to save files to Samba. File GET and DELETE are unavailable |
 | `/incidents` | Retrieve operational incidents |
-| `/users`, `/roles`, `/permissions` | Authorized administration and assignments |
+| `/roles`, `/permissions` | Authorized administration and assignments in E |
 
 ## Dates and codes
 

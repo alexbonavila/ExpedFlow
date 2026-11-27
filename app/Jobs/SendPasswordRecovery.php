@@ -21,8 +21,15 @@ final class SendPasswordRecovery implements ShouldBeEncrypted, ShouldQueue
     public function handle(): void
     {
         $origin = config()->string('app.url');
-        if (! str_starts_with($origin, 'https://') || ! filter_var($origin, FILTER_VALIDATE_URL)) {
+        if (! filter_var($origin, FILTER_VALIDATE_URL) || ! preg_match('~^https://[^/@?#]+(?:/[^?#]*)?$~D', $origin)) {
             Log::warning('Password recovery requires a valid HTTPS application URL.');
+
+            return;
+        }
+
+        $mailer = config()->string('mail.default');
+        if (config('mail.mailers.'.$mailer.'.transport') !== 'smtp') {
+            Log::warning('Password recovery requires an SMTP mailer.');
 
             return;
         }

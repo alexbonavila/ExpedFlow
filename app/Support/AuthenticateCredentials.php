@@ -17,7 +17,7 @@ final class AuthenticateCredentials
     {
         return $this->timebox->call(function () use ($email, $password): User {
             $user = User::query()->where('email', $email)->lockForUpdate()->first();
-            $valid = Hash::check($password, $user?->password);
+            $valid = Hash::check($password, $user->password ?? '');
 
             if (! $valid || $user === null || $user->disabled_at !== null) {
                 throw new IdentityError(401, 'invalid_credentials');

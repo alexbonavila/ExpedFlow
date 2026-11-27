@@ -87,3 +87,22 @@ test('non-testing deployments require HTTPS for identity requests', function () 
     $this->get('http://expedflow.example/api/v1/me')->assertForbidden()->assertJsonPath('code', 'https_required');
     $this->api('PUT', '/api/v1/me')->assertMethodNotAllowed()->assertJsonPath('code', 'method_not_allowed');
 });
+
+test('credential attempts share an IP-wide limit across login and token issuance', function () {
+    config(['identity.limits.attempts_per_ip' => 2, 'identity.limits.attempts_per_identity' => 1]);
+    $this->freshCsrf();
+    $this->spa('POST', '/auth/login', ['email' => 'first@example.test', 'password' => 'synthetic input'])
+        ->assertUnauthorized();
+    $this->api('POST', '/api/v1/auth/token', ['email' => 'second@example.test', 'password' => 'synthetic input', 'device_name' => 'Fixture'])
+        ->assertUnauthorized();
+    $this->spa('POST', '/auth/login', ['email' => 'third@example.test', 'password' => 'synthetic input'])
+        ->assertTooManyRequests()->assertJsonPath('code', 'rate_limited');
+});
+
+test('SPA logout clears only the active session and retains unrelated remembered state', function () {
+    $user = User::factory()->create();
+    $this->freshCsrf();
+    $this->spa('POST', '/auth/login', ['email' => $user->email, 'password' => 'password'])->assertOk();
+    $this->spa('POST', '/auth/logout')->assertOk();
+    expect($user->fresh()->remember_token)->toBe($user->remember_token);
+});
