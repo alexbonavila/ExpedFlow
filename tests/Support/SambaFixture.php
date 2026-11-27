@@ -4,6 +4,7 @@ namespace Tests\Support;
 
 use App\Support\Samba\MountVerifier;
 use App\Support\Samba\StorageConfiguration;
+use FilesystemIterator;
 use Illuminate\Filesystem\Filesystem;
 use RuntimeException;
 
@@ -21,8 +22,9 @@ final class SambaFixture implements MountVerifier
         }
         $fd = fopen($this->root, 'rb');
         $this->id = 0;
-        foreach (glob('/proc/self/fd/*') ?: [] as $path) {
-            if (@readlink($path) === $this->root) {
+        $descriptors = new FilesystemIterator('/proc/self/fd', FilesystemIterator::CURRENT_AS_PATHNAME | FilesystemIterator::SKIP_DOTS);
+        foreach ($descriptors as $path) {
+            if (readlink($path) === $this->root) {
                 $info = file_get_contents('/proc/self/fdinfo/'.basename($path));
                 if (is_string($info) && preg_match('/^mnt_id:\s+(\d+)$/m', $info, $match) === 1) {
                     $this->id = (int) $match[1];

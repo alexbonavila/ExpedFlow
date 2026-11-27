@@ -213,19 +213,41 @@ test('admits legacy retry explicitly and rejects unowned folders and inactive or
 test('refuses a simultaneous retry while an independent PHP process holds the case lock', function (): void {
     $case = Expedient::factory()->create();
     $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $retry = "/api/v1/expedients/{$case->id}/storage/retry";
+    config(['samba.mountpoint' => null]);
+
     $input = new InputStream;
-    $process = new Process(['php', 'tests/Fixtures/SambaLockHolder.php', (string) $case->id], base_path(), ['APP_ENV' => 'testing']);
-    $process->setInput($input)->setTimeout(10)->start();
+    $holder = new Process([PHP_BINARY, 'tests/Fixtures/SambaLockHolder.php', (string) $case->id], base_path(), ['APP_ENV' => 'testing']);
     try {
-        expect($process->waitUntil(fn (string $type, string $output): bool => $type === 'out' && str_contains($output, "locked\n")))->toBeTrue();
-        $this->api('POST', "/api/v1/expedients/{$case->id}/storage/retry", [], $headers)
-            ->assertConflict()->assertJsonPath('code', 'storage_busy')->assertJsonPath('incident_id', null);
+        $holder->setInput($input)->setTimeout(8)->start();
+        $stdout = '';
+        $ready = $holder->waitUntil(function (string $type, string $output) use (&$stdout): bool {
+            if ($type === Process::OUT) {
+                $stdout .= $output;
+            }
+
+            return str_contains($stdout, "locked\n");
+        });
+        expect($ready)->toBeTrue('Lock holder exited before acquiring the lock. '.$holder->getErrorOutput());
+
+        $attempt = $this->api('POST', $retry, [], $headers);
+        expect($holder->isRunning())->toBeTrue('Retry returned after the lock holder exited. '.$holder->getErrorOutput());
+        $attempt->assertConflict()->assertJsonPath('code', 'storage_busy')->assertJsonPath('incident_id', null);
         $this->assertDatabaseEmpty('incidents');
+        expect($case->fresh()->samba_relative_path)->toBeNull();
+
+        $input->write("release\n");
+        $input->close();
+        expect($holder->wait())->toBe(0, $holder->getErrorOutput());
     } finally {
         $input->close();
-        $process->stop();
+        $holder->stop(0.25);
     }
-});
+
+    expect($holder->isRunning())->toBeFalse();
+    $this->api('POST', $retry, [], $headers)
+        ->assertServiceUnavailable()->assertJsonPath('code', 'storage_configuration_invalid');
+})->group('samba-lock');
 
 test('preserves copied task rows and storage across retry, trash, restore and force delete', function (): void {
     $fixture = new SambaFixture;

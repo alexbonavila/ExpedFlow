@@ -24,14 +24,16 @@ use Pest\Support\Container;
 use Symfony\Component\Process\Process;
 
 require_once dirname(__DIR__, 3).'/vendor/autoload.php';
+require __DIR__.'/identity.php';
+requireSupportedMutationPlugin();
 
 if (getenv(Mutate::ENV_MUTATION_TESTING) !== false) {
+    require __DIR__.'/native-lock-stream.php';
+
     return;
 }
 
-require __DIR__.'/identity.php';
 require __DIR__.'/generator.php';
-requireSupportedMutationPlugin();
 Container::getInstance()->add(MutationGenerator::class, new LocatedMutationGenerator);
 $directory = getenv('EXPEDFLOW_MUTATION_EVIDENCE_DIR');
 if ($directory === false || ! is_dir($directory)) {
