@@ -50,4 +50,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(ExpedientUserPreference::class);
     }
+
+    /** @return HasMany<Incident, $this> */
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(Incident::class);
+    }
 }
