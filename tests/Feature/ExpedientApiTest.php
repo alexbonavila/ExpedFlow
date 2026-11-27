@@ -44,7 +44,7 @@ test('case creation reserves one shared annual sequence in the installation time
     $id = $first->json('data.id');
     expect($id)->not->toBe(9999);
     $case = Expedient::query()->findOrFail($id);
-    expect($case->samba_relative_path)->toBeNull()->and($case->year)->toBe(2036)
+    expect($case->samba_relative_path)->toBe('EXPEDIENTES/203600105 Case  A')->and($case->year)->toBe(2036)
         ->and($case->sequence_number)->toBe(1);
 
     $this->api('POST', '/api/v1/expedients', ['expedient_type_id' => $alternate->id] + $input, $headers)->assertCreated()

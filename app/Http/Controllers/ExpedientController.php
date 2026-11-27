@@ -12,6 +12,7 @@ use App\Support\BusinessWrite;
 use App\Support\ExpedientLifecycle;
 use App\Support\ExpedientWriter;
 use App\Support\PermissionKey;
+use App\Support\Samba\CaseStorage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,13 +54,14 @@ final class ExpedientController extends Controller
         return new ExpedientResource($case);
     }
 
-    public function store(ExpedientRequest $request): JsonResponse
+    public function store(ExpedientRequest $request, CaseStorage $storage): JsonResponse
     {
         $input = $request->validated();
         $case = $this->write->run($request, PermissionKey::CreateExpedients,
-            fn (User $actor): Expedient => $this->writer->create($actor, $input)->load(ExpedientResource::RELATIONS));
+            fn (User $actor): Expedient => $storage->reserve($this->writer->create($actor, $input))->load(ExpedientResource::RELATIONS));
 
-        return (new ExpedientResource($case))->response()->setStatusCode(201);
+        return (new ExpedientResource($case))->additional(['storage' => $storage->created($request, $case)->payload()])
+            ->response()->setStatusCode(201);
     }
 
     public function update(ExpedientRequest $request, string $expedient): ExpedientResource

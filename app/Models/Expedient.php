@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Hidden(['samba_relative_path'])]
+#[Hidden(['samba_relative_path', 'samba_provisioning'])]
 class Expedient extends Model
 {
     /** @use HasFactory<ExpedientFactory> */
