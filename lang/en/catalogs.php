@@ -13,4 +13,6 @@ return [
     'tag_name_conflict' => 'This tag name already exists.',
     'tag_deleted' => 'Tag deleted.',
     'tag_reference_invalid' => 'Each tag must reference an existing tag.',
+    'board_membership_conflict' => 'The board changed. Reload it before moving the case.',
+    'move_position_invalid' => 'The requested position is outside the destination column.',
 ];

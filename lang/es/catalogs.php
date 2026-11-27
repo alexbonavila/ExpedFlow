@@ -13,4 +13,6 @@ return [
     'tag_name_conflict' => 'Ya existe este nombre de etiqueta.',
     'tag_deleted' => 'Etiqueta eliminada.',
     'tag_reference_invalid' => 'Cada etiqueta debe corresponder a una etiqueta existente.',
+    'board_membership_conflict' => 'El tablero ha cambiado. Recárgalo antes de mover el expediente.',
+    'move_position_invalid' => 'La posición solicitada está fuera de la columna de destino.',
 ];

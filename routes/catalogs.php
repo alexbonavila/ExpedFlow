@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ExpedientTagController;
 use App\Http\Controllers\ExpedientTypeCatalogController;
+use App\Http\Controllers\PersonalKanbanController;
 use App\Http\Controllers\StatusCatalogController;
 use App\Http\Controllers\TagCatalogController;
 use App\Http\Controllers\TaskTemplateController;
@@ -70,4 +71,15 @@ Route::prefix('expedients/{expedient}/tags')->whereNumber('expedient')->controll
     ->middleware(RequirePermission::class.':'.PermissionKey::ViewExpedients->value)->group(function (): void {
         Route::get('/', 'index')->middleware(RequirePermission::class.':'.PermissionKey::ViewTags->value);
         Route::put('/', 'replace')->middleware(RequirePermission::class.':'.PermissionKey::AssociateTags->value);
+    });
+
+Route::prefix('expedients')->controller(PersonalKanbanController::class)
+    ->middleware([
+        RequirePermission::class.':'.PermissionKey::ViewExpedients->value,
+        RequirePermission::class.':'.PermissionKey::ManagePersonalKanban->value,
+    ])->group(function (): void {
+        Route::get('board', 'board');
+        Route::get('{expedient}/preferences', 'show')->whereNumber('expedient');
+        Route::patch('{expedient}/preferences', 'update')->whereNumber('expedient');
+        Route::post('{expedient}/move', 'move')->whereNumber('expedient');
     });

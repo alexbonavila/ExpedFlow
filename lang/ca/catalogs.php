@@ -13,4 +13,6 @@ return [
     'tag_name_conflict' => 'Ja existeix aquest nom d’etiqueta.',
     'tag_deleted' => 'Etiqueta eliminada.',
     'tag_reference_invalid' => 'Cada etiqueta ha de correspondre a una etiqueta existent.',
+    'board_membership_conflict' => 'El tauler ha canviat. Torna’l a carregar abans de moure l’expedient.',
+    'move_position_invalid' => 'La posició sol·licitada és fora de la columna de destinació.',
 ];

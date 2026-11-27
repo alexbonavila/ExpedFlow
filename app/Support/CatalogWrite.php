@@ -20,7 +20,7 @@ final class CatalogWrite
         }
 
         try {
-            $record->delete();
+            $record->newQuery()->whereKey($record->id)->delete();
         } catch (QueryException $error) {
             if (($error->errorInfo[1] ?? null) === 1451) {
                 throw new IdentityError(409, $conflict, 'catalogs');

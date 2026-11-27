@@ -39,7 +39,7 @@ final class ExpedientTagController extends Controller
             $case = $this->lifecycle->lockParent($id);
             Gate::forUser($actor)->authorize('associateTags', $case);
 
-            $tags = Tag::query()->whereKey($ids)->orderBy('id')->lockForUpdate()->get(['id'])->modelKeys();
+            $tags = Tag::query()->whereKey($ids)->orderBy('id')->lockForUpdate()->pluck('id')->all();
             if (count($tags) !== count($ids)) {
                 throw ValidationException::withMessages(['tag_ids' => __('catalogs.tag_reference_invalid')]);
             }
