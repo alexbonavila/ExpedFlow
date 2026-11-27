@@ -11,14 +11,17 @@ use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\ExpedientLifecycle;
 use App\Support\ExpedientWriter;
+use App\Support\IdentityError;
 use App\Support\PermissionKey;
 use App\Support\Samba\CaseStorage;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 final class ExpedientController extends Controller
 {
@@ -57,8 +60,17 @@ final class ExpedientController extends Controller
     public function store(ExpedientRequest $request, CaseStorage $storage): JsonResponse
     {
         $input = $request->validated();
-        $case = $this->write->run($request, PermissionKey::CreateExpedients,
-            fn (User $actor): Expedient => $storage->reserve($this->writer->create($actor, $input))->load(ExpedientResource::RELATIONS));
+        try {
+            $case = $this->write->run($request, PermissionKey::CreateExpedients,
+                fn (User $actor): Expedient => $storage->reserve($this->writer->create($actor, $input))->load(ExpedientResource::RELATIONS));
+        } catch (QueryException $exception) {
+            if (! str_contains($exception->getSql(), 'samba_relative_path')) {
+                throw $exception;
+            }
+            Log::error('Case storage intent could not be persisted.');
+
+            throw new IdentityError(500, 'server_error');
+        }
 
         return (new ExpedientResource($case))->additional(['storage' => $storage->created($request, $case)->payload()])
             ->response()->setStatusCode(201);

@@ -7,7 +7,7 @@ final class PinnedDirectory
 {
     /** @param resource $handle */
     private function __construct(
-        private $handle,
+        private mixed $handle,
         public readonly string $path,
         public readonly int $device,
         public readonly int $mountId,
@@ -39,7 +39,7 @@ final class PinnedDirectory
                 throw new StorageFailure(Failure::Unsafe);
             }
 
-            foreach (array_diff_key(self::descriptors(), $before) as $descriptor => $target) {
+            foreach (array_diff_key(self::descriptors(), $before) as $descriptor => $_target) {
                 $fd = '/proc/self/fd/'.$descriptor;
                 $info = @file_get_contents('/proc/self/fdinfo/'.$descriptor);
                 $stat = @stat($fd);

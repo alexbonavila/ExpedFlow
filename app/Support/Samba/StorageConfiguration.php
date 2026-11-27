@@ -4,7 +4,7 @@ namespace App\Support\Samba;
 
 final readonly class StorageConfiguration
 {
-    public const DEFAULT_CASES_ROOT = 'EXPEDIENTES';
+    public const string DEFAULT_CASES_ROOT = 'EXPEDIENTES';
 
     private function __construct(
         public string $mountpoint,

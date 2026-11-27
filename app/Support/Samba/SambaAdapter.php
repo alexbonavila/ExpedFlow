@@ -7,9 +7,9 @@ use Illuminate\Http\UploadedFile;
 
 final class SambaAdapter
 {
-    private const CLAIM = '.expedflow-claim-v1';
+    private const string CLAIM = '.expedflow-claim-v1';
 
-    private const READY = '.expedflow-ready-v1';
+    private const string READY = '.expedflow-ready-v1';
 
     public function __construct(private readonly MountVerifier $verifier) {}
 

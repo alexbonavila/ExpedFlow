@@ -7,7 +7,7 @@ use Illuminate\Validation\ValidationException;
 
 final class UploadInput
 {
-    private const TYPES = [
+    private const array TYPES = [
         'pdf' => 'application/pdf',
         'jpg' => 'image/jpeg',
         'jpeg' => 'image/jpeg',

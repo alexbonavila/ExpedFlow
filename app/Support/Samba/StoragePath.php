@@ -6,9 +6,9 @@ use Normalizer;
 
 final class StoragePath
 {
-    private const UNSAFE = '~[\p{Cc}\p{Cf}<>:"/\\\\|?*]~u';
+    private const string UNSAFE = '~[\p{Cc}\p{Cf}<>:"/\\\\|?*]~u';
 
-    private const RESERVED = '/^(?:CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|(?:COM|LPT)[1-9¹²³])(?:[ .]|$)/iu';
+    private const string RESERVED = '/^(?:CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|(?:COM|LPT)[1-9¹²³])(?:[ .]|$)/iu';
 
     public static function isComponent(string $name): bool
     {

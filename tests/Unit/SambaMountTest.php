@@ -11,13 +11,14 @@ it('requires an exact writable hardened CIFS mount with the configured source', 
     $fixture = new SambaFixture;
     try {
         $configuration = $fixture->configuration(['mountpoint' => '/mnt/fixture space']);
-        $mount = '37 21 0:51 / /mnt/fixture\040space rw,nosuid,nodev,noexec - cifs //fixture.local/cases rw,vers=3.1.1';
+        $mount = '37 21 0:51 / /mnt/fixture\040space rw,nosuid,nodev,noexec - cifs //fixture.local/cases rw,vers=3.1.1,cache=none';
         expect(LinuxMountVerifier::verify($configuration, $mount."\n"))->toBe(37);
         expect(LinuxMountVerifier::verify($configuration, str_replace('cifs', 'smb3', $mount)))->toBe(37);
         foreach ([
             '', 'bad line', str_replace('37 ', 'x ', $mount), str_replace('0:51', 'bad', $mount),
             str_replace('cifs', 'ext4', $mount), str_replace('fixture.local', 'wrong.local', $mount),
-            str_replace('noexec', 'exec', $mount), str_replace('rw,vers', 'ro,vers', $mount),
+            str_replace('noexec', 'exec', $mount), str_replace('cache=none', 'cache=loose', $mount),
+            $mount.',nostrictsync', str_replace('rw,vers', 'ro,vers', $mount),
             str_replace('rw,nosuid', 'ro,nosuid', $mount), str_replace(' / /mnt', ' /other /mnt', $mount),
             str_replace('\040space', '\141space', $mount), str_replace('\040space', '', $mount),
             $mount."\n".str_replace(['37 ', '\040space '], ['38 ', '\040space/sub '], $mount),

@@ -9,8 +9,10 @@ use App\Models\User;
 use App\Support\Samba\MountVerifier;
 use App\Support\Samba\StorageConfiguration;
 use Database\Seeders\AuthorizationSeeder;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
@@ -93,11 +95,14 @@ test('does not probe storage or retain a number when the database creation rolls
     $verifier = Mockery::mock(MountVerifier::class);
     $verifier->shouldNotReceive('mountId');
     $this->app->instance(MountVerifier::class, $verifier);
-    Expedient::updating(function (): never {
-        throw new RuntimeException('Synthetic storage intent transaction failure.');
+    Expedient::updating(function (Expedient $case): never {
+        throw new QueryException('mysql', 'update expedients set samba_relative_path = ?',
+            [$case->samba_relative_path], new RuntimeException('Synthetic storage intent transaction failure.'));
     });
+    Log::shouldReceive('error')->once()->with('Case storage intent could not be persisted.');
 
-    $this->api('POST', '/api/v1/expedients', $input, $this->authorizationBearer($actor))->assertInternalServerError();
+    $this->api('POST', '/api/v1/expedients', $input, $this->authorizationBearer($actor))->assertInternalServerError()
+        ->assertJsonPath('code', 'server_error')->assertJsonMissingPath('trace');
     $this->assertDatabaseEmpty('expedients');
     $this->assertDatabaseEmpty('expedient_sequences');
     $this->assertDatabaseEmpty('incidents');

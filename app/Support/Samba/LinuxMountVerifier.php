@@ -40,10 +40,12 @@ final class LinuxMountVerifier implements MountVerifier
                 continue;
             }
             $flags = explode(',', $options);
+            $serverFlags = explode(',', $tail[2]);
             if ($mount !== null || $root !== '/' || ! in_array($tail[0], ['cifs', 'smb3'], true)
                 || self::decode($tail[1]) !== $configuration->source
                 || array_diff(['rw', 'nodev', 'nosuid', 'noexec'], $flags) !== []
-                || ! in_array('rw', explode(',', $tail[2]), true)) {
+                || array_diff(['rw', 'cache=none'], $serverFlags) !== []
+                || in_array('nostrictsync', $serverFlags, true)) {
                 throw new StorageFailure(Failure::Unavailable);
             }
             $mount = [(int) $id, $device];

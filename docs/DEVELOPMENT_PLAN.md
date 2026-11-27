@@ -98,3 +98,9 @@ Phase E.1 continued on `feat/authorization-roles-e` and PR #12. It introduces is
 ## Phase F clients and cases
 
 Phase F implements client and case routes, read-only lookups, annual numbering, transactional parent lifecycle and a shared status-order foundation on `feat/clients-expedients-f`. The API and architecture documents specify the contracts for later parallel G/H/I development. Owner acceptance and protected integration follow hosted validation on the exact candidate. A separate authorized maintenance change can then rename the workflow file while retaining `quality-gate`.
+
+## Phase I integration handoff
+
+The Phase I route include and case controller hook are the shared application integration points. After the sibling work is integrated, the authenticated API group must include each phase's routes once. In the case create action, run H's validated database template copy inside the existing writer called by BusinessWrite, reserve the private I storage target before that transaction commits, then provision Samba after BusinessWrite returns. Storage retry addresses the same case and does not call the writer. Phase G task mutations continue to use the active-parent and authorization locks from F.
+
+Review route and documentation overlap during combined integration. Run the combined regression, including H's actual transactional copy followed by a failed Samba attempt and a retry. Phase J owns centralized auditing and decisions about incident retention. Phase K owns API consolidation and later phases own the functional frontend. A future mobile upload idempotency protocol, installation verification in R, the published-release event check and an independent CodeQL alert inventory remain separate acceptance work.
