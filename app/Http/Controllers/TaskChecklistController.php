@@ -101,7 +101,7 @@ final class TaskChecklistController extends Controller
 
             $ordered = [];
             foreach ($ids as $index => $id) {
-                $item = $items[$id];
+                $item = $items->get($id) ?? throw new RuntimeException('The locked checklist item is missing.');
                 if (! $item->forceFill(['position' => $index + 1])->save()) {
                     throw new RuntimeException('Checklist reorder did not complete.');
                 }

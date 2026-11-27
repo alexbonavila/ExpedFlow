@@ -317,6 +317,55 @@
             }
           }
         }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Action"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
       }
     },
     "/api/v1/tasks/{task}/move": {
@@ -1670,6 +1719,319 @@
           }
         }
       }
+    },
+    "/api/v1/expedients/{expedient}/tasks/trash": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TrashedTask"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "expedient",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/expedients/{expedient}/tasks/trash/{task}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/TrashedTask"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "expedient",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          },
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/tasks/{task}/restore": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Task"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/tasks/{task}/force-delete": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Action"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/calendar/tasks": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CalendarTask"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "in": "query"
+          },
+          {
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "in": "query"
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1979,6 +2341,128 @@
           "position",
           "created_at",
           "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "TrashedTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expedient_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "scheduled_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}:\\d{2}$",
+            "nullable": true
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Assignee"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "expedient_id",
+          "status_id",
+          "status",
+          "name",
+          "description",
+          "scheduled_date",
+          "scheduled_time",
+          "position",
+          "assignees",
+          "created_at",
+          "updated_at",
+          "deleted_at"
+        ],
+        "additionalProperties": false
+      },
+      "CalendarTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expedient_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expedient_code": {
+            "type": "string"
+          },
+          "expedient_name": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "scheduled_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}:\\d{2}$",
+            "nullable": true
+          },
+          "all_day": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "expedient_id",
+          "expedient_code",
+          "expedient_name",
+          "name",
+          "scheduled_date",
+          "scheduled_time",
+          "all_day"
         ],
         "additionalProperties": false
       }

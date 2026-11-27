@@ -61,4 +61,7 @@ return [
     'task_comment_force_deleted' => 'Comment permanently deleted.',
     'task_checklist_deleted' => 'Checklist item deleted.',
     'task_checklist_membership_changed' => 'The checklist has changed. Send all current item IDs.',
+    'task_deleted' => 'Task moved to trash.',
+    'task_force_deleted' => 'Task permanently deleted.',
+    'task_calendar_range_invalid' => 'The end date must be on or after the start date.',
 ];

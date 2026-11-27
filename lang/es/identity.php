@@ -61,4 +61,7 @@ return [
     'task_comment_force_deleted' => 'El comentario se ha eliminado definitivamente.',
     'task_checklist_deleted' => 'Se ha eliminado el elemento de la lista de verificación.',
     'task_checklist_membership_changed' => 'La lista de verificación ha cambiado. Envía todos los identificadores actuales.',
+    'task_deleted' => 'La tarea se ha movido a la papelera.',
+    'task_force_deleted' => 'La tarea se ha eliminado definitivamente.',
+    'task_calendar_range_invalid' => 'La fecha final debe ser igual o posterior a la fecha inicial.',
 ];

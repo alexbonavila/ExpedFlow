@@ -5,6 +5,7 @@ use App\Models\Status;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\AuthorizationCatalog;
+use App\Support\ExpedientLifecycle;
 use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
@@ -125,4 +126,67 @@ test('a queued checklist reorder rejects membership changed by concurrent creati
     ], fn () => $this->api('POST', $root, ['name' => 'Concurrent addition'], $headers)->assertCreated());
     expect($result['status'])->toBe(409)->and($result['code'])->toBe('task_checklist_membership_changed');
     expect($task->checklistItems()->orderBy('position')->pluck('position')->all())->toBe([1, 2]);
+});
+
+test('a queued task mutation rechecks the active case after its deletion commits', function (string $action): void {
+    $deleter = User::factory()->create()->assignRole('user');
+    $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $case = Expedient::factory()->create();
+    $task = Task::factory()->for($case)->create();
+    $path = "/api/v1/tasks/{$task->id}";
+    $casePath = "/api/v1/expedients/{$case->id}";
+    if ($action === 'restore') {
+        $this->api('DELETE', $path, headers: $headers)->assertOk();
+    }
+    [$method, $target, $body] = match ($action) {
+        'create' => ['POST', "$casePath/tasks", ['status_id' => $task->status_id, 'name' => 'Contending task']],
+        'update' => ['PATCH', $path, ['name' => 'Contending change']],
+        'assign' => ['PUT', "$path/assignees", ['user_ids' => [$deleter->id]]],
+        'move' => ['POST', "$path/move", ['status_id' => $case->status_id]],
+        'restore' => ['POST', "$path/restore", []],
+    };
+    DB::beginTransaction();
+    $lifecycle = app(ExpedientLifecycle::class);
+    $lifecycle->lockParent($case->id);
+
+    $result = commitAgainstTaskContender([
+        'method' => $method, 'path' => $target, 'authorization' => $headers['Authorization'], 'body' => $body,
+        'barrier' => 'from `expedients`',
+    ], fn () => $lifecycle->delete($deleter, $case->id));
+
+    expect($result['status'])->toBe(404);
+    $current = Task::withTrashed()->sole();
+    expect($current->id)->toBe($task->id)->and($current->name)->toBe($task->name)
+        ->and($current->status_id)->toBe($task->status_id)->and($current->deleted_by_expedient)->toBe($action !== 'restore');
+    $this->assertDatabaseEmpty('task_user');
+})->with(['create', 'update', 'assign', 'move', 'restore']);
+
+test('case deletion contending with a task creation cascades the committed task', function (): void {
+    $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $case = Expedient::factory()->create();
+    $path = "/api/v1/expedients/{$case->id}";
+    DB::beginTransaction();
+    AuthorizationCatalog::lockAdministratorRole();
+
+    $result = commitAgainstTaskContender([
+        'method' => 'DELETE', 'path' => $path, 'authorization' => $headers['Authorization'],
+    ], fn () => $this->api('POST', "$path/tasks", ['status_id' => $case->status_id, 'name' => 'Winning task'], $headers)
+        ->assertCreated());
+    expect($result['status'])->toBe(200);
+    $task = Task::onlyTrashed()->sole();
+    expect($task->name)->toBe('Winning task')->and($task->deleted_by_expedient)->toBeTrue();
+});
+
+test('a queued task update rejects a revoked bearer credential after admission', function (): void {
+    $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $task = Task::factory()->create();
+    DB::beginTransaction();
+    AuthorizationCatalog::lockAdministratorRole();
+
+    $result = commitAgainstTaskContender([
+        'method' => 'PATCH', 'path' => "/api/v1/tasks/{$task->id}", 'authorization' => $headers['Authorization'],
+        'body' => ['name' => 'Revoked change'],
+    ], fn () => $this->api('DELETE', '/api/v1/auth/token', headers: $headers)->assertOk());
+    expect($result['status'])->toBe(401)->and($result['code'])->toBe('unauthenticated');
+    expect($task->fresh()->name)->toBe($task->name);
 });

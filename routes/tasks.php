@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\TaskAssigneeController;
+use App\Http\Controllers\TaskCalendarController;
 use App\Http\Controllers\TaskChecklistController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskLifecycleController;
 use App\Http\Middleware\RequirePermission;
 use App\Support\PermissionKey;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +52,17 @@ Route::middleware(RequirePermission::class.':'.PermissionKey::ViewExpedients->va
                     Route::delete('{item}', 'destroy')->whereNumber('item');
                 });
             });
+        Route::get('calendar/tasks', TaskCalendarController::class)
+            ->middleware(RequirePermission::class.':'.PermissionKey::ViewCalendar->value);
+        Route::get('expedients/{expedient}/tasks/trash', [TaskLifecycleController::class, 'trash'])->whereNumber('expedient');
+        Route::get('expedients/{expedient}/tasks/trash/{task}', [TaskLifecycleController::class, 'showTrashed'])
+            ->whereNumber(['expedient', 'task']);
+        Route::delete('tasks/{task}', [TaskLifecycleController::class, 'destroy'])->whereNumber('task')
+            ->middleware(RequirePermission::class.':'.PermissionKey::DeleteTasks->value);
+        Route::post('tasks/{task}/restore', [TaskLifecycleController::class, 'restore'])->whereNumber('task')
+            ->middleware(RequirePermission::class.':'.PermissionKey::RestoreTasks->value);
+        Route::post('tasks/{task}/force-delete', [TaskLifecycleController::class, 'forceDelete'])->whereNumber('task')
+            ->middleware(RequirePermission::class.':'.PermissionKey::ForceDeleteTasks->value);
         Route::get('tasks/{task}', [TaskController::class, 'show'])->whereNumber('task');
     });
 });

@@ -61,4 +61,7 @@ return [
     'task_comment_force_deleted' => 'El comentari s’ha eliminat definitivament.',
     'task_checklist_deleted' => 'S’ha eliminat l’element de la llista de verificació.',
     'task_checklist_membership_changed' => 'La llista de verificació ha canviat. Envia tots els identificadors actuals.',
+    'task_deleted' => 'La tasca s’ha mogut a la paperera.',
+    'task_force_deleted' => 'La tasca s’ha eliminat definitivament.',
+    'task_calendar_range_invalid' => 'La data final ha de ser igual o posterior a la data inicial.',
 ];

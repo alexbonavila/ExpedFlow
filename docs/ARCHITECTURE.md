@@ -106,3 +106,9 @@ Template copying, when H adds it, must persist its database rows inside the same
 ## Phase G audit handoff
 
 Comment writes run in `TaskCommentController` inside `BusinessWrite`. Phase J can record the fresh actor, action, task and comment IDs, original author ID and the authorized change inside that transaction. Capture old values before applying a change and record actual changed fields, keeping the original author on every update and deletion. Centralized recording and retention are pending Phase J.
+
+## Phase G integration with H and I
+
+H can use `TaskOrdering::append` in the Phase F case and annual-number transaction after locking the active case and relevant status IDs with `CaseOrdering::lockStatuses`. The caller authorizes the case/template operation and supplies validated task fields and an explicit shared initial status. Each copied task and checklist item is an independent row without a source-template FK. Template copies have no assignees or schedule, and checklist rows start incomplete in template order. H owns the template mapping and coordination of any proposed alternative initial status. Status deletion must continue to respect FK references from active and trashed tasks and cases.
+
+I owns storage provisioning and incident behavior. Task transactions contain only database changes and return responses after commit. Storage handling has no task-data side effects. The owner coordinates reconciliation of authenticated route includes and shared documentation across G, H and I, followed by combined lifecycle, catalog, template and storage regressions.

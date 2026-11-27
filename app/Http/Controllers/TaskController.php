@@ -127,7 +127,10 @@ final class TaskController extends Controller
         return new TaskResource($record);
     }
 
-    /** @param array<string, mixed> $fields @return array<string, mixed> */
+    /**
+     * @param  array<string, mixed>  $fields
+     * @return array<string, mixed>
+     */
     private function schedule(array $fields, ?Task $task = null): array
     {
         $date = array_key_exists('scheduled_date', $fields) ? $fields['scheduled_date'] : $task?->scheduled_date;
