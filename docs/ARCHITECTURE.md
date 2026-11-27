@@ -21,8 +21,8 @@ flowchart TD
 |---|---|
 | Server | Apache, PHP and MySQL with a traditional installation |
 | Backend | Stable, supported Laravel. Select its exact version in A, with compatible PHP and official extensions |
-| Identity | Laravel Sanctum 4.5.0 supplies the token schema. Fortify is proposed for authentication without its own UI |
-| Roles | Spatie Laravel Permission 8.5.1 supplies the role and permission schema |
+| Identity | Laravel 13.44.1 supplies sessions, validation and the password broker. Sanctum 4.5.0 supplies stateful SPA support and personal access tokens |
+| Roles | Spatie Laravel Permission 8.5.1 supplies the reserved web guard `admin` role and effective permission names |
 | Audit | Spatie Laravel Activitylog 5.1.5 supplies polymorphic actor and subject references, attribute changes and timestamped audit entries |
 | Frontend | Vue 3 with the latest compatible stable AdminLTE. TypeScript and Vite are proposed. Use Vue Router or Pinia only when justified |
 | UI | Evaluate SortableJS for dragging, FullCalendar, and Tabulator or a maintained Vue-compatible alternative in L |
@@ -61,3 +61,7 @@ The operating system manages the SMB mount. Laravel Filesystem uses a configured
 ## Deployment
 
 Use `public/` as the Apache document root, HTTPS, private `.env` configuration, `APP_DEBUG=false`, a cron-driven scheduler and corporate SMTP. Clients may need internal network or VPN access depending on the company. The company is responsible for MySQL, configuration and Samba backups and restoration. Document the requirements and upgrade procedure. CI builds and validates code and artifacts. Automatic deployment to user servers is out of scope.
+
+## Phase D identity implementation
+
+Laravel's native guards, session middleware, Sanctum, password broker and notification facilities supply the required flows without an additional package. The API passes credential mutations through the locked account row and uses an inline Laravel Gate that checks the reserved role directly for the reserved role. Recovery jobs use the existing encrypted database queue and send mail through configured SMTP with a trusted origin. Fortify adds no required mechanism for the selected endpoints. The existing welcome and test pages remain the available UI.

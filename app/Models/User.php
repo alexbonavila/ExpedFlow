@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\Contracts\HasAbilities;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -17,6 +18,10 @@ use Spatie\Permission\Traits\HasRoles;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    public const string ADMIN_ROLE = 'admin';
+
+    public const string SESSION_VERSION = 'identity.auth_version';
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
@@ -29,8 +34,16 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'disabled_at' => 'immutable_datetime',
+            'auth_version' => 'integer',
             'password' => 'hashed',
         ];
+    }
+
+    /** Sanctum uses both a transient browser credential and a persisted bearer credential. */
+    public function currentAccessToken(): ?HasAbilities
+    {
+        return $this->accessToken;
     }
 
     /** @return BelongsToMany<Task, $this> */

@@ -81,4 +81,8 @@ Phase B was integrated through PR #1 at `f33b90f`. The default-branch push and a
 
 ## Phase C status
 
-The candidate on `feat/database-schema-c` delivers the functional schema, Eloquent relations, localization persistence, initial status seed and synthetic MySQL verification. See [DATABASE.md](DATABASE.md) for the dictionary and invariants and [TESTING.md](TESTING.md) for local results. Confirm the hosted core and extended candidate runs and obtain owner acceptance before progressing to Phase D.
+The candidate on `feat/database-schema-c` delivers the functional schema, Eloquent relations, localization persistence, initial status seed and synthetic MySQL verification. See [DATABASE.md](DATABASE.md) for the dictionary and invariants and [TESTING.md](TESTING.md) for local results. The owner accepted Phase C after integration through PR #10 at `942e5cd` and authorized Phase D. The [CI record](CI.md) lists the verified core, extended and post-merge runs.
+
+## Phase D status
+
+The implementation branch is `feat/authentication-users-d`. Phase D delivers the API identity layer, explicit first-administrator provisioning, secure SPA and mobile authentication, SMTP recovery, account lifecycle and localized responses. The [identity contract](API.md#phase-d-identity-contract) and [testing matrix](TESTING.md#phase-d-identity-verification) describe the candidate. Phase E follows the required hosted runs, owner acceptance and integration of Phase D.

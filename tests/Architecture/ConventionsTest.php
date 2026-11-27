@@ -9,3 +9,11 @@ arch('application code contains no debug dumping calls')
 arch('application models are Eloquent models')
     ->expect('App\Models')
     ->toExtend(Model::class);
+
+arch('identity controllers leave role assignment to the explicit bootstrap command')
+    ->expect('App\Http\Controllers')
+    ->not->toUse('Spatie\Permission\Models\Role');
+
+arch('identity code reads bootstrap settings through Laravel configuration')
+    ->expect(['App\Console\Commands', 'App\Support'])
+    ->not->toUse('env');

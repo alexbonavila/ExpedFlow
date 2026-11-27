@@ -1,0 +1,1186 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "ExpedFlow identity API",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/v1/auth/login": {
+            "post": {
+                "summary": "Start a first-party session",
+                "security": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Identity"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/Http429"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "maxLength": 4096
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "summary": "End a first-party session",
+                "security": [
+                    {
+                        "spaSession": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Action"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/token": {
+            "post": {
+                "summary": "Issue a personal access token",
+                "security": [],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Token"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/Http429"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "maxLength": 4096
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "device_name"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Revoke the current personal access token",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Action"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/forgot-password": {
+            "post": {
+                "summary": "Request a recovery email",
+                "security": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Action"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/Http429"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "email"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/reset-password": {
+            "post": {
+                "summary": "Reset a password",
+                "security": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Action"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/Http429"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "token": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 12,
+                                        "maxLength": 1024,
+                                        "format": "password"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "minLength": 12,
+                                        "maxLength": 1024,
+                                        "format": "password"
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "token",
+                                    "password",
+                                    "password_confirmation"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/me": {
+            "get": {
+                "summary": "Read the authenticated identity",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Identity"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            }
+        },
+        "/api/v1/me/locale": {
+            "patch": {
+                "summary": "Update own locale",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Identity"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "locale": {
+                                        "type": "string",
+                                        "enum": [
+                                            "es",
+                                            "ca",
+                                            "en"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "locale"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users": {
+            "get": {
+                "summary": "List complete managed accounts",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create an ordinary account",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Http409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "locale": {
+                                        "type": "string",
+                                        "enum": [
+                                            "es",
+                                            "ca",
+                                            "en"
+                                        ]
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 12,
+                                        "maxLength": 1024,
+                                        "format": "password"
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{user}": {
+            "get": {
+                "summary": "Read a managed account",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update a managed account",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Http409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "locale": {
+                                        "type": "string",
+                                        "enum": [
+                                            "es",
+                                            "ca",
+                                            "en"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/{user}/password": {
+            "patch": {
+                "summary": "Replace a managed password",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Action"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 12,
+                                        "maxLength": 1024,
+                                        "format": "password"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "minLength": 12,
+                                        "maxLength": 1024,
+                                        "format": "password"
+                                    }
+                                },
+                                "required": [
+                                    "password",
+                                    "password_confirmation"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/{user}/disable": {
+            "post": {
+                "summary": "Disable a managed account",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Http409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/{user}/enable": {
+            "post": {
+                "summary": "Enable a managed account",
+                "security": [
+                    {
+                        "spaSession": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "spaSession": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "expedflow-session"
+            },
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        },
+        "schemas": {
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "locale": {
+                        "type": "string",
+                        "enum": [
+                            "es",
+                            "ca",
+                            "en"
+                        ]
+                    },
+                    "active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "locale",
+                    "active"
+                ],
+                "additionalProperties": false
+            },
+            "Identity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "locale": {
+                        "type": "string",
+                        "enum": [
+                            "es",
+                            "ca",
+                            "en"
+                        ]
+                    },
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "locale",
+                    "active",
+                    "permissions"
+                ],
+                "additionalProperties": false
+            },
+            "Error": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "additionalProperties": false
+            },
+            "Action": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "additionalProperties": false
+            },
+            "Token": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "token",
+                    "expires_at"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "responses": {
+            "Http401": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http403": {
+                "description": "Forbidden",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http404": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http409": {
+                "description": "Conflict",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http419": {
+                "description": "Invalid CSRF",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http422": {
+                "description": "Unprocessable",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http429": {
+                "description": "Too many requests",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http500": {
+                "description": "Unexpected error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

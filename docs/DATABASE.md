@@ -82,3 +82,7 @@ erDiagram
 The original Laravel users, sessions, reset, cache and jobs migrations remain unchanged. Add locale and the package schemas, then clients, case types, annual sequences, statuses and cases. Tasks follow cases. Templates, tags and personal preferences follow their parents. Activitylog and incidents complete the schema. Reverse in dependency order on a disposable database. Rolling back Phase C drops domain data and locale values. Back up existing installations and prefer a corrective forward migration for production data.
 
 After applying migrations, run `php artisan db:seed --force` to initialize the shared status catalog. The default seeder creates no accounts or demonstration records. Domain models use Eloquent's default mass-assignment guard. Factories and the initial status seeder supply trusted values explicitly. The business feature phases define their authorized write fields.
+
+## Phase D account lifecycle
+
+The forward migration adds nullable `users.disabled_at TIMESTAMP` and `users.auth_version BIGINT UNSIGNED NOT NULL DEFAULT 0`. Existing accounts remain active and keep password hashes, locales and relationships. The session generation rejects stale sessions even if a concurrent response writes an old session after bulk deletion. Rolling back drops both columns and therefore discards disabled state and generation history. Treat rollback as a maintenance operation.

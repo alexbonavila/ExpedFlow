@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Support\IdentityInput;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +23,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        foreach (['identity.credentials', 'identity.recovery'] as $name) {
+            RateLimiter::for($name, $this->identityLimits(...));
+        }
+    }
+
+    /** @return list<Limit> */
+    private function identityLimits(Request $request): array
+    {
+        $email = $request->input('email');
+        $identity = is_string($email) ? IdentityInput::email($email) : '';
+        $ip = $request->ip() ?? 'unknown';
+        $accountAndIp = hash('sha256', serialize([$identity, $ip]));
+
+        return [
+            Limit::perMinute(max(1, config()->integer('identity.limits.attempts_per_ip')))->by($ip),
+            Limit::perMinute(max(1, config()->integer('identity.limits.attempts_per_identity')))->by($accountAndIp),
+        ];
     }
 }

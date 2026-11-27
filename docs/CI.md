@@ -151,3 +151,13 @@ The temporary validation branches were absent from the remote at the start of Ph
 The owner requested repository cleanup and final Phase B closeout on November 27, 2026. [PR #7](https://github.com/alexbonavila/ExpedFlow/pull/7) passed [run 45952196316](https://github.com/alexbonavila/ExpedFlow/actions/runs/45952196316) and was merged at `5f06ab87461bfe719249c94353f8f1405a68c8d8`. The corresponding [main run 45952681738](https://github.com/alexbonavila/ExpedFlow/actions/runs/45952681738) passed. [PR #8](https://github.com/alexbonavila/ExpedFlow/pull/8) passed [run 45952822548](https://github.com/alexbonavila/ExpedFlow/actions/runs/45952822548). The [main run 45955325050](https://github.com/alexbonavila/ExpedFlow/actions/runs/45955325050) passed at the Phase C starting commit `430c9a4`.
 
 The owner accepted Phase B for progression to Phase C from `430c9a4`. Actual scheduled and published-release executions and independent review of the CodeQL alert inventory remain open operational follow-up. Retain the existing triggers and gates. The prior manual extended run verified the shared jobs. Record the first actual scheduled run, the first authorized published-release run and the GitHub Security inventory review when available. See [SECURITY.md](SECURITY.md) for the dependency updater issue.
+
+## Integrated Phase C
+
+The owner accepted Phase C after integration at `942e5cdc416947a586ac4167a9a3c5a76197e100` through [PR #10](https://github.com/alexbonavila/ExpedFlow/pull/10). The [core run 45959448962](https://github.com/alexbonavila/ExpedFlow/actions/runs/45959448962), [extended run 45959904640](https://github.com/alexbonavila/ExpedFlow/actions/runs/45959904640) and [main run 45960606761](https://github.com/alexbonavila/ExpedFlow/actions/runs/45960606761) each passed. The Phase B schedule event, published release event and independent CodeQL alert inventory review remain operational follow-up.
+
+## Phase D candidate delivery
+
+Use one regular pull request from `feat/authentication-users-d` to `main`. The existing **Phase B** workflow runs core checks automatically on the PR. Select the same branch from **Actions → Phase B → Run workflow** to exercise the extended mutation, dynamic security and performance checks on the candidate. Match both runs to the reviewed head SHA. Record the candidate and its actual run conclusions in the PR and proceed only after owner authorization.
+
+The initial candidate `4654bc4` failed `backend-quality` because the injected password broker interface does not declare the token deletion method. The follow-up uses Laravel's documented facade. Review only the run for the final head when deciding acceptance. [Initial Phase D core run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45972628346)
