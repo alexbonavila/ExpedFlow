@@ -168,7 +168,7 @@ Run the existing guarded `composer test:database` suite on a dedicated MySQL 8.4
 | Dependency and secret checks | npm audit passed the High threshold and reported five moderate findings. Gitleaks detected no leaks. The Packagist advisory endpoint returned HTTP 403 for the Composer audit and the result requires hosted verification. |
 | Samba harness | The missing-mount guard passed. The full smoke needs the isolated Linux runner with sudo and CIFS helpers. |
 
-The existing **Phase B** workflow validates this candidate through a pull request to `main`. For extended candidate CI, open **Actions → Phase B → Run workflow**, choose `feat/database-schema-c` in the branch menu and select **Run workflow**. Verify that the selected head SHA matches the candidate and confirm both the extended jobs and the aggregate gate.
+The Phase C candidate used automatic pull-request checks and the historical Phase B extended dispatch. See CI.md for the run IDs and current ExpedFlow CI commands.
 
 ## Phase D identity verification
 
@@ -202,3 +202,17 @@ The first Phase D candidate passed 116 Pest tests, including 42 integration and 
 | E08 API contract and regression | `AuthorizationContractTest` validates actual `/api/v1` authorization request and response contracts, including protected JSON success and errors. The identity OpenAPI contract and full Phase B quality gates continue to run without exceptions. |
 
 Use `APP_ENV=testing php tests/Support/check-database.php` before database test suites. The contention tests coordinate through a MySQL query barrier using synthetic users, data and credentials. No test calls production storage or SMTP. Domain tests exercise Gates and Policies directly. Service writes, cascade effects, list scoping and future endpoint contracts are prerequisites for their respective later phases.
+
+## Phase E.1 local verification
+
+Activate the existing Codex runtime in each Bash shell. Use focused local checks and hand full mutation verification to the isolated hosted matrix. A targeted diagnosis can run the following commands from the activated checkout.
+
+```bash
+source /workspace/.expedflow-runtime/activate.sh
+APP_ENV=testing php tests/Support/check-database.php
+XDEBUG_MODE=coverage php -d memory_limit=512M vendor/bin/pest --mutate --path=app/Support/EffectivePermissions.php --no-cache
+```
+
+Use `python3 -B -m unittest discover -s scripts/testing -p test_mutation.py` to verify the planner, global score and gate failures. The tests cover invalid and incomplete inventories, missing shards, duplicates, stale configuration, failed processes, infrastructure failures, timeouts and below-threshold scores. Hosted jobs use the unchanged 90% line, 100% measurable type and 80% mutation minima and the complete existing test suites. The sequential Composer command remains available for an explicitly needed reference investigation.
+
+Initiate the candidate's hosted checks and record exact URLs and SHA. Let long-running jobs finish independently and use specific failure evidence or owner follow-up to resume investigation. See CI.md for artifact interpretation and the workflow filename transition.

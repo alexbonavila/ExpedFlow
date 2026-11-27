@@ -47,6 +47,14 @@ Code and documentation agree, relevant tests are reproducible, mandatory gates p
 - If remote branch deletion or pull request creation is unavailable, avoid unnecessary remote branches and document the exact manual operation.
 - At Phase C delivery, the phase-related remote branches should be `main` and `feat/database-schema-c` pending owner integration.
 
+## 8. Codex verification efficiency
+
+- Reuse the stabilized ExpedFlow environment. Source `/workspace/.expedflow-runtime/activate.sh` in each new Bash shell before running PHP, Composer, Artisan or project tests.
+- Run targeted local tests for changed behavior and targeted mutation tests when diagnosing a specific issue. Use equivalent mandatory hosted mutation testing for full verification whenever available.
+- Repeat a successful check only when a relevant change or a specific failure warrants it. Use existing reports and avoid repeated inspection of unchanged process states or logs.
+- Push the candidate and initiate the required hosted workflows. Record the commit SHA and workflow IDs and URLs. End the task once they are recorded and leave long-running checks to finish independently.
+- Resume hosted investigation on owner follow-up or when a specific known failure requires it. Hosted verification remains mandatory before acceptance.
+
 ===
 
 <laravel-boost-guidelines>
