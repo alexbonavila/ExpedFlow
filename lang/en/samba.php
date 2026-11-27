@@ -14,4 +14,10 @@ return [
     'upload_name_conflict' => 'A file with that name already exists.',
     'storage_admission_changed' => 'The case storage operation could not be confirmed with the current access.',
     'unexpected_fields' => 'This endpoint accepts no request fields.',
+    'upload_saved' => 'The file was saved.',
+    'upload_invalid' => 'Send one valid, nonempty file in a multipart request.',
+    'upload_invalid_type' => 'The file contents do not match an allowed format.',
+    'upload_invalid_name' => 'Use a safe filename with an allowed extension.',
+    'upload_too_large' => 'The file exceeds the upload size limit.',
+    'storage_directory_limit' => 'The case folder cannot safely accept another upload.',
 ];

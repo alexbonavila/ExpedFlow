@@ -12,6 +12,7 @@ final readonly class StorageConfiguration
         public string $templates,
         public string $cases,
         public int $uploadBytes,
+        public int $uploadEntries,
         public int $copyFileBytes,
         public int $copyBytes,
         public int $copyEntries,
@@ -38,15 +39,31 @@ final readonly class StorageConfiguration
             throw new StorageFailure(Failure::Configuration);
         }
 
+        self::uploadsPerMinute($values);
+
         return new self(
             $mount, $source, $templates, $cases,
-            self::limit($values, 'upload_bytes', 268435456),
+            self::uploadLimit($values),
+            self::limit($values, 'upload_entries', 50000),
+
             self::limit($values, 'copy_file_bytes', 4294967296),
             self::limit($values, 'copy_bytes', 17179869184),
             self::limit($values, 'copy_entries', 20000),
             self::limit($values, 'copy_depth', 32),
             self::limit($values, 'operation_seconds', 120),
         );
+    }
+
+    /** @param array<string, mixed> $values */
+    public static function uploadLimit(array $values): int
+    {
+        return self::limit($values, 'upload_bytes', 268435456);
+    }
+
+    /** @param array<string, mixed> $values */
+    public static function uploadsPerMinute(array $values): int
+    {
+        return self::limit($values, 'uploads_per_minute', 120);
     }
 
     private static function overlaps(string $first, string $second): bool

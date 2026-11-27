@@ -9,6 +9,7 @@ enum Failure: string
     case Unsafe = 'storage_unsafe';
     case TemplateMissing = 'storage_template_missing';
     case Conflict = 'storage_conflict';
+    case DirectoryLimit = 'storage_directory_limit';
     case CopyLimit = 'storage_copy_limit';
     case Transfer = 'storage_transfer_failed';
     case Busy = 'storage_busy';

@@ -11,6 +11,8 @@ use App\Policies\CatalogPolicy;
 use App\Support\EffectivePermissions;
 use App\Support\IdentityInput;
 use App\Support\PermissionKey;
+use App\Support\Samba\StorageConfiguration;
+use App\Support\Samba\StorageFailure;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -49,6 +51,16 @@ class AppServiceProvider extends ServiceProvider
         foreach (['identity.credentials', 'identity.recovery'] as $name) {
             RateLimiter::for($name, $this->identityLimits(...));
         }
+
+        RateLimiter::for('samba.uploads', function (Request $request): Limit {
+            try {
+                $attempts = StorageConfiguration::uploadsPerMinute(config()->array('samba'));
+            } catch (StorageFailure) {
+                $attempts = 1;
+            }
+
+            return Limit::perMinute($attempts)->by((string) $request->user()?->getAuthIdentifier());
+        });
     }
 
     /** @return list<Limit> */

@@ -11,4 +11,5 @@ Route::prefix('expedients/{expedient}')->whereNumber('expedient')
         RequirePermission::class.':'.PermissionKey::UploadCaseFiles->value,
     ])->group(function (): void {
         Route::post('storage/retry', [SambaController::class, 'retry']);
+        Route::post('uploads', [SambaController::class, 'upload'])->middleware('throttle:samba.uploads');
     });

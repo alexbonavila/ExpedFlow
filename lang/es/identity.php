@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'payload_too_large' => 'La solicitud supera el tamaño permitido.',
     'bad_request' => 'No se ha podido procesar la solicitud.',
     'unauthenticated' => 'Inicia sesión para continuar.',
     'forbidden' => 'No tienes permiso para realizar esta acción.',

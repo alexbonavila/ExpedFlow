@@ -13,6 +13,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -53,6 +54,16 @@ final class CaseStorage
 
         return $this->perform($request, $case, Operation::Retry,
             fn (Expedient $active) => $this->provision($request, $this->reserveLegacy($request, $active), Operation::Retry));
+    }
+
+    public function upload(Request $request, int $id, UploadedFile $file): StorageOutcome
+    {
+        $case = $this->admit($request, $id, Operation::Upload);
+
+        return $this->perform($request, $case, Operation::Upload, function (Expedient $active) use ($file): void {
+            $size = UploadInput::validate($file, StorageConfiguration::uploadLimit(config()->array('samba')));
+            $this->adapter->upload($this->intent($active), $active->samba_provisioning, $file, $size);
+        });
     }
 
     /** @param Closure(Expedient): void $work */
@@ -107,10 +118,14 @@ final class CaseStorage
 
     private function provision(Request $request, Expedient $case, Operation $operation): void
     {
-        $intent = new StorageIntent($case->id, $case->code, $case->samba_relative_path ?? throw new StorageFailure(Failure::NotReady));
-        $this->adapter->provision($intent, $case->samba_provisioning, function (string $state) use ($request, $case, $operation): void {
+        $this->adapter->provision($this->intent($case), $case->samba_provisioning, function (string $state) use ($request, $case, $operation): void {
             $this->admit($request, $case->id, $operation, $state);
         });
+    }
+
+    private function intent(Expedient $case): StorageIntent
+    {
+        return new StorageIntent($case->id, $case->code, $case->samba_relative_path ?? throw new StorageFailure(Failure::NotReady));
     }
 
     private function failed(Request $request, Expedient $case, Operation $operation, StorageFailure|QueryException $failure): StorageOutcome

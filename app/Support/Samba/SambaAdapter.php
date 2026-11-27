@@ -3,6 +3,7 @@
 namespace App\Support\Samba;
 
 use Closure;
+use Illuminate\Http\UploadedFile;
 
 final class SambaAdapter
 {
@@ -22,17 +23,14 @@ final class SambaAdapter
     {
         $configuration = $this->configuration();
         $intent->validate($configuration);
-        $key = config()->string('app.key');
-        if (strlen($key) < 32) {
-            throw new StorageFailure(Failure::Configuration);
-        }
+        $key = $this->key();
 
         $share = new MountedShare($configuration, $this->verifier);
         $cases = $share->directory($configuration->cases) ?? throw new StorageFailure(Failure::NotReady);
         $destination = $share->directory($intent->target);
         [$phase, $claim] = $this->state($state);
         $template = $intent->template($configuration);
-        $identity = json_encode([$configuration->source, $template, $intent->id, $intent->code, $intent->target], JSON_THROW_ON_ERROR);
+        $identity = $this->identity($configuration, $intent);
         $ready = hash_hmac('sha256', 'ready:'.$identity.':'.$claim, $key);
 
         if ($destination !== null) {
@@ -83,6 +81,68 @@ final class SambaAdapter
         $ready = hash_hmac('sha256', 'ready:'.$identity.':'.$claim, $key);
         $this->writeMarker($share, $destination, self::READY, $ready);
         $share->check();
+    }
+
+    public function upload(StorageIntent $intent, ?string $state, UploadedFile $file, int $size): void
+    {
+        $configuration = $this->configuration();
+        if ($size < 1 || $size > $configuration->uploadBytes) {
+            throw UploadInput::invalid('upload_too_large')->status(413);
+        }
+        $intent->validate($configuration);
+        [$phase, $claim] = $this->state($state);
+        if ($phase !== 'r' || $claim === null) {
+            throw new StorageFailure(Failure::NotReady);
+        }
+
+        $identity = $this->identity($configuration, $intent);
+        $ready = hash_hmac('sha256', 'ready:'.$identity.':'.$claim, $this->key());
+        $share = new MountedShare($configuration, $this->verifier);
+        $directory = $share->directory($intent->target) ?? throw new StorageFailure(Failure::NotReady);
+        if (! $this->matches($share, $directory, self::CLAIM, $claim) || ! $this->matches($share, $directory, self::READY, $ready)) {
+            throw new StorageFailure(Failure::NotReady);
+        }
+
+        $name = $file->getClientOriginalPath();
+        $folded = StoragePath::fold($name);
+        $count = 0;
+        foreach ($share->names($directory) as $existing) {
+            if (++$count > $configuration->uploadEntries) {
+                throw new StorageFailure(Failure::DirectoryLimit);
+            }
+            if (StoragePath::fold($existing) === $folded) {
+                throw new StorageFailure(Failure::NameConflict);
+            }
+        }
+        $path = $file->getRealPath();
+        $input = $path === false ? false : @fopen($path, 'rb');
+        if ($input === false) {
+            throw UploadInput::invalid('upload_invalid');
+        }
+        try {
+            $share->write($directory, $name, $input, $size, Failure::NameConflict);
+        } finally {
+            if (! @fclose($input)) {
+                throw new StorageFailure(Failure::Transfer);
+            }
+        }
+    }
+
+    private function key(): string
+    {
+        $key = config()->string('app.key');
+        if (strlen($key) < 32) {
+            throw new StorageFailure(Failure::Configuration);
+        }
+
+        return $key;
+    }
+
+    private function identity(StorageConfiguration $configuration, StorageIntent $intent): string
+    {
+        return json_encode([
+            $configuration->source, $intent->template($configuration), $intent->id, $intent->code, $intent->target,
+        ], JSON_THROW_ON_ERROR);
     }
 
     /** @return array{string|null, string|null} */

@@ -12,7 +12,7 @@ function sambaConfigurationValues(): array
     return [
         'mountpoint' => '/mnt/cases', 'source' => '//fixture.local/cases',
         'templates' => 'PLANTILLAS', 'cases' => 'EXPEDIENTES', 'upload_bytes' => '26214400',
-        'copy_file_bytes' => '268435456', 'copy_bytes' => '1073741824',
+        'upload_entries' => 10000, 'uploads_per_minute' => 12, 'copy_file_bytes' => '268435456', 'copy_bytes' => '1073741824',
         'copy_entries' => '5000', 'copy_depth' => '16', 'operation_seconds' => '45',
     ];
 }

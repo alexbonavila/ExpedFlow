@@ -49,7 +49,7 @@ final class SambaFixture implements MountVerifier
         return [
             'mountpoint' => $this->root, 'source' => '//fixture.local/cases',
             'templates' => 'PLANTILLAS', 'cases' => 'EXPEDIENTES', 'upload_bytes' => 26214400,
-            'copy_file_bytes' => 26214400, 'copy_bytes' => 52428800,
+            'upload_entries' => 10000, 'uploads_per_minute' => 12, 'copy_file_bytes' => 26214400, 'copy_bytes' => 52428800,
             'copy_entries' => 100, 'copy_depth' => 5, 'operation_seconds' => 20,
         ];
     }
