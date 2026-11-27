@@ -31,4 +31,10 @@ return [
     'self_disable' => 'No puedes desactivar tu propia cuenta.',
     'last_active_admin' => 'No se puede desactivar la última cuenta de administración activa.',
     'password_replaced' => 'Se ha cambiado la contraseña y se han revocado los accesos existentes.',
+    'role_name_conflict' => 'Este nombre de rol ya está en uso.',
+    'system_role' => 'Los roles del sistema no se pueden renombrar ni eliminar.',
+    'role_assigned' => 'Retira todas las asignaciones de cuentas antes de eliminar este rol.',
+    'restricted_permissions' => 'Los permisos solicitados no cumplen las reglas de administración.',
+    'unknown_permissions' => 'Uno o más permisos no están disponibles.',
+    'role_deleted' => 'El rol se ha eliminado.',
 ];

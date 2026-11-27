@@ -31,4 +31,10 @@ return [
     'self_disable' => 'You cannot disable your own account.',
     'last_active_admin' => 'The last active administrator cannot be disabled.',
     'password_replaced' => 'The password was replaced and existing sign-ins were revoked.',
+    'role_name_conflict' => 'This role name is already in use.',
+    'system_role' => 'System roles cannot be renamed or deleted.',
+    'role_assigned' => 'Remove all account assignments before deleting this role.',
+    'restricted_permissions' => 'The requested grants do not satisfy the administrator permission rules.',
+    'unknown_permissions' => 'One or more permissions are not available.',
+    'role_deleted' => 'The role was deleted.',
 ];

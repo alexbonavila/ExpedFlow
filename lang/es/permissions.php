@@ -1,0 +1,35 @@
+<?php
+
+return [
+    'groups' => [
+        'users' => 'usuarios',
+        'roles' => 'roles',
+        'statuses' => 'estados',
+        'clients' => 'clientes',
+        'expedient-types' => 'tipos de expediente',
+        'expedients' => 'expedientes',
+        'tasks' => 'tareas',
+        'task-templates' => 'plantillas de tareas',
+        'task-checklists' => 'listas de comprobación de tareas',
+        'task-comments' => 'comentarios de tareas',
+        'tags' => 'etiquetas',
+        'kanban' => 'preferencias personales del Kanban',
+        'calendar' => 'calendario personal',
+        'case-files' => 'archivos de expedientes',
+        'incidents' => 'incidencias',
+    ],
+    'actions' => [
+        'manage' => 'Gestionar :resource',
+        'assign' => 'Asignar :resource',
+        'view' => 'Ver :resource',
+        'create' => 'Crear :resource',
+        'update' => 'Modificar :resource',
+        'delete' => 'Eliminar :resource',
+        'restore' => 'Restaurar :resource',
+        'force-delete' => 'Eliminar definitivamente :resource',
+        'reorder' => 'Reordenar :resource',
+        'associate' => 'Asociar :resource',
+        'upload' => 'Subir :resource',
+    ],
+    'description' => 'Autoriza la siguiente operación: :action.',
+];

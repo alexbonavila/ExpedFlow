@@ -1,0 +1,697 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "ExpedFlow authorization API",
+        "version": "1.0.0"
+    },
+    "security": [
+        {
+            "spaSession": []
+        },
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+        "/api/v1/permissions": {
+            "get": {
+                "summary": "Read the supported permission catalog",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Permission"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles": {
+            "get": {
+                "summary": "List all web roles",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Role"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a custom role",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Role"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Http409"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 125
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/PermissionKey"
+                                        },
+                                        "uniqueItems": true,
+                                        "maxItems": 38
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "permissions"
+                                ],
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{role}": {
+            "parameters": [
+                {
+                    "name": "role",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                }
+            ],
+            "get": {
+                "summary": "Read a web role",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Role"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            },
+            "patch": {
+                "summary": "Rename a custom role",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Role"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Http409"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 125
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ],
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete an unassigned custom role",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Action"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Http409"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{role}/permissions": {
+            "parameters": [
+                {
+                    "name": "role",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                }
+            ],
+            "put": {
+                "summary": "Replace a role’s assigned permissions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Role"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/PermissionKey"
+                                        },
+                                        "uniqueItems": true,
+                                        "maxItems": 38
+                                    }
+                                },
+                                "required": [
+                                    "permissions"
+                                ],
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Action": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "additionalProperties": false
+            },
+            "Error": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "additionalProperties": false
+            },
+            "PermissionKey": {
+                "type": "string",
+                "enum": [
+                    "users.manage",
+                    "roles.manage",
+                    "roles.assign",
+                    "statuses.view",
+                    "statuses.manage",
+                    "clients.view",
+                    "clients.manage",
+                    "expedient-types.view",
+                    "expedient-types.manage",
+                    "expedients.view",
+                    "expedients.create",
+                    "expedients.update",
+                    "expedients.delete",
+                    "expedients.restore",
+                    "expedients.force-delete",
+                    "tasks.view",
+                    "tasks.create",
+                    "tasks.update",
+                    "tasks.assign",
+                    "tasks.reorder",
+                    "tasks.delete",
+                    "tasks.restore",
+                    "tasks.force-delete",
+                    "task-templates.view",
+                    "task-templates.manage",
+                    "task-checklists.manage",
+                    "task-comments.create",
+                    "task-comments.update",
+                    "task-comments.delete",
+                    "task-comments.restore",
+                    "task-comments.force-delete",
+                    "tags.view",
+                    "tags.manage",
+                    "tags.associate",
+                    "kanban.manage",
+                    "calendar.view",
+                    "case-files.upload",
+                    "incidents.view"
+                ]
+            },
+            "Permission": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "$ref": "#/components/schemas/PermissionKey"
+                    },
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "users",
+                            "roles",
+                            "statuses",
+                            "clients",
+                            "expedient-types",
+                            "expedients",
+                            "tasks",
+                            "task-templates",
+                            "task-checklists",
+                            "task-comments",
+                            "tags",
+                            "kanban",
+                            "calendar",
+                            "case-files",
+                            "incidents"
+                        ]
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "restricted": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "key",
+                    "group",
+                    "label",
+                    "description",
+                    "restricted"
+                ],
+                "additionalProperties": false
+            },
+            "Role": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PermissionKey"
+                        },
+                        "uniqueItems": true,
+                        "maxItems": 38
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "permissions"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "responses": {
+            "Http401": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http403": {
+                "description": "Forbidden",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http404": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http409": {
+                "description": "Conflict",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http419": {
+                "description": "Invalid CSRF",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http422": {
+                "description": "Unprocessable",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http500": {
+                "description": "Unexpected error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "spaSession": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "expedflow-session"
+            },
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}

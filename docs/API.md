@@ -107,3 +107,21 @@ Validate the size, name and allowed format. The server resolves the destination 
 ## OpenAPI and tests
 
 Generate and validate a reproducible OpenAPI specification with authentication, schemas, synthetic examples and errors. Prefer Scramble if compatible. Contract tests compare actual responses with schemas and verify JSON, status codes, permissions, unpaginated responses and the absence of sensitive fields. Breaking changes require review and a versioning strategy. Keep credentials and real internal URLs out of published documentation.
+
+## Phase E authorization contract
+
+The existing HTTPS, Sanctum, active-account, real SPA CSRF, locale and `Cache-Control: no-store` rules apply. The endpoints below require both membership in the reserved `web` role `admin` and the listed effective permission. Token abilities cannot satisfy either condition. Only the source-controlled keys in the [permission matrix](SECURITY.md#phase-e-authorization-matrix) can be assigned.
+
+| Method and path | Permission | Request and success |
+|---|---|---|
+| `GET /api/v1/permissions` | `roles.manage` | 200 with `data`, the complete catalog in declaration order. Each item has `key`, `group`, localized `label` and `description`, and boolean `restricted`. |
+| `GET /api/v1/roles` | `roles.manage` | 200 with every web role in ascending ID order in `data`. |
+| `POST /api/v1/roles` | `roles.manage` | `name` and `permissions` list. 201 with the new role in `data`. |
+| `GET /api/v1/roles/{role}` | `roles.manage` | 200 with the web role in `data`. |
+| `PATCH /api/v1/roles/{role}` | `roles.manage` | `name`. 200 with the renamed custom role in `data`. |
+| `PUT /api/v1/roles/{role}/permissions` | `roles.manage` | `permissions` list. 200 with the updated role in `data`. |
+| `DELETE /api/v1/roles/{role}` | `roles.manage` | 200 with localized `message` and `code: role_deleted` for an unassigned custom role. |
+
+Each role exposes `id`, `name` and its assigned known `permissions` keys in ascending order. Custom names are user-authored, trimmed and limited to 125 characters. MySQL's `utf8mb4_unicode_ci` uniqueness for the web guard is case and accent insensitive. Reserved-name variants collide with their system role. Permission replacement accepts a complete JSON list of unique keys, including an empty list where permitted. Each essential administrator key must remain assigned to `admin`, and every other role is limited to delegable keys. The two system roles cannot be renamed or deleted.
+
+Missing or non-web resources return `404 not_found`. Conflicts return `409 role_name_conflict`, `system_role` or `role_assigned`. Invalid or unavailable permission keys, duplicate keys and restricted grant violations return `422 validation_failed` with localized field errors. Guests and invalid credentials receive 401. Active clients without the required authority receive 403.
