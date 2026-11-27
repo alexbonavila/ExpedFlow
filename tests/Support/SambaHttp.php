@@ -2,12 +2,25 @@
 
 namespace Tests\Support;
 
+use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Testing\TestResponse;
 
 trait SambaHttp
 {
     use CaseHttp;
+
+    protected function prepareStandaloneSambaHttp(bool $initializeDatabase): void
+    {
+        TestingDatabase::assertSafe($this->app);
+
+        if ($initializeDatabase) {
+            $this->artisan('migrate:fresh', ['--force' => true])->assertSuccessful();
+            $this->artisan('db:seed', ['--class' => AuthorizationSeeder::class, '--no-interaction' => true])->assertSuccessful();
+        }
+
+        $this->identityHttp();
+    }
 
     /** @param array<string, mixed> $files @param array<string, string> $headers @param array<string, mixed> $parameters */
     protected function sambaMultipart(int $caseId, array $files, array $headers, array $parameters = [], bool $browser = false): TestResponse

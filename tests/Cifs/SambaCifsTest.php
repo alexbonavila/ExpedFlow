@@ -1,27 +1,26 @@
 <?php
 
 use App\Models\Expedient;
+use App\Models\ExpedientSequence;
 use App\Models\ExpedientType;
 use App\Models\Incident;
 use App\Models\User;
+use App\Support\AuthorizationCatalog;
 use App\Support\Samba\LinuxMountVerifier;
 use App\Support\Samba\MountVerifier;
 use App\Support\Samba\StorageConfiguration;
-use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Http\UploadedFile;
 use Tests\Support\SambaHttp;
-use Tests\Support\TestingDatabase;
 use Tests\TestCase;
 
 uses(TestCase::class, SambaHttp::class);
 
 test('exercises the production adapter against the disposable CIFS fixture', function (): void {
-    TestingDatabase::assertSafe($this->app);
-    $this->identityHttp();
     $stage = getenv('SAMBA_CIFS_STAGE');
     $root = getenv('SAMBA_CIFS_MOUNT');
     expect($stage)->toBeIn(['writer', 'reader', 'readonly', 'wrong-source', 'missing', 'loss', 'reconnect'])
         ->and($root)->toBeString()->toMatch('~^/tmp/expedflow-cifs\.[A-Za-z0-9]+/mounted$~D');
+    $this->prepareStandaloneSambaHttp($stage === 'writer');
     config([
         'samba.mountpoint' => $root,
         'samba.source' => $stage === 'wrong-source' ? '//127.0.0.1/wrong-fixture' : '//127.0.0.1/fixtures',
@@ -31,9 +30,7 @@ test('exercises the production adapter against the disposable CIFS fixture', fun
     $partialName = 'interrupted.pdf';
 
     if ($stage === 'writer') {
-        $this->artisan('migrate:fresh', ['--force' => true])->assertSuccessful();
-        $this->seed(AuthorizationSeeder::class);
-        $user = User::factory()->create(['locale' => 'en'])->assignRole('user');
+        $user = User::factory()->create(['locale' => 'en'])->assignRole(AuthorizationCatalog::ORDINARY_ROLE);
         $headers = $this->authorizationBearer($user);
         $input = $this->caseInput(['expedient_type_id' => ExpedientType::factory()->create(['code' => '05'])->id]);
         $this->api('POST', '/api/v1/expedients', ['name' => 'CIFS Àrea'] + $input, $headers)
@@ -48,7 +45,9 @@ test('exercises the production adapter against the disposable CIFS fixture', fun
         $this->sambaMultipart($case->id, ['file' => $file], $headers)->assertConflict()->assertJsonPath('code', 'upload_name_conflict');
         expect(hash_file('sha256', $base.'/'.$filename))->toBe(hash('sha256', $pdf));
         $this->api('POST', "/api/v1/expedients/{$case->id}/storage/retry", [], $headers)->assertOk();
-        expect(hash_file('sha256', $base.'/'.$filename))->toBe(hash('sha256', $pdf));
+        expect(hash_file('sha256', $base.'/'.$filename))->toBe(hash('sha256', $pdf))
+            ->and(Expedient::query()->sole()->is($case))->toBeTrue()
+            ->and(ExpedientSequence::query()->sole()->last_number)->toBe($case->sequence_number);
 
         return;
     }
@@ -107,7 +106,13 @@ test('exercises the production adapter against the disposable CIFS fixture', fun
             ->assertConflict()->assertJsonPath('code', 'upload_name_conflict');
         expect(@filesize($base.'/'.$partialName))->toBe($partial);
         $this->sambaMultipart($case->id, ['file' => UploadedFile::fake()->createWithContent('reconnected.pdf', $pdf)], $headers)->assertCreated();
+        $caseUrl = "/api/v1/expedients/{$case->id}";
+        $this->api('DELETE', $caseUrl, [], $headers)->assertOk();
+        $this->api('POST', $caseUrl.'/restore', [], $headers)->assertOk()->assertJsonPath('data.code', $case->code);
         expect(hash_file('sha256', $base.'/reconnected.pdf'))->toBe(hash('sha256', $pdf))
+            ->and(hash_file('sha256', $base.'/'.$filename))->toBe(hash('sha256', $pdf))
+            ->and(filesize($base.'/'.$partialName))->toBe($partial)
+            ->and(ExpedientSequence::query()->sole()->last_number)->toBe($case->sequence_number)
             ->and(Incident::query()->where('type', 'storage_unavailable')->exists())->toBeTrue();
 
         return;
