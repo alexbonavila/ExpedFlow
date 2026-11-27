@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\TaskTemplateFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class TaskTemplate extends Model
+{
+    /** @use HasFactory<TaskTemplateFactory> */
+    use HasFactory;
+
+    /** @return BelongsTo<ExpedientType, $this> */
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(ExpedientType::class, 'expedient_type_id');
+    }
+
+    /** @return HasMany<TaskTemplateChecklistItem, $this> */
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(TaskTemplateChecklistItem::class);
+    }
+}

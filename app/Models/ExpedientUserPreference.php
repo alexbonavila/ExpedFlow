@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\ExpedientUserPreferenceFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class ExpedientUserPreference extends Model
+{
+    /** @use HasFactory<ExpedientUserPreferenceFactory> */
+    use HasFactory;
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['hidden' => 'boolean'];
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<Expedient, $this> */
+    public function expedient(): BelongsTo
+    {
+        return $this->belongsTo(Expedient::class);
+    }
+}

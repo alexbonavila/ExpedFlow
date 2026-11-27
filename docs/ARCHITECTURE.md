@@ -21,15 +21,17 @@ flowchart TD
 |---|---|
 | Server | Apache, PHP and MySQL with a traditional installation |
 | Backend | Stable, supported Laravel. Select its exact version in A, with compatible PHP and official extensions |
-| Identity | Sanctum is confirmed. Fortify is proposed for authentication without its own UI |
-| Roles | Spatie Laravel Permission is confirmed |
-| Audit | Evaluate the proposed Spatie Laravel Activitylog package |
+| Identity | Laravel Sanctum 4.5.0 supplies the token schema. Fortify is proposed for authentication without its own UI |
+| Roles | Spatie Laravel Permission 8.5.1 supplies the role and permission schema |
+| Audit | Spatie Laravel Activitylog 5.1.5 supplies polymorphic actor and subject references, attribute changes and timestamped audit entries |
 | Frontend | Vue 3 with the latest compatible stable AdminLTE. TypeScript and Vite are proposed. Use Vue Router or Pinia only when justified |
 | UI | Evaluate SortableJS for dragging, FullCalendar, and Tabulator or a maintained Vue-compatible alternative in L |
 | API | REST JSON v1 with OpenAPI. Scramble is a candidate |
 | Tests/CI | Pest/PHPUnit, Vitest, Playwright and GitHub Actions. See TESTING and CI |
 
 Install a package only when it is justified. Check actual compatibility, supported versions, maintenance, vulnerabilities, dependencies and cost. Record exact versions and lockfiles. Verify the Vue variant of AdminLTE in L before relying on any particular version's stability. Limit B frontend work to infrastructure and a minimal page for verifying the test harness.
+
+The Phase C packages support Laravel 13. Activitylog requires PHP 8.4, the runtime already pinned in CI. Permission and Activitylog share the locked Laravel Package Tools 1.93.3 dependency. Activitylog supplies the audit persistence model and structured changes. Phase J will define the business events and retention operation.
 
 ## Laravel organization
 

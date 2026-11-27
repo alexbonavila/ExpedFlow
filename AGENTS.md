@@ -37,6 +37,16 @@ Resolve implementation details within scope and document their consequences. If 
 
 Code and documentation agree, relevant tests are reproducible, mandatory gates pass, and there are no known regressions or undisclosed omissions. Acceptance requires evidence from checks that were actually run.
 
+## 7. Branch management
+
+- Use one implementation branch per phase. For Phase C, use `feat/database-schema-c`. Use descriptive commits for development blocks and one final pull request to `main`.
+- Create auxiliary branches only when strictly necessary. Prefer local branches and verify that a remote auxiliary branch can be removed before publishing it.
+- Integrate required, validated auxiliary changes into the implementation branch. Keep failed experiments and deliberate defects out of it.
+- Preserve relevant validation evidence, then remove auxiliary branches once their purpose is fulfilled. Leave no redundant or validation-only branches at phase closeout. Respect branches belonging to other contributors or ongoing work.
+- Never force-push shared branches or bypass main branch protection. Merge the final pull request only with explicit owner authorization.
+- If remote branch deletion or pull request creation is unavailable, avoid unnecessary remote branches and document the exact manual operation.
+- At Phase C delivery, the phase-related remote branches should be `main` and `feat/database-schema-c` pending owner integration.
+
 ===
 
 <laravel-boost-guidelines>
