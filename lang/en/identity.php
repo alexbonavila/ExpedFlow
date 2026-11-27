@@ -50,4 +50,9 @@ return [
     'case_description_too_long' => 'The description may contain at most 65,535 UTF-8 bytes.',
     'case_deleted' => 'The case was moved to trash.',
     'case_force_deleted' => 'The case was permanently deleted.',
+    'task_text_too_long' => 'The text may not exceed 65,535 UTF-8 bytes.',
+    'task_date_invalid' => 'Enter a valid date in YYYY-MM-DD format.',
+    'task_time_requires_date' => 'Set a date before providing a time.',
+    'task_order_exhausted' => 'No task position is available.',
+    'task_status_changed' => 'The task status changed. Refresh and try again.',
 ];

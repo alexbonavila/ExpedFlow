@@ -50,4 +50,9 @@ return [
     'case_description_too_long' => 'La descripción admite como máximo 65 535 bytes UTF-8.',
     'case_deleted' => 'El expediente se ha movido a la papelera.',
     'case_force_deleted' => 'El expediente se ha eliminado definitivamente.',
+    'task_text_too_long' => 'El texto no puede superar los 65 535 bytes UTF-8.',
+    'task_date_invalid' => 'Introduce una fecha válida en formato AAAA-MM-DD.',
+    'task_time_requires_date' => 'Indica una fecha antes de proporcionar una hora.',
+    'task_order_exhausted' => 'No hay ninguna posición disponible para la tarea.',
+    'task_status_changed' => 'El estado de la tarea cambió. Actualiza e inténtalo de nuevo.',
 ];

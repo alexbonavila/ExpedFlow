@@ -50,4 +50,9 @@ return [
     'case_description_too_long' => 'La descripció admet com a màxim 65.535 bytes UTF-8.',
     'case_deleted' => 'L’expedient s’ha mogut a la paperera.',
     'case_force_deleted' => 'L’expedient s’ha suprimit definitivament.',
+    'task_text_too_long' => 'El text no pot superar els 65 535 bytes UTF-8.',
+    'task_date_invalid' => 'Introdueix una data vàlida en format AAAA-MM-DD.',
+    'task_time_requires_date' => 'Indica una data abans de proporcionar una hora.',
+    'task_order_exhausted' => 'No hi ha cap posició disponible per a la tasca.',
+    'task_status_changed' => 'L’estat de la tasca ha canviat. Actualitza i torna-ho a provar.',
 ];
