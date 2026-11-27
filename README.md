@@ -4,7 +4,7 @@ Self-hosted case, task and business workflow management system.
 
 ExpedFlow is an internal Laravel application designed for self-managed Apache, PHP and MySQL installations. It will expose a versioned JSON API shared by its Vue web client and future Android client. The product will use an organization's Samba share for its files.
 
-Phase A established the Laravel scaffold. Phase B adds test infrastructure and CI. Integration and acceptance remain pending. See the [Phase B verification record](docs/CI.md) for execution results and open criteria.
+Phase A established the Laravel scaffold. Phase B integrated the test infrastructure and CI on protected `main`. The acceptance closeout and outstanding verification items are documented. See the [Phase B verification record](docs/CI.md) for execution results and open criteria.
 
 ## Development setup
 
