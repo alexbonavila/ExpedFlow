@@ -34,4 +34,13 @@ final class AdministrativeWrite
             return $operation($adminRole, $accounts->findOrFail($targetId));
         }, 3);
     }
+
+    public static function assertRemovableAdministrator(Role $admin, User $account): void
+    {
+        if ($account->disabled_at === null
+            && $account->roles()->whereKey($admin->id)->exists()
+            && ! User::role($admin)->whereNull('disabled_at')->whereKeyNot($account->id)->exists()) {
+            throw new IdentityError(409, 'last_active_admin');
+        }
+    }
 }

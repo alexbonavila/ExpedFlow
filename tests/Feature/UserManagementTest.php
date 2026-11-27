@@ -152,7 +152,7 @@ test('an already admitted stale administrative operation cannot disable the last
     $other->forceFill(['disabled_at' => now()])->save();
 
     expect(fn () => app(AccountLifecycle::class)->disable($other, $active))->toThrow(
-        fn (IdentityError $exception) => expect($exception->errorCode)->toBe('last_active_admin')
+        fn (IdentityError $exception) => expect($exception->errorCode)->toBe('unauthenticated')
     );
     expect($active->fresh()->disabled_at)->toBeNull();
 

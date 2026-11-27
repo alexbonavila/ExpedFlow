@@ -23,7 +23,7 @@ final class RoleAssignments
                 if ($actor->is($account)) {
                     throw new IdentityError(409, 'self_demotion');
                 }
-                self::assertRemovableAdministrator($admin, $account);
+                AdministrativeWrite::assertRemovableAdministrator($admin, $account);
             }
 
             $otherGuards = $account->roles()->where('roles.guard_name', '!=', AuthorizationCatalog::GUARD)->pluck('roles.id')->all();
@@ -31,14 +31,5 @@ final class RoleAssignments
 
             return $account;
         }, $target);
-    }
-
-    public static function assertRemovableAdministrator(Role $admin, User $account): void
-    {
-        if ($account->disabled_at === null
-            && $account->roles()->whereKey($admin->id)->exists()
-            && ! User::role($admin)->whereNull('disabled_at')->whereKeyNot($account->id)->exists()) {
-            throw new IdentityError(409, 'last_active_admin');
-        }
     }
 }

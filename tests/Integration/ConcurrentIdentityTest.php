@@ -1,13 +1,19 @@
 <?php
 
 use App\Models\User;
+use App\Support\AdministrativeWrite;
+use App\Support\EffectivePermissions;
+use App\Support\IdentityError;
 use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\Process\Process;
 use Tests\Support\IdentityHttp;
 use Tests\Support\TestingDatabase;
@@ -95,7 +101,7 @@ test('simultaneous administrative disables leave one active administrator', func
             ->assertOk()->assertJsonPath('data.active', false);
     });
 
-    expect($response)->toBe(['status' => 409, 'code' => 'last_active_admin']);
+    expect($response)->toBe(['status' => 401, 'code' => 'unauthenticated']);
     expect(User::role($role)->whereNull('disabled_at')->sole()->id)->toBe($first->id);
     $this->assertModelMissing($secondToken->accessToken);
 });
@@ -115,4 +121,179 @@ test('a concurrent token issuance resumes after disable and cannot issue a crede
 
     expect($response)->toBe(['status' => 401, 'code' => 'invalid_credentials']);
     expect($user->tokens()->count())->toBe(0);
+});
+
+test('competing administrator mutations recheck current membership and account state under the same lock', function (
+    string $winningAction, string $contendingAction, int $denial, string $code,
+): void {
+    $role = Role::findByName('admin', 'web');
+    $first = User::factory()->create()->assignRole($role);
+    $second = User::factory()->create()->assignRole($role);
+    $firstAuth = 'Bearer '.$first->createToken('First actor')->plainTextToken;
+    $secondAuth = 'Bearer '.$second->createToken('Second actor')->plainTextToken;
+    $method = fn (string $action): string => $action === 'roles' ? 'PUT' : 'POST';
+    $payload = fn (string $action): array => $action === 'roles' ? ['role_ids' => []] : [];
+
+    DB::beginTransaction();
+    Role::query()->lockForUpdate()->findOrFail($role->id);
+    $response = competeForIdentityLock([
+        'method' => $method($contendingAction), 'path' => "/api/v1/users/{$first->id}/$contendingAction",
+        'authorization' => $secondAuth, 'body' => $payload($contendingAction),
+    ], function () use ($firstAuth, $second, $winningAction, $method, $payload): void {
+        $this->api($method($winningAction), "/api/v1/users/{$second->id}/$winningAction", $payload($winningAction),
+            ['Authorization' => $firstAuth])->assertOk();
+    });
+
+    expect($response)->toBe(['status' => $denial, 'code' => $code])
+        ->and(User::role($role)->whereNull('disabled_at')->sole()->is($first))->toBeTrue();
+})->with([
+    'demotion against demotion' => ['roles', 'roles', 403, 'forbidden'],
+    'disable against demotion' => ['disable', 'roles', 401, 'unauthenticated'],
+    'demotion against disable' => ['roles', 'disable', 403, 'forbidden'],
+]);
+
+test('an admitted password replacement fails after the actor loses administrator authority', function (): void {
+    $role = Role::findByName('admin', 'web');
+    $owner = User::factory()->create()->assignRole($role);
+    $actor = User::factory()->create()->assignRole($role);
+    $victim = User::factory()->create();
+    $password = $victim->password;
+    $ownerAuth = 'Bearer '.$owner->createToken('Owner')->plainTextToken;
+    $actorAuth = 'Bearer '.$actor->createToken('Admitted writer')->plainTextToken;
+    $victimToken = $victim->createToken('Existing credential');
+
+    DB::beginTransaction();
+    Role::query()->lockForUpdate()->findOrFail($role->id);
+    $response = competeForIdentityLock([
+        'method' => 'PATCH', 'path' => "/api/v1/users/{$victim->id}/password",
+        'authorization' => $actorAuth, 'body' => [
+            'password' => 'synthetic password change', 'password_confirmation' => 'synthetic password change',
+        ],
+    ], function () use ($ownerAuth, $actor): void {
+        $this->api('PUT', "/api/v1/users/{$actor->id}/roles", ['role_ids' => []], ['Authorization' => $ownerAuth])->assertOk();
+    });
+
+    expect($response)->toBe(['status' => 403, 'code' => 'forbidden'])
+        ->and($victim->fresh()->password)->toBe($password);
+    $this->assertModelExists($victimToken->accessToken);
+});
+
+test('a concurrent password change invalidates the admitted administrative credential generation', function (): void {
+    $role = Role::findByName('admin', 'web');
+    $owner = User::factory()->create()->assignRole($role);
+    $actor = User::factory()->create()->assignRole($role);
+    $ownerAuth = 'Bearer '.$owner->createToken('Owner')->plainTextToken;
+    $actorAuth = 'Bearer '.$actor->createToken('Admitted writer')->plainTextToken;
+    $account = User::factory()->create();
+
+    DB::beginTransaction();
+    Role::query()->lockForUpdate()->findOrFail($role->id);
+    $response = competeForIdentityLock([
+        'method' => 'PATCH', 'path' => "/api/v1/users/{$account->id}",
+        'authorization' => $actorAuth, 'body' => ['name' => 'Unauthorized late edit'],
+    ], function () use ($ownerAuth, $actor): void {
+        $this->api('PATCH', "/api/v1/users/{$actor->id}/password", [
+            'password' => 'synthetic password change', 'password_confirmation' => 'synthetic password change',
+        ], ['Authorization' => $ownerAuth])->assertOk();
+    });
+
+    expect($response)->toBe(['status' => 401, 'code' => 'unauthenticated'])
+        ->and($account->fresh()->name)->toBe($account->name);
+});
+
+test('role assignment racing deletion preserves referential and authorization state', function (bool $assignmentFirst): void {
+    $actor = User::factory()->create()->assignRole('admin');
+    $user = User::factory()->create();
+    $role = Role::query()->create(['name' => 'Temporary reviewer', 'guard_name' => 'web']);
+    $headers = ['Authorization' => 'Bearer '.$actor->createToken('Concurrent client')->plainTextToken];
+    $assignment = [
+        'method' => 'PUT', 'path' => "/api/v1/users/{$user->id}/roles", 'body' => ['role_ids' => [$role->id]],
+    ];
+    $deletion = ['method' => 'DELETE', 'path' => "/api/v1/roles/{$role->id}", 'body' => []];
+    [$winner, $contender] = $assignmentFirst ? [$assignment, $deletion] : [$deletion, $assignment];
+    DB::beginTransaction();
+    Role::query()->lockForUpdate()->findOrFail(Role::findByName('admin', 'web')->id);
+    $response = competeForIdentityLock($contender + ['authorization' => $headers['Authorization']], function () use ($winner, $headers): void {
+        $this->api($winner['method'], $winner['path'], $winner['body'], $headers)->assertOk();
+    });
+
+    if ($assignmentFirst) {
+        expect($response)->toBe(['status' => 409, 'code' => 'role_assigned'])
+            ->and($user->roles()->sole()->is($role))->toBeTrue();
+    } else {
+        expect($response)->toBe(['status' => 422, 'code' => 'validation_failed'])
+            ->and($user->roles()->count())->toBe(0);
+        $this->assertModelMissing($role);
+    }
+})->with(['assignment wins' => true, 'deletion wins' => false]);
+
+test('competing replacements remain complete across processes and invalidate the database cache after commit', function (): void {
+    config(['permission.cache.store' => 'database']);
+    $registrar = app(PermissionRegistrar::class);
+    $registrar->initializeCache();
+    $cachedKey = config()->string('permission.cache.key');
+    $role = Role::query()->create(['name' => 'Reviewers', 'guard_name' => 'web']);
+    $role->givePermissionTo('tasks.view');
+    $account = User::factory()->create()->assignRole($role)->load('roles.permissions');
+    $actor = User::factory()->create()->assignRole('admin');
+    $headers = ['Authorization' => 'Bearer '.$actor->createToken('Grant writer')->plainTextToken];
+    $update = "/api/v1/roles/{$role->id}/permissions";
+    Permission::findByName('tasks.view', 'web');
+    expect(Cache::store('database')->has($cachedKey))->toBeTrue();
+
+    DB::beginTransaction();
+    $this->api('PUT', $update, ['permissions' => ['tasks.create']], $headers)->assertOk();
+    expect(Cache::store('database')->has($cachedKey))->toBeTrue();
+    DB::rollBack();
+    expect(Cache::store('database')->has($cachedKey))->toBeTrue()
+        ->and($role->permissions()->pluck('name')->all())->toBe(['tasks.view']);
+
+    DB::beginTransaction();
+    Role::query()->lockForUpdate()->findOrFail(Role::findByName('admin', 'web')->id);
+    $response = competeForIdentityLock([
+        'method' => 'PUT', 'path' => $update, 'authorization' => $headers['Authorization'],
+        'body' => ['permissions' => ['tags.view', 'expedients.view']],
+    ], function () use ($update, $headers): void {
+        $this->api('PUT', $update, ['permissions' => ['tasks.create']], $headers)->assertOk();
+    });
+    expect($response)->toBe(['status' => 200, 'code' => null])
+        ->and(Cache::store('database')->has($cachedKey))->toBeFalse()
+        ->and(app(EffectivePermissions::class)->for($account))->toBe(['expedients.view', 'tags.view']);
+
+    $process = new Process(['php', 'tests/Fixtures/IdentityContender.php'], base_path(), ['APP_ENV' => 'testing']);
+    $process->setTimeout(15)->setInput(json_encode([
+        'method' => 'GET', 'path' => '/api/v1/me', 'read_effective' => true,
+        'authorization' => 'Bearer '.$account->createToken('Existing reader')->plainTextToken,
+    ], JSON_THROW_ON_ERROR));
+    expect($process->run())->toBe(0);
+    expect(preg_match('/^result:(.+)$/m', $process->getOutput(), $matches))->toBe(1);
+    expect(json_decode($matches[1], true, flags: JSON_THROW_ON_ERROR))->toBe([
+        'status' => 200, 'code' => null, 'permissions' => ['expedients.view', 'tags.view'],
+    ]);
+});
+
+test('catalog seeding waits for the first initializer and preserves its administrator', function (): void {
+    config(['identity.bootstrap' => [
+        'name' => 'First Owner', 'email' => 'first-owner@example.test', 'password' => 'synthetic first password',
+    ]]);
+    DB::beginTransaction();
+    expect(Artisan::call('expedflow:admin:init'))->toBe(0);
+
+    $response = competeForIdentityLock(['seed' => true], fn () => null);
+
+    expect($response)->toBe(['exit' => 0])
+        ->and(User::role('admin')->whereNull('disabled_at')->sole()->email)->toBe('first-owner@example.test');
+    $this->assertDatabaseCount('users', 1);
+    $this->assertDatabaseMissing('seeded_catalogs', ['catalog' => 'authorization_admin_pending']);
+});
+
+test('the shared invariant rejects removal of a sole active administrator despite disabled memberships', function (): void {
+    $role = Role::findByName('admin', 'web');
+    $active = User::factory()->create()->assignRole($role);
+    User::factory()->create(['disabled_at' => now()])->assignRole($role);
+
+    expect(fn () => AdministrativeWrite::assertRemovableAdministrator($role, $active))->toThrow(
+        fn (IdentityError $exception) => expect($exception->errorCode)->toBe('last_active_admin'),
+    );
+    expect(User::role($role)->whereNull('disabled_at')->sole()->is($active))->toBeTrue();
 });

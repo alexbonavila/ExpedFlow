@@ -111,3 +111,11 @@ Spatie's `web` guard applies to both Sanctum transports. An authenticated active
 | Audit log visibility | Reserved for J | Audit visibility and incident retention remain undecided. Never expose raw logs or operational secrets. |
 
 Phase E implements the authorization boundaries. F through J must wire the applicable decisions into real routes and transactions, with no per-case ACL, hierarchical roles or tenancy.
+
+### Transactional authorization and cache
+
+Every administrative write acquires the reserved `admin` web role row first, then locks relevant user rows by ascending ID and locks any additional target roles by ID. The first-administrator command and catalog installer use the same reserved row. Recheck actor activity, credential generation, administrator membership and the operation's current permission inside the write transaction. The disable and membership paths share the last-active-administrator check. Conflicts roll back without modifying credentials or assignments. Proposed business writes in later phases must recheck their permissions and invariants inside the relevant mutation transaction.
+
+The authoritative decision queries current Spatie web memberships and permission pivots in MySQL. It avoids reliance on cached Gate guesses, previously loaded Eloquent relationships and client claims. Catalog and role graph changes clear the native Spatie cache after commit using the configured store. Rollbacks leave the previously valid cache intact. In-flight reads that already passed authorization may finish with their earlier result. Newly admitted requests read committed authorization. The credential revocation rules for disabling and password changes remain in effect.
+
+Phase J should record the actor, target, timestamp and role or permission differences for successful security and assignment changes. Never include secrets, passwords, hashes, tokens or session data. The proposal to omit transient personal Kanban ordering and visibility events requires an explicit decision in J. Audit visibility and incident retention remain open.

@@ -1,5 +1,6 @@
 <?php
 
+use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ $app->make(ConsoleKernel::class)->bootstrap();
 TestingDatabase::assertSafe($app);
 
 $operation = json_decode(stream_get_contents(STDIN), true, flags: JSON_THROW_ON_ERROR);
-$marker = isset($operation['bootstrap']) ? 'insert ignore into `roles`' : 'for update';
+$marker = isset($operation['bootstrap']) || isset($operation['seed']) ? 'insert ignore into `roles`' : 'for update';
 DB::connection()->beforeExecuting(static function (string $query) use ($marker): void {
     if (str_contains(strtolower($query), $marker)) {
         fwrite(STDOUT, "ready\n");
@@ -25,16 +26,21 @@ DB::connection()->beforeExecuting(static function (string $query) use ($marker):
 if (isset($operation['bootstrap'])) {
     config(['identity.bootstrap' => $operation['bootstrap']]);
     $result = ['exit' => Artisan::call('expedflow:admin:init')];
+} elseif (isset($operation['seed'])) {
+    $result = ['exit' => Artisan::call('db:seed', ['--class' => AuthorizationSeeder::class, '--force' => true])];
 } else {
-    $request = Request::create('https://expedflow.example'.$operation['path'], 'POST', server: [
+    $request = Request::create('https://expedflow.example'.$operation['path'], $operation['method'] ?? 'POST', server: [
         'HTTP_ACCEPT' => 'application/json',
         'CONTENT_TYPE' => 'application/json',
         'HTTP_AUTHORIZATION' => $operation['authorization'] ?? '',
-    ], content: json_encode($operation['body'], JSON_THROW_ON_ERROR));
+    ], content: json_encode($operation['body'] ?? [], JSON_THROW_ON_ERROR));
 
     $response = $app->make(HttpKernel::class)->handle($request);
     $body = json_decode($response->getContent(), true, flags: JSON_THROW_ON_ERROR);
     $result = ['status' => $response->getStatusCode(), 'code' => $body['code'] ?? null];
+    if (isset($operation['read_effective'])) {
+        $result['permissions'] = $body['data']['permissions'] ?? null;
+    }
 }
 
 fwrite(STDOUT, 'result:'.json_encode($result, JSON_THROW_ON_ERROR)."\n");

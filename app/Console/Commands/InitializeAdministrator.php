@@ -52,7 +52,7 @@ final class InitializeAdministrator extends Command
     {
         return DB::transaction(function () use ($catalog, $name, $email, $password): bool {
             [$role, $created] = $catalog->ensureAdministratorRole();
-            $administrators = User::role($role)->lockForUpdate()->limit(2)->get();
+            $administrators = User::role($role)->orderBy('users.id')->lockForUpdate()->limit(2)->get();
 
             if ($administrators->count() === 1 && IdentityInput::email($administrators->firstOrFail()->email) === $email) {
                 return false;
