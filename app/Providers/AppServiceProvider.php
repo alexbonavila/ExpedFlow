@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use App\Support\IdentityInput;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::define('manage-accounts', fn (User $user): bool => $user->hasRole(User::ADMIN_ROLE, 'web'));
+
         foreach (['identity.credentials', 'identity.recovery'] as $name) {
             RateLimiter::for($name, $this->identityLimits(...));
         }

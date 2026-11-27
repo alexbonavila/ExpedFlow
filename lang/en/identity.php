@@ -27,4 +27,8 @@ return [
     'recovery_action' => 'Reset password',
     'recovery_expiry' => 'This link expires after :minutes minutes.',
     'recovery_ignore' => 'If you did not request a password reset, you can ignore this email.',
+    'email_conflict' => 'An account already uses that email address.',
+    'self_disable' => 'You cannot disable your own account.',
+    'last_active_admin' => 'The last active administrator cannot be disabled.',
+    'password_replaced' => 'The password was replaced and existing sign-ins were revoked.',
 ];
