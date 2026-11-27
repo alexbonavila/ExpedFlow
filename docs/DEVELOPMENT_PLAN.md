@@ -1,80 +1,80 @@
-# Plan de desarrollo y aceptación
+# Development and acceptance plan
 
-## Orden y dependencias
+## Order and dependencies
 
-Fase 0: requisitos y documentación. A → B → C son estrictamente secuenciales. El backend D–K se acepta antes de L. El frontend funcional L–P se desarrolla sobre contratos validados. Q/R consolidan y distribuyen; S se definirá después. No iniciar automáticamente una fase posterior ni ejecutar cambios no solicitados. Paralelismo solo si se acuerda y no rompe dependencias ni contratos.
+Phase 0 establishes requirements and documentation. A → B → C must run in that order. Accept the D–K backend before L. Build the L–P functional frontend on validated contracts. Q/R consolidate and distribute the application. Define S later. Start later phases only when authorized and keep changes within the requested scope. Parallel work requires agreement and must preserve dependencies and contracts.
 
-| Fase | Alcance y entregables | Criterio de salida |
+| Phase | Scope and deliverables | Exit criteria |
 |---|---|---|
-| 0 | Documentación, requisitos, arquitectura, estándares, pruebas y plan | Documentos coherentes; propuestas técnicas distinguidas de requisitos; sin código funcional |
-| A | Laravel base, GitHub, MySQL, configuración y entornos | Arranque local y conexión DB, repositorio y documentación, `.env.example` sin secretos, lockfiles, commit base |
-| B | Testing, CI y controles de calidad completos | Todos los harnesses y gates comprobados, pruebas adversariales, protección main, evidencia real; ninguna funcionalidad de negocio anticipada |
-| C | Base de datos completa | Diccionario final, migraciones, modelos, factories, seeders, FKs/índices/constraints y tests MySQL; migración y rollback comprobados |
-| D | Autenticación y usuarios | Sanctum, sesiones/tokens, login/logout/reset, admin bootstrap, registro cerrado, gestión usuarios, locale, pruebas |
-| E | Roles y permisos | Spatie, roles iniciales, roles configurables, Policies, matriz autorizaciones y pruebas de escalada/soft/hard delete |
-| F | Clientes, expedientes, numeración | CRUD, clientes únicos, doble relación, código anual concurrente, 999 límite, estados de alta, soft delete/restore de expediente; coordinar cascada con G |
-| G | Tareas, asignaciones, comentarios, checklist | CRUD, asignación múltiple, fecha única opcional, orden común, edición comentarios ajenos, cascada/restauración correcta |
-| H | Estados, plantillas, etiquetas, preferencias | Catálogo común, integridad referencial, copia independiente de plantilla, colores/nombres únicos, comportamiento multiusuario Kanban |
-| I | Samba e incidencias | Copia modelo, subida API, fallo/montaje ausente y recuperación, tabla incidencias; pruebas reales SMB; no listado ni borrado |
-| J | Auditoría | Cambios de negocio y actor, cambios de relaciones, retención anual, scheduler, pruebas; asegurar auditoría de flujos previos |
-| K | Consolidación API | Endpoints y políticas completos, OpenAPI, contratos y errores JSON, filtros sin paginación, integración backend, seguridad y regresiones |
-| L | Infraestructura frontend | Vue + AdminLTE compatible, router, localización, cliente API, layouts, login; build y pruebas |
-| M | Administración | Usuarios, roles/permisos, estados, plantillas y catálogo según permisos; E2E |
-| N | Clientes y expedientes | Altas/ediciones, tipos, etiquetas, tablas, papelera, incidencias, exportación base; E2E |
-| O | Kanban | General con orden personal/ocultación, tablero de tareas compartido, drag/drop y alternativa accesible; E2E dos usuarios |
-| P | Calendario, tablas y CSV | Tareas asignadas día completo/hora, filtros/orden/paginación local, CSV, pruebas |
-| Q | Validación integral | E2E completos, navegadores, accesibilidad, seguridad, rendimiento, fallos Samba y recuperación; calidad y regresiones |
-| R | Instalación y versión estable | Apache/PHP/MySQL, SMTP, Samba, cron, instrucciones tradicionales, instalación/actualización comprobadas |
-| S | Android futuro | Definir requisitos propios, usar contrato API y Sanctum; no desarrollar hasta recibir alcance |
+| 0 | Documentation, requirements, architecture, standards, tests and plan | Consistent documents, technical proposals distinguished from requirements, no functional code |
+| A | Laravel foundation, GitHub, MySQL, configuration and environments | Local startup and database connection, repository and documentation, secret-free `.env.example`, lockfiles and base commit |
+| B | Complete testing, CI and quality controls | Verified harnesses and gates, adversarial tests, main branch protection and actual evidence, with no early business functionality |
+| C | Complete database | Final dictionary, migrations, models, factories, seeders, foreign keys, indexes, constraints and MySQL tests, with migration and rollback verified |
+| D | Authentication and users | Sanctum, sessions and tokens, login, logout and reset, administrator bootstrap, closed registration, user management, locale and tests |
+| E | Roles and permissions | Spatie, initial and configurable roles, Policies, authorization matrix and escalation, soft deletion and hard deletion tests |
+| F | Clients, cases and numbering | CRUD, unique clients, two client relationships, concurrent annual codes, limit of 999, initial statuses, case soft deletion and restoration, and cascade coordination with G |
+| G | Tasks, assignments, comments and checklists | CRUD, multiple assignees, one optional date, shared order, editing other users' comments, and correct cascade and restoration |
+| H | Statuses, templates, tags and preferences | Shared catalog, referential integrity, independent template copies, colors and unique names, and multi-user Kanban behavior |
+| I | Samba and incidents | Template copies, API uploads, failure or missing-mount recovery and incident table, with real SMB tests and no listing or deletion |
+| J | Auditing | Business changes and actors, relationship changes, annual retention, scheduler and tests, with auditing of earlier flows verified |
+| K | API consolidation | Complete endpoints and policies, OpenAPI, contracts and JSON errors, unpaginated filters, backend integration, security and regression tests |
+| L | Frontend infrastructure | Compatible Vue and AdminLTE, router, localization, API client, layouts, login, build and tests |
+| M | Administration | Users, roles, permissions, statuses, templates and catalog as authorized, with E2E tests |
+| N | Clients and cases | Creation and editing, types, tags, tables, trash, incidents and basic export |
+| O | Kanban | General board with personal order and visibility, shared task board, drag and drop with an accessible alternative, and two-user E2E tests |
+| P | Calendar, tables and CSV | All-day and timed assigned tasks, local filtering, sorting and pagination, CSV and tests |
+| Q | Comprehensive validation | Full E2E, browser, accessibility, performance, security, Samba failure and recovery, quality and regression tests |
+| R | Installation and stable release | Apache/PHP/MySQL, SMTP, Samba, cron and traditional setup instructions, with installation and upgrades verified |
+| S | Future Android app | Define its own requirements, use the API contract and Sanctum, and wait for scope approval before development |
 
-Las fases F–J pueden necesitar usar modelos/catálogos ya creados en C aunque sus endpoints de administración lleguen después. No se considerará completada una regla transversal hasta verificarla en la fase que incorpora todas sus dependencias. La auditoría se consolida en J sin perder cobertura de modificaciones anteriores.
+Phases F–J may need models or catalogs created in C even if their administrative endpoints come later. A cross-cutting rule is complete only after verification in the phase that incorporates all of its dependencies. Consolidate auditing in J while retaining coverage of earlier changes.
 
-## Instrucciones específicas fase A
+## Phase A instructions
 
-1. Verificar entorno y seleccionar versiones Laravel/PHP/MySQL/Node soportadas y compatibles. Registrar las versiones reales; no inventarlas. Crear proyecto Laravel limpio en raíz del repositorio, sin frontend funcional ni paquetes de dominio innecesarios.
-2. Incorporar los doce archivos de fase 0. Adaptar documentación de arranque a comandos reales. Mantener archivos Laravel estándar y convenciones.
-3. Configurar conexión MySQL de desarrollo y base de pruebas separada; `.env.example` con variables necesarias no secretas. Comprobar `.gitignore` y lockfiles. Preparar configuración para idioma/zona horaria sin introducir modelos funcionales.
-4. Verificar arranque, migraciones base del framework en DB desechable y pruebas base existentes. Registrar comandos, versiones, resultados y commit. No instalar todavía el esquema ExpedFlow.
-5. Confirmar repositorio GitHub y estado limpio; no afirmar push o CI sin comprobar. Cerrar A antes de iniciar B.
+1. Check the environment and select supported, compatible Laravel/PHP/MySQL/Node versions. Record the actual versions. Create a clean Laravel project at the repository root without a functional frontend or unnecessary domain packages.
+2. Add the twelve Phase 0 files. Update startup documentation with actual commands. Keep standard Laravel files and conventions.
+3. Set up the MySQL development connection and a separate test database. Put necessary non-secret variables in `.env.example`. Check `.gitignore` and lockfiles. Prepare language and time zone settings and defer functional models.
+4. Verify startup, baseline framework migrations against a disposable database and the existing baseline tests. Record commands, versions, results and commit. Defer installation of the ExpedFlow schema.
+5. Confirm the GitHub repository and a clean working tree. Report pushes or CI only after verifying them. Close A before starting B.
 
-## Instrucciones específicas fase B
+## Phase B instructions
 
-### B01 — Inventario y herramientas
-Leer TESTING.md/CI.md. Seleccionar versiones compatibles, Pest/PHPUnit y plugins, Pint, Larastan, herramientas frontend, Playwright y auxiliares. Instalar solo dependencias necesarias y registrar lockfiles. Preparar entorno de test, scripts y documentación. Decidir umbrales medibles con justificación.
+### B01 — Inventory and tools
+Read TESTING.md/CI.md. Select compatible versions of Pest/PHPUnit and its plugins, Pint, Larastan, frontend tools, Playwright and supporting tools. Install only necessary dependencies and record lockfiles. Prepare the test environment, scripts and documentation. Choose measurable thresholds and justify them.
 
-### B02 — Backend y base de datos
-Configurar descubrimiento de suites, unit/feature/integración/arquitectura/contratos/regresión, cobertura y tipos, mutación. MySQL real y aislamiento. Pruebas ejecutables de migraciones base, rollback, factories/seed existentes, transacciones y concurrencia técnica. Configurar mecanismos Laravel de fakes y pruebas de almacenamiento/correo/console. No crear modelos de negocio.
+### B02 — Backend and database
+Configure discovery for unit, feature, integration, architecture, contract and regression suites, along with line and type coverage and mutation testing. Use isolated real MySQL. Provide runnable tests for baseline migrations, rollback, existing factories and seed data, transactions and concurrency. Configure Laravel fakes and storage, mail and console tests. Defer business models.
 
-### B03 — Frontend y navegador
-Harness Vue mínimo, ESLint/Prettier/TypeScript, Vitest/Vue Test Utils. Vite build y servidor real efímero. Playwright en Chromium, Firefox y WebKit, axe-core, datos de prueba y capturas/trazas al fallar. El harness no se convierte en frontend funcional adelantado. Integrar contratos JSON y localización mínima verificable.
+### B03 — Frontend and browsers
+Provide a minimal Vue harness, ESLint, Prettier, TypeScript, Vitest and Vue Test Utils. Build with Vite and use a real temporary server. Run Playwright in Chromium, Firefox and WebKit, use axe-core and test data, and capture screenshots and traces on failure. Keep the harness limited to testing. Integrate JSON contracts and minimal verifiable localization.
 
-### B04 — Seguridad, rendimiento y almacenamiento
-Auditorías Composer/npm, Gitleaks, CodeQL, Dependabot, ZAP, k6 y recurso Samba de prueba. Ejecutar smoke reproducible. No utilizar sistemas reales de empresa. Resolver compatibilidad/privilegios runner para SMB o documentar bloqueo sin cerrar fase.
+### B04 — Security, performance and storage
+Configure Composer/npm audits, Gitleaks, CodeQL, Dependabot, ZAP, k6 and a test Samba share. Run a reproducible smoke test. Keep real company systems out of testing. Resolve SMB runner compatibility and permissions or document the blocker and keep the phase open.
 
 ### B05 — Workflows
-Automatizar jobs PR/main, nocturnos y release, con permisos mínimos y artefactos. Usar scripts comunes local/CI, health checks y timeouts. Configurar gate agregador y protección de rama. Probar workflow manual de checks programados. No añadir CD a producción.
+Automate jobs for PRs, main pushes, nightly runs and releases with least privilege and artifacts. Share local and CI scripts, readiness checks and timeouts. Configure the aggregate gate and branch protection. Test manual dispatch for the scheduled checks. Production CD is out of scope.
 
-### B06 — Pruebas de los controles
-Ejecutar matriz de fallos deliberados de CI.md en ramas temporales. Verificar detección, gate y bloqueo real de integración; revertir cada cambio. Verificar main final verde y limpio. Registrar URLs/IDs de ejecuciones reales, resultados, versiones y configuración efectiva de protección.
+### B06 — Control tests
+Run the deliberate failure matrix from CI.md on temporary branches. Verify detection, the gate and actual integration blocking, then revert each change. Verify a final clean and green main branch. Record actual run URLs and IDs, results, versions and effective protection settings.
 
-### B07 — Aceptación
-Entregar inventario de herramientas, comandos, suites y workflows, resultados reales de local/CI, métricas, pruebas de gate, documentación de mantenimiento y categorías funcionales diferidas a C–Q. C solo se autoriza si B supera todos los controles obligatorios; un problema de permisos, runner o servicio no se convierte en un éxito simulado.
+### B07 — Acceptance
+Deliver the tool inventory, commands, suites and workflows, actual local and CI results, metrics, gate tests, maintenance documentation, and functional categories deferred to C–Q. Authorize C only after B passes every mandatory control. Record permission, runner and service blockers accurately.
 
-## Formato de cierre para cualquier fase
+## Closeout format for every phase
 
-- Fase y commit/rama; alcance solicitado y entregado.
-- Requisitos y criterios de aceptación cumplidos con evidencia.
-- Archivos modificados, decisiones técnicas y justificación.
-- Tests/comandos ejecutados y resultados (local y CI separados).
-- Fallos, limitaciones y tareas diferidas legítimamente; ninguna afirmación de ejecución sin evidencia.
-- Estado del árbol y de integración; recomendación de siguiente fase sin iniciarla automáticamente.
+- Phase, commit and branch, with the requested and delivered scope.
+- Met requirements and acceptance criteria with evidence.
+- Changed files, technical decisions and reasons.
+- Tests and commands run, with separate local and CI results.
+- Failures, limitations and legitimately deferred work. Report execution only with evidence.
+- Working tree and integration status, plus a recommendation for the next phase. Do not start it automatically.
 
-## Estado de este documento
+## Status of this document
 
-Fase 0 documentada; A–S pendientes. No se han creado repositorio, proyecto Laravel, dependencias ni CI mediante este paquete. Las decisiones técnicas de implementación se cerrarán cuando correspondan, respetando los requisitos confirmados.
+The Phase 0 package documents the plan and records A–S as pending at that baseline. The package did not create a repository, Laravel project, dependencies or CI. Finalize technical implementation decisions in their assigned phases and preserve confirmed requirements.
 
 ## Phase A and B status
 
 Phase A is closed on the owner's supplied baseline evidence for commit `22528be`. The cloud reran the two inherited tests and Pint and confirmed the base Laravel page. The original cloud Vite configuration depended on a font CDN that the proxy blocked. The Phase B build now bundles the same font from the npm lockfile and ran locally.
 
-Phase B has a tested implementation branch and is pending protected PR integration and default-branch trigger verification. Read the actual execution and open criteria in [CI.md](CI.md), [TESTING.md](TESTING.md) and [SECURITY.md](SECURITY.md). The owner must authorize integration. Phase C requires explicit acceptance of Phase B after the required checks pass on `main`.
+Phase B was integrated through PR #1 at `f33b90f`. The default-branch push and actual manual extended workflow passed. Active main rules and the remaining controlled PR, scheduled and release-event evidence are recorded in [CI.md](CI.md). Phase C remains gated on explicit Phase B acceptance.

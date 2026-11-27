@@ -1,68 +1,68 @@
-# Contrato API — reglas y recursos preliminares
+# API contract — preliminary rules and resources
 
-## Convenciones
+## Conventions
 
-Base `/api/v1`, HTTPS, JSON UTF-8. API pública en especificación, no acceso anónimo a datos. No paginar respuestas, no `links/meta` de paginación, no límites silenciosos ni truncado. Búsqueda y filtros opcionales explícitos, ordenación con allowlist, paginación de tablas en Vue. Seleccionar campos y relaciones necesarios; evitar N+1. Riesgo de respuestas grandes: pruebas de carga y filtros explícitos, sin cambiar el contrato sin aprobación.
+Use `/api/v1` as the base path, HTTPS and UTF-8 JSON. The API specification is public. Data access requires authentication. API responses must be complete, with no pagination, pagination `links/meta`, silent limits or truncation. Offer explicit optional search and filters, allowlisted sorting and table pagination in Vue. Select the fields and relationships needed to avoid N+1 queries. Mitigate large responses with load tests and explicit filters. Obtain approval for any contract change.
 
-Solicitudes JSON salvo autenticación CSRF nativa y subida multipart. `Accept: application/json`. Respuestas de recursos mediante Laravel API Resources: propuesta `{"data": {...}}` o `{"data": [...]}`; acciones sin representación `{"message":"..."}` para evitar cuerpos no JSON. Errores consistentes `{"message":"...","code":"...","errors":{...}}` con códigos de máquina estables, mensaje localizado y errores de campos cuando proceda. Validar contrato exacto en K. No devolver HTML, redirects o stack traces para endpoints API. Los endpoints nativos auxiliares SPA (p. ej. CSRF) no forman parte del contrato v1.
+Use JSON requests except for native CSRF authentication and multipart uploads. Send `Accept: application/json`. Use Laravel API Resources for resource responses. The proposed formats are `{"data": {...}}` and `{"data": [...]}`, with `{"message":"..."}` for actions without a representation so their bodies remain JSON. Use a consistent error format `{"message":"...","code":"...","errors":{...}}` with stable machine-readable codes, a localized message and field errors when applicable. Validate the exact contract in K. API endpoints must omit HTML, redirects and stack traces. Native SPA support endpoints such as CSRF fall outside the v1 contract.
 
-| HTTP | Uso |
+| HTTP | Use |
 |---|---|
-| 200 | Consulta/actualización/acción correcta con JSON |
-| 201 | Creación correcta |
-| 400 | Solicitud mal formada |
-| 401 | No autenticado |
-| 403 | No autorizado |
-| 404 | Recurso inexistente o no accesible según contrato |
-| 409 | Conflicto de estado, duplicidad operativa, secuencia agotada |
-| 419 | CSRF inválido si procede en flujo SPA |
-| 422 | Validación |
-| 429 | Límite de peticiones |
-| 503 | Servicio externo no disponible cuando impide completar la operación |
-| 500 | Error inesperado, sin detalles sensibles |
+| 200 | Successful query, update or action with JSON |
+| 201 | Successful creation |
+| 400 | Malformed request |
+| 401 | Unauthenticated |
+| 403 | Unauthorized |
+| 404 | Resource does not exist or is inaccessible under the contract |
+| 409 | State conflict, operational duplicate or exhausted sequence |
+| 419 | Invalid CSRF token where applicable to the SPA flow |
+| 422 | Validation failure |
+| 429 | Request limit reached |
+| 503 | An unavailable external service prevents the operation from completing |
+| 500 | Unexpected error, with sensitive details omitted |
 
-## Autenticación
+## Authentication
 
-Sanctum: SPA propia usa sesión y CSRF; Android usa bearer tokens con expiración/revocación definida. No registro público. Login/logout, recuperación y reset mediante mecanismos Laravel/Fortify; endpoints de identidad documentados, sin enumeración de cuentas. `GET /api/v1/me` devuelve identidad, idioma y permisos necesarios, nunca credenciales. Gestión de usuarios, roles y permisos requiere privilegios. Policies y middleware obligatorios aunque frontend o token indiquen permiso.
+Use Sanctum. The first-party SPA uses sessions and CSRF protection. Android uses bearer tokens with defined expiration and revocation. Public registration is disabled. Use Laravel/Fortify mechanisms for login, logout, recovery and password reset. Document identity endpoints and prevent account enumeration. `GET /api/v1/me` returns identity, language and the necessary permissions. It omits credentials. Managing users, roles and permissions requires privileges. Policies and middleware are mandatory even when the frontend or token indicates permission.
 
-## Mapa preliminar de endpoints
+## Preliminary endpoint map
 
-Las rutas exactas y esquemas se concretan en D–K; no es una API implementada. CRUD significa GET colección/elemento, POST, PATCH, DELETE según autorización. Restauración y eliminación definitiva son acciones explícitas distintas de DELETE ordinario.
+Phases D–K define the exact routes and schemas for this planned API. CRUD means GET for collections and individual resources, POST, PATCH and DELETE, subject to authorization. Restore and permanent deletion are explicit actions separate from ordinary DELETE.
 
-| Recurso | Operaciones |
+| Resource | Operations |
 |---|---|
-| `/clients` | Listar, crear, editar, eliminar/restaurar según reglas de integridad |
-| `/expedient-types` | CRUD tipos; código inmutable |
-| `/expedient-types/{id}/task-templates` | Administrar plantilla y checklist |
-| `/statuses` | Listar; administración y orden por admin |
-| `/expedients` | Listar, crear (opción copiar plantilla), consultar, editar, soft delete |
-| `/expedients/{id}/restore`, `/expedients/{id}/force-delete` | Acciones explícitas con permisos |
-| `/expedients/{id}/move` | Estado global y posición del actor |
-| `/expedients/{id}/preferences` | Orden/visibilidad solo del usuario autenticado |
-| `/expedients/{id}/tasks` | Listar/crear tareas |
-| `/tasks/{id}` | Consultar, editar, soft delete |
-| `/tasks/{id}/restore`, `/tasks/{id}/force-delete`, `/tasks/{id}/move` | Restaurar, eliminar definitivamente, mover posición global |
-| `/tasks/{id}/assignees` | Gestionar asignaciones múltiples, sin duplicados |
-| `/tasks/{id}/checklist` | CRUD/orden/marcado de elementos |
-| `/tasks/{id}/comments` | CRUD comentarios, con auditoría del actor |
-| `/tags`, `/expedients/{id}/tags` | Catálogo y asociación de etiquetas |
-| `/calendar/tasks` | Tareas fechadas asignadas al usuario actual; filtro opcional de intervalo |
-| `/expedients/{id}/uploads` | POST multipart, guardado Samba; sin GET de archivos ni DELETE |
-| `/incidents` | Consultar incidencias operativas |
-| `/users`, `/roles`, `/permissions` | Administración y asignaciones autorizadas |
+| `/clients` | List, create, edit, delete and restore according to integrity rules |
+| `/expedient-types` | CRUD for types with immutable codes |
+| `/expedient-types/{id}/task-templates` | Manage the template and checklist |
+| `/statuses` | List statuses, with administration and ordering reserved for administrators |
+| `/expedients` | List, create with an option to copy a template, retrieve, edit and soft delete |
+| `/expedients/{id}/restore`, `/expedients/{id}/force-delete` | Explicit actions subject to permissions |
+| `/expedients/{id}/move` | Update the global status and the actor's position |
+| `/expedients/{id}/preferences` | Manage ordering and visibility for the authenticated user only |
+| `/expedients/{id}/tasks` | List and create tasks |
+| `/tasks/{id}` | Retrieve, edit and soft delete |
+| `/tasks/{id}/restore`, `/tasks/{id}/force-delete`, `/tasks/{id}/move` | Restore, permanently delete and change the global position |
+| `/tasks/{id}/assignees` | Manage multiple assignments and prevent duplicates |
+| `/tasks/{id}/checklist` | CRUD, ordering and completion of checklist items |
+| `/tasks/{id}/comments` | Comment CRUD with auditing of the actor |
+| `/tags`, `/expedients/{id}/tags` | Tag catalog and tag associations |
+| `/calendar/tasks` | Dated tasks assigned to the current user, with an optional date-range filter |
+| `/expedients/{id}/uploads` | Multipart POST to save files to Samba. File GET and DELETE are unavailable |
+| `/incidents` | Retrieve operational incidents |
+| `/users`, `/roles`, `/permissions` | Authorized administration and assignments |
 
-## Fechas y códigos
+## Dates and codes
 
-Código `202600105` y código tipo `05` como strings. Una fecha funcional de tarea, propuesta `scheduled_date: "2026-12-01"`, `scheduled_time: "10:30"` o null; hora sin fecha inválida. Date-only no significa medianoche. Sin fechas en checklist ni plantilla. Timestamps técnicos ISO 8601. El cliente no decide el correlativo ni el año de generación.
+Represent case code `202600105` and type code `05` as strings. A task has one functional date, proposed as `scheduled_date: "2026-12-01"` with `scheduled_time: "10:30"` or null. A time without a date is invalid. Treat a date-only value as distinct from midnight. Checklists and templates have no dates. Use ISO 8601 for technical timestamps. The server determines the sequence number and generation year.
 
-## Movimientos y eliminación
+## Moves and deletion
 
-El servidor calcula/valida estado y posición, en transacción. El cliente no puede editar preferencias ajenas mediante un user_id arbitrario. La API normal excluye soft deleted, papelera explícita y autorización para restaurar. Force-delete reservado a admin, nunca toca Samba. Validar hijos contra padre indicado y bloquear accesos a tareas de expedientes eliminados.
+The server calculates and validates status and position within a transaction. A client cannot edit another user's preferences by supplying an arbitrary user_id. The ordinary API excludes soft-deleted records and provides an explicit trash view with authorized restoration. Force-delete is reserved for administrators and leaves Samba untouched. Validate child resources against the specified parent and block access to tasks belonging to deleted cases.
 
-## Subidas y errores Samba
+## Uploads and Samba errors
 
-Validar tamaño, nombre y formato permitido; el servidor resuelve destino desde expediente, no aceptar rutas libres. No exponer ruta física, secretos ni contenido del archivo en JSON. Devolver resultado real de la escritura; registrar incidencia al fallar. Para alta de expediente con fallo de aprovisionamiento, propuesta: `201` con indicador explícito de fallo parcial/incidencia y reintento idempotente; no informar que la carpeta se creó si no ocurrió. Cerrar contrato en I/K. La exportación CSV se implementa en Vue a partir de los datos JSON, sin endpoints CSV dentro del API v1.
+Validate the size, name and allowed format. The server resolves the destination from the case and rejects arbitrary paths. Omit physical paths, secrets and file contents from JSON. Return the actual write outcome and record an incident on failure. For case creation when provisioning fails, the proposed response is `201` with an explicit partial-failure or incident indicator and an idempotent retry. Report folder creation only when it occurred. Finalize the contract in I/K. Vue exports CSV from JSON data. API v1 has no CSV endpoints.
 
-## OpenAPI y pruebas
+## OpenAPI and tests
 
-Generar y validar especificación OpenAPI reproducible, con auth, esquemas, ejemplos sintéticos y errores. Preferir Scramble si compatible. Pruebas de contrato comparan respuestas reales con esquemas y verifican JSON, códigos, permisos, no paginación y ausencia de campos sensibles. Cambios incompatibles requieren revisión y estrategia de versionado. No publicar documentación con credenciales ni URL internas reales.
+Generate and validate a reproducible OpenAPI specification with authentication, schemas, synthetic examples and errors. Prefer Scramble if compatible. Contract tests compare actual responses with schemas and verify JSON, status codes, permissions, unpaginated responses and the absence of sensitive fields. Breaking changes require review and a versioning strategy. Keep credentials and real internal URLs out of published documentation.

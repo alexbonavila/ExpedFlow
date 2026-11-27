@@ -1,72 +1,72 @@
-# CI y Quality Gates — fase B
+# CI and quality gates — Phase B
 
-## Objetivo
+## Objective
 
-Configurar GitHub Actions después de crear Laravel/repositorio (A), antes de cualquier migración de negocio (C). Integración automática de comprobaciones PHP, frontend, MySQL, seguridad y E2E; sin despliegues automáticos a instalaciones corporativas. La fase B debe demostrar tanto que el código válido pasa como que errores deliberados son rechazados.
+Configure GitHub Actions after establishing Laravel and the repository in A and before any business migrations in C. Automate PHP, frontend, MySQL, security and E2E checks. Corporate installations are deployed separately. Demonstrate that valid code passes and deliberate errors are rejected.
 
-## Workflows propuestos
+## Proposed workflows
 
-| Job / workflow | Controles | Activación |
+| Job / workflow | Checks | Trigger |
 |---|---|---|
-| backend-quality | Laravel Pint `--test`, PHPStan + Larastan, Composer validate, comprobación tipos | PR, push main, nocturno |
-| backend-tests | Pest/PHPUnit: unit, feature, integración, arquitectura, regresión, cobertura | PR, push main, nocturno |
-| database-tests | MySQL real, migraciones, rollback, modelos, concurrencia y constraints | PR, push main, nocturno |
-| frontend-quality | ESLint, Prettier check, vue-tsc | PR, push main, nocturno |
-| frontend-tests | Vitest, Vue Test Utils | PR, push main, nocturno |
-| api-contract | OpenAPI reproducible y validación de respuesta real | PR, push main, nocturno |
-| security | Composer audit, npm audit, Gitleaks, CodeQL (según configuración aplicable) | PR/push y programación según herramienta |
-| build | `composer install` desde lock y build Vite desde npm ci | PR, push main, nocturno |
-| e2e | Playwright, MySQL, servidor efímero y build de producción; Chromium/Firefox/WebKit | PR, push main, nocturno |
-| accessibility | axe-core sobre páginas reales del harness/app | PR, push main, nocturno |
-| storage-integration | Samba desechable, smoke y pruebas reales cuando existan | PR, push main, nocturno |
-| mutation | Pest Mutation con informe y umbral acordado | Nocturno y release |
-| performance | k6, presupuesto y conjunto de datos sintético | Nocturno y release |
-| dynamic-security | OWASP ZAP contra instancia efímera autorizada | Nocturno y release |
-| quality-gate | Agregador explícito de resultados obligatorios | PR, push main |
+| backend-quality | Laravel Pint `--test`, PHPStan + Larastan, Composer validation and type checking | PR, push to main, nightly |
+| backend-tests | Pest/PHPUnit unit, feature, integration, architecture, regression and coverage checks | PR, push to main, nightly |
+| database-tests | Real MySQL, migrations, rollback, models, concurrency and constraints | PR, push to main, nightly |
+| frontend-quality | ESLint, Prettier check, vue-tsc | PR, push to main, nightly |
+| frontend-tests | Vitest, Vue Test Utils | PR, push to main, nightly |
+| api-contract | Reproducible OpenAPI and validation of actual responses | PR, push to main, nightly |
+| security | Composer audit, npm audit, Gitleaks and CodeQL as applicable | PR/push and scheduled according to the tool |
+| build | `composer install` from the lockfile and a Vite build with npm ci | PR, push to main, nightly |
+| e2e | Playwright, MySQL, temporary server and production build in Chromium, Firefox and WebKit | PR, push to main, nightly |
+| accessibility | axe-core on actual harness or application pages | PR, push to main, nightly |
+| storage-integration | Disposable Samba, a smoke test and real tests as they become available | PR, push to main, nightly |
+| mutation | Pest Mutation with a report and an agreed threshold | Nightly and release |
+| performance | k6, a performance budget and a synthetic dataset | Nightly and release |
+| dynamic-security | OWASP ZAP against an authorized temporary instance | Nightly and release |
+| quality-gate | Explicit aggregate of mandatory results | PR, push to main |
 
-Dependabot configurado para Composer, npm y Actions, no es un test. Elegir cantidad de archivos YAML y jobs que mantenga la configuración simple; nombres estables. Los jobs obligatorios no deben desaparecer por filtros de paths que dejen el gate pendiente o falsamente verde. Los controles costosos pueden ejecutarse fuera de PR, pero deben estar configurados, probados y ser obligatorios para aceptación de B/release según su aplicabilidad. No declarar protección configurada sin comprobarla.
+Configure Dependabot for Composer, npm and Actions. Its update checks are separate from tests. Choose a simple number of YAML files and jobs and give jobs stable names. Keep mandatory jobs visible so path filters cannot leave the gate pending or misleadingly green. Expensive checks may run outside PRs, but configure and test them and require them for B or release acceptance as applicable. Verify protection before reporting it as configured.
 
-## Entorno y reproducibilidad
+## Environment and reproducibility
 
-- Fijar versiones compatibles PHP, Laravel, Composer, Node, npm, MySQL, navegadores, dependencias y Actions; guardar lockfiles. Usar versiones soportadas y comprobar dependencias en el momento de A/B. Runners Linux, MySQL service con health check y credenciales exclusivas de CI; base única/worker cuando aplique.
-- `composer install`, `npm ci`; cachés solo aceleran, no sustituyen instalación. Preparar APP_KEY efímera, config testing, DB de test; migrar desde cero. No usar secretos/infraestructura de empresas ni producción.
-- Servidor E2E real con readiness HTTP y build compilado. Ejecutar tests en navegadores reales; no limitar a test de mock HTML. Configurar artefactos de trazas/capturas y logs al fallar. Validar Apache de referencia en Q/R.
-- Servicio SMB efímero o runner aislado compatible; permisos mínimos, datos sintéticos. Si el montaje no puede ejecutarse en runner hospedado, resolver y verificar alternativa real de CI antes de dar por aceptado ese control; no sustituir silenciosamente por Storage fake.
-- Scripts locales equivalentes a CI (propuesta Composer `test`, `test:coverage`, `analyse`, `lint`; npm `lint`, `typecheck`, `test`, `build`, `test:e2e`). Nombres finales documentados y probados. No depender de pasos manuales invisibles.
-- Permisos GitHub mínimos, `pull_request` sin secretos privilegiados de forks; evitar ejecutar código no confiable con `pull_request_target` y privilegios de escritura. Actions fijadas a revisiones de confianza, timeout, concurrency/cancelación de ejecuciones obsoletas. Artefactos con retención acotada y sin secretos.
+- Pin compatible PHP, Laravel, Composer, Node, npm, MySQL, browser, dependency and Actions versions and track lockfiles. Use supported versions and check dependencies during A/B. Use Linux runners and a MySQL service with a health check and CI-only credentials. Isolate each worker's database where applicable.
+- Install dependencies with `composer install` and `npm ci`. Use caches only to accelerate installation. Prepare an ephemeral APP_KEY, test configuration and a test database, and migrate from scratch. Keep company and production secrets and infrastructure out of CI.
+- Use a real E2E server with HTTP readiness checks and compiled assets. Run tests in real browsers. Mock HTML tests alone are insufficient. Capture traces, screenshots and logs on failure. Validate the reference Apache configuration in Q/R.
+- Use an ephemeral SMB service or compatible isolated runner with least privilege and synthetic data. If a hosted runner cannot mount the share, implement and verify a real CI alternative before accepting the control. Keep any fake Storage tests separate from this check.
+- Provide local equivalents for CI commands. Proposed Composer scripts are `test`, `test:coverage`, `analyse` and `lint`. Proposed npm scripts are `lint`, `typecheck`, `test`, `build` and `test:e2e`. Document and test the final names. Document any required manual steps.
+- Minimize GitHub permissions and keep privileged secrets out of `pull_request` runs from forks. Avoid executing untrusted code with write privileges through `pull_request_target`. Pin actions to trusted revisions, set timeouts and use concurrency controls to cancel obsolete runs. Limit artifact retention and keep secrets out of artifacts.
 
-## Gate y protección
+## Gate and protection
 
-Configurar ruleset/protección de `main`: PR y checks obligatorios, impedir bypass ordinario y force-push. Gate agregador con `needs` y evaluación incluso tras fallos; falla ante cualquier dependencia obligatoria fallida, cancelada o inesperadamente omitida. No `continue-on-error` en gates bloqueantes. La política de revisión humana debe ser viable con el número de colaboradores; no fingir aprobación independiente.
+Protect `main` with a ruleset or branch protection that requires PRs and checks and blocks routine bypass and force pushes. Define the aggregate gate with `needs` and evaluate it even after failures. Fail if any mandatory dependency fails, is cancelled or is unexpectedly skipped. Keep `continue-on-error` out of blocking gates. Choose a human review policy that works for the number of contributors. Report independent approval only when it occurred.
 
-Umbrales de propuesta: líneas PHP >=90%, cobertura de tipos PHP 100%, mutation >=80%, cero tests fallidos, cero errores de formato/estático/build, cero secretos y vulnerabilidades altas/críticas sin resolver. Validar aplicabilidad y valores en B; documentar exclusiones justificadas, alcance y comandos exactos. No rebajar requisitos unilateralmente. Dependencias con alertas deben evaluarse y resolverse antes del gate o de release según política documentada, sin ocultarlas. La cobertura de escenarios críticos exige casos explícitos. Un informe vacío no cuenta como éxito.
+The proposed thresholds are at least 90% PHP line coverage, 100% PHP type coverage, a mutation score of at least 80%, zero test failures, zero formatting, static analysis or build errors, zero secrets and zero unresolved High or Critical vulnerabilities. Validate applicability and values in B and document justified exclusions, scope and exact commands. Obtain authorization before lowering a requirement. Evaluate and resolve dependency alerts before the gate or release according to the documented policy and keep them visible. Cover critical scenarios through explicit cases. An empty report fails the criterion.
 
-## Validación adversarial de CI (obligatoria en B)
+## Adversarial CI validation (mandatory in B)
 
-Usar ramas temporales no integradas, cambios controlados y revertibles, sin secretos reales. Verificar que el workflow y el gate fallan por el motivo esperado y que una PR con ese fallo no puede integrarse mediante flujo normal. Restaurar cambios y verificar verde final.
+Use unmerged temporary branches and controlled, reversible changes. Keep real secrets out of the tests. Verify that the workflow and gate fail for the expected reason and that a PR with the failure cannot merge through the normal process. Revert the changes and verify a final green run.
 
-| Fallo deliberado | Control esperado |
+| Deliberate failure | Expected check |
 |---|---|
-| Aserción unitaria falsa | backend-tests |
-| Error de tipos PHP | backend-quality |
-| PHP mal formateado | Pint |
-| Migración inválida | database-tests |
-| Regla arquitectónica incumplida | Pest Architecture |
-| Respuesta JSON distinta del esquema | api-contract |
-| Error de tipos/compilación Vue | frontend-quality/build |
-| Aserción de componente falsa | frontend-tests |
-| Aserción E2E falsa en navegador | e2e |
-| Infracción accesible detectable | accessibility |
-| Secreto sintético reconocido por regla de prueba (no credencial real) | Gitleaks |
-| Caída bajo umbral de cobertura | coverage gate |
-| Job obligatorio cancelado/omitido | quality-gate |
-| Samba de prueba inaccesible | storage-integration detecta fallo y no escribe en fallback local |
+| False unit assertion | backend-tests |
+| PHP type error | backend-quality |
+| PHP formatting violation | Pint |
+| Invalid migration | database-tests |
+| Architecture rule violation | Pest Architecture |
+| JSON response that differs from the schema | api-contract |
+| Vue type or compilation error | frontend-quality/build |
+| False component assertion | frontend-tests |
+| False browser E2E assertion | e2e |
+| Detectable accessibility violation | accessibility |
+| Synthetic value recognized by a test secret rule, using a dummy credential | Gitleaks |
+| Coverage below the threshold | coverage gate |
+| Mandatory job cancelled or skipped | quality-gate |
+| Test Samba share unavailable | storage-integration detects the failure and prevents writes to a local fallback |
 
-Guardar referencia a ejecuciones y resultados; no dejar cambios de sabotaje, credenciales sintéticas detectables ni ramas temporales innecesarias en main. Validar también ejecución real de nocturnos/release con `workflow_dispatch` o equivalente, sin esperar a su horario. Comprobar que los informes se generan y que los fallos son visibles.
+Save references to runs and outcomes. Keep deliberate faults, detectable synthetic credentials and unnecessary temporary branches out of main. Exercise nightly and release checks through `workflow_dispatch` or an equivalent so they can be tested ahead of the schedule. Verify that runs generate reports and make failures visible.
 
-## Aceptación de B
+## Acceptance of B
 
-Todos los checks aplicables ejecutados sobre commit concreto; harnesses reales PHP/MySQL/Vue/browser/contratos/seguridad; comandos locales documentados; programación y protección verificadas; pruebas adversariales con evidencia; main limpio y verde. Documentar las categorías que aún no tienen lógica funcional y sus pruebas futuras. No iniciar C si existen bloqueos de infraestructura o controles obligatorios sin demostrar.
+Run all applicable checks on a specific commit. Use real PHP, MySQL, Vue, browser, contract and security harnesses. Document local commands, verify scheduling and branch protection, record adversarial test evidence and verify a clean, green main branch. Document categories that lack functional logic and the tests deferred with them. Start C only after resolving infrastructure blockers and demonstrating every mandatory control.
 
 ## Phase B workflow configuration
 
@@ -98,19 +98,19 @@ The following runs used the isolated `validation/phase-b-controls` checkout bran
 | Missing extended jobs on a scheduled event | The local aggregate script returned 1 |
 | Empty CIFS mount point | The shared copy guard refused the operation and left the underlying directory empty |
 
-The local gate also accepted the expected all-green PR and scheduled result sets. These local inputs exercise the aggregate's logic. The contract-drift push on the temporary validation branch produced a real hosted failure. The backend suite exited 2, the contract check exited 1, and the aggregate exited 1 in [run 45819680432](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819680432). Actual PR merge blocking and scheduled, manually dispatched and release events still need evidence. Run the full CIFS check on an isolated Linux runner with kernel CIFS and permitted mount capabilities. `bash scripts/testing/storage.sh --check-unmounted` exercises only the shared missing-mount guard.
+The local gate also accepted the expected all-green PR and scheduled result sets. These local inputs exercise the aggregate's logic. The contract-drift push on the temporary validation branch produced a real hosted failure. The backend suite exited 2, the contract check exited 1, and the aggregate exited 1 in [run 45819680432](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819680432). The post-integration acceptance record below tracks PR merge blocking and workflow trigger evidence. Run the full CIFS check on an isolated Linux runner with kernel CIFS and permitted mount capabilities. `bash scripts/testing/storage.sh --check-unmounted` exercises only the shared missing-mount guard.
 
 ## Candidate verification and acceptance
 
 The local runtime checks ran against the code at `a8d5ab6`. Composer validation, Pint, Larastan, ESLint, Prettier, vue-tsc, Vite and actionlint passed. Pest executed 28 tests with 97 assertions, including four MySQL integration tests and one contract test. Line coverage was 662 of 662 executable lines across 26 source files, and the declaration-coverage report found zero uncovered lines across its 24 scanned files. Vitest passed one component test. Chromium passed the interaction and axe tests, and the production harness request returned HTTP 404. The workflow's MySQL provisioning script authenticated correctly in a local reproduction of the Actions service.
 
-The repository's public branch inventory reported `protectedByBranchProtections=false` and no ruleset for `main`. The public ruleset list was empty. Authenticated GitHub API operations returned HTTP 403 through the cloud proxy. The feature branch push is authorized through the Git proxy. Branch rule administration and draft PR creation require authenticated access. Before integration, open the PR, verify the observed required check name and enforce it through the `main` ruleset with required PRs, force-push blocking and a feasible review count. Run and record scheduled, manual and release checks when the workflow is present on the default branch. Use an authorized owner review for integration.
+Before integration, the repository's public branch inventory reported no legacy branch protection and an empty ruleset list. The post-integration record below supersedes that historical observation. Authenticated GitHub API operations returned HTTP 403 through the cloud proxy. The feature branch push is authorized through the Git proxy. Branch rule administration and draft PR creation require authenticated access. Before integration, open the PR, verify the observed required check name and enforce it through the `main` ruleset with required PRs, force-push blocking and a feasible review count. Run and record scheduled, manual and release checks when the workflow is present on the default branch. Use an authorized owner review for integration.
 
 The first two feature-branch runs ([45818569120](https://github.com/alexbonavila/ExpedFlow/actions/runs/45818569120) and [45819062188](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819062188)) passed the backend, frontend, dependency audits, CodeQL execution, three-engine E2E and accessibility jobs. The container-side CIFS check returned exit 2 in both runs and the required aggregate returned exit 1. The push policy skipped mutation, performance and ZAP as expected. The second run used Composer 2.11.2, resolving the first run's warning about the upstream Composer 2.8.8 binary.
 
-The revised hosted workflow passed every core job, including the real CIFS mount and aggregate, in [run 45819539665](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819539665) and in the subsequent [run 45820590297](https://github.com/alexbonavila/ExpedFlow/actions/runs/45820590297) at `e791611`. The separate extended [push verification run 45819755815](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819755815) exercised the same performance and passive security steps used for the scheduled jobs. Performance passed. Mutation exited 1, the passive scan exited 2, and the aggregate exited 1. The matching local mutation run measured 75 of 647 detected (11.59%), below the 80% minimum. The temporary branches were restored after both validation runs. Schedule, manual dispatch and release events still require direct verification.
+The revised hosted workflow passed every core job, including the real CIFS mount and aggregate, in [run 45819539665](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819539665) and in the subsequent [run 45820590297](https://github.com/alexbonavila/ExpedFlow/actions/runs/45820590297) at `e791611`. The separate extended [push verification run 45819755815](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819755815) exercised the same performance and passive security steps used for the scheduled jobs. Performance passed. Mutation exited 1, the passive scan exited 2, and the aggregate exited 1. The matching local mutation run measured 75 of 647 detected (11.59%), below the 80% minimum. The temporary branches were restored after both validation runs. The post-integration record below tracks the actual events.
 
-The restricted behavioral mutation scope and the focused security disposition are documented in [TESTING.md](TESTING.md) and [SECURITY.md](SECURITY.md). The 80% mutation minimum and Low ZAP warning threshold remain in effect. Feature-branch pushes verify the core workflow. The temporary extended validation branch exercises all extended jobs through a push. Actual scheduled, manual and release events still require direct evidence. Domain models, business APIs, permission scenarios and operational storage integration remain in their assigned later phases.
+The restricted behavioral mutation scope and the focused security disposition are documented in [TESTING.md](TESTING.md) and [SECURITY.md](SECURITY.md). The 80% mutation minimum and Low ZAP warning threshold remain in effect. Feature-branch pushes verify the core workflow. The temporary extended validation branch exercises all extended jobs through a push. The post-integration record distinguishes actual events from the temporary push checks. Domain models, business APIs, permission scenarios and operational storage integration remain in their assigned later phases.
 
 ### Repository owner integration procedure
 
@@ -120,3 +120,23 @@ The restricted behavioral mutation scope and the focused security disposition ar
 4. Confirm the rule applies to `main` and verify an actual failing PR check prevents integration. Record the PR workflow and rule evidence, then obtain explicit owner authorization before integrating.
 5. After authorized integration, verify the protected `main` push. Run the manual extended workflow from the default branch, observe the actual scheduled workflow and record release-event verification when an authorized release occurs.
 6. Review both `validation/` branches against their recorded implementation base. Preserve run URLs and any needed review history. The temporary trigger and deliberate fault can be reverted on their branches. Retire the remote branches only after owner authorization.
+
+## Post-integration Phase B acceptance audit
+
+The implementation was merged through [PR #1](https://github.com/alexbonavila/ExpedFlow/pull/1). The audited default-branch commit is [`f33b90fe196023ffd97568bfbf8f40921c3a83e3`](https://github.com/alexbonavila/ExpedFlow/commit/f33b90fe196023ffd97568bfbf8f40921c3a83e3). The former implementation branch has been deleted.
+
+| Event | Evidence | Result |
+| --- | --- | --- |
+| Pull request #1 | [45830722868](https://github.com/alexbonavila/ExpedFlow/actions/runs/45830722868) | All core jobs and the aggregate passed. |
+| Push to `main` at `f33b90f` | [45832019557](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832019557) | All core jobs and the aggregate passed. |
+| Manual dispatch on `main` at `f33b90f` | [45832795169](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832795169) | All 16 jobs passed, including mutation, performance, dynamic security and the aggregate. |
+| Daily schedule | [Schedule history](https://github.com/alexbonavila/ExpedFlow/actions/workflows/phase-b.yml?query=event%3Aschedule) | No run was visible at the November 26, 2026 audit. The next configured occurrence was November 27 at 02:17 UTC, 03:17 in Madrid. Record the run ID, tested commit and job results after GitHub executes it. |
+| Published release | [Release-event history](https://github.com/alexbonavila/ExpedFlow/actions/workflows/phase-b.yml?query=event%3Arelease) | No run was visible at the audit. The manual run exercises the same extended jobs. Verify the actual event on the first owner-authorized release. A synthetic release in an owner-approved disposable repository can exercise trigger mechanics earlier. It provides evidence for that repository and requires separate authorization. |
+
+[Ruleset 28167262](https://github.com/alexbonavila/ExpedFlow/rules/28167262) is active and targets the default branch. Its public rules require a PR, the GitHub Actions check `quality-gate` and an up-to-date branch. They block deletion and force pushes. The owner reports an empty bypass list. The public response did not expose bypass actors for independent verification.
+
+The historical [contract-drift run 45819680432](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819680432) proves that the aggregate rejects the defect. It predates this ruleset and ran on a push. The controlled failing-PR check remains open because authenticated GitHub access returned HTTP 403. To finish it, branch from current `main`, temporarily change the expected welcome-page title in `tests/Feature/ApplicationTest.php`, and open a regular PR to `main`. Wait for `quality-gate` to fail because of the assertion. Record the PR, run ID, head SHA and GitHub's blocked-merge message with the branch current against `main`. Revert the single test change in a new commit, check the follow-up result and close the PR.
+
+Both validation branches may be removed after owner authorization. The extended branch at `d2a81b2` matches the merged implementation parent `3a66e5b` exactly. The gate-runtime branch at `ea1952b` matches its original base `4b9c946` after the revert. Both base commits are ancestors of `main`. Preserve [extended validation run 45826375945](https://github.com/alexbonavila/ExpedFlow/actions/runs/45826375945) and [contract-drift run 45819680432](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819680432) as the evidence.
+
+Final acceptance still needs the controlled PR enforcement evidence, schedule and release events, and the owner confirmation of restricted details such as bypass actors and the CodeQL alert inventory. Phase C follows explicit Phase B acceptance.

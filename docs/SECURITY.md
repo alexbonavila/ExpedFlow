@@ -1,37 +1,37 @@
-# Seguridad
+# Security
 
-## Modelo de amenazas
+## Threat model
 
-Aplicación interna no equivale a aplicación confiable. Usuarios autenticados pueden intentar elevar privilegios, acceder a preferencias ajenas, borrar definitivamente datos, modificar identificadores o enviar rutas/archivos maliciosos. Considerar robo de sesión/token, XSS, CSRF, inyección SQL, brute force, dependencias vulnerables, errores de montaje Samba y filtración de datos en logs o CI.
+Treat internal applications as untrusted. Authenticated users may attempt to escalate privileges, access other users' preferences, permanently delete data, alter identifiers or submit malicious paths or files. Consider session or token theft, XSS, CSRF, SQL injection, brute force, vulnerable dependencies, Samba mount errors and data leaks in logs or CI.
 
-## Identidad y acceso
+## Identity and access
 
-Sanctum, hashing nativo Laravel, regeneración de sesión al login e invalidación al logout, cookies Secure/HttpOnly/SameSite apropiadas, CSRF para SPA, tokens revocables para Android y duración definida. HTTPS incluso en LAN. Rate limit para login, reset, API y cargas según necesidades. Recuperación por SMTP con expiración y mensajes que no enumeren usuarios. Registro público ausente o deshabilitado. No almacenar contraseñas en texto claro.
+Use Sanctum, Laravel's native hashing, session regeneration at login and invalidation at logout, appropriate Secure/HttpOnly/SameSite cookies, CSRF for the SPA, and revocable Android tokens with a defined lifetime. Use HTTPS even on the LAN. Rate-limit login, reset, API and upload operations as needed. Use SMTP password recovery with expiration and messages that prevent account enumeration. Omit or disable public registration. Never store passwords in plaintext.
 
-Administrador inicial: variables `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (propuesta) para inicialización mediante comando Artisan idempotente, con hash, validación y sin mostrar secreto. No sobrescribir una cuenta existente cada arranque; retirar credenciales de bootstrap tras usar. `.env.example` sin valores reales. Roles/permisos Spatie, Policies por recurso; comprobar siempre servidor y evitar asignación de privilegios por usuario no admin. Hard delete requiere rol administrativo además de permiso correspondiente; no delegar por accidente. Proteger acceso a hijos de expedientes borrados y preferencias de otro usuario. Revocar sesiones/tokens cuando se desactive un usuario según política definida en D.
+The proposed `ADMIN_NAME`, `ADMIN_EMAIL` and `ADMIN_PASSWORD` variables initialize the first administrator through an idempotent Artisan command that hashes passwords, validates input and keeps the secret private. Preserve existing accounts at startup and remove bootstrap credentials after use. Keep actual values out of `.env.example`. Use Spatie roles and permissions and Policies per resource. Always check authorization on the server and prevent non-administrators from assigning privileges. Hard deletion requires both the administrator role and the corresponding permission. Protect that operation from accidental delegation. Restrict access to children of deleted cases and to other users' preferences. Revoke sessions and tokens when a user is disabled, according to the policy defined in D.
 
-## Entradas y salida
+## Input and output
 
-Form Requests, allowlists de campos y ordenación, Eloquent/queries parametrizadas, control mass assignment, límites de tamaño de petición, tipos y codificación. Escapar textos de usuarios, no renderizar HTML arbitrario de comentarios. En CSV evitar fórmulas interpretables por hojas de cálculo (celdas que comienzan por caracteres de fórmula), codificación y escapado correctos. API JSON sin trazas, SQL o rutas privadas; nunca serializar passwords, tokens ni datos de configuración. CSP y cabeceras HTTP seguras adecuadas; CORS mínimo (preferir mismo origen).
+Use Form Requests, field and sorting allowlists, Eloquent or parameterized queries, mass assignment controls, request size limits, types and encoding. Escape user text and prevent arbitrary comment HTML from rendering. Prevent spreadsheet formula interpretation in CSV, including cells starting with formula characters, and apply correct encoding and escaping. Keep stack traces, SQL and private paths out of API JSON. Never serialize passwords, tokens or configuration data. Apply CSP and appropriate secure HTTP headers. Keep CORS minimal and prefer same-origin access.
 
-## MySQL y auditoría
+## MySQL and auditing
 
-Usuario MySQL de aplicación con privilegios mínimos necesarios; credenciales separadas de test. Restricciones DB además de validación. Auditar actor y diferencias, no contraseñas, hashes, tokens, cookies, credenciales o archivos. Retener un año mediante limpieza programada; no mezclar logs de petición con auditoría. Incidencias visibles con mensaje seguro y referencia útil, logs técnicos de acceso restringido. Evitar acumular datos personales innecesarios. Backups a cargo de empresa; documentar que restauración requiere coherencia entre configuración, MySQL y Samba.
+Grant the application's MySQL user the minimum privileges it needs and keep test credentials separate. Enforce database constraints alongside validation. Audit the actor and differences while excluding passwords, hashes, tokens, cookies, credentials and files. Retain audit history for one year through scheduled cleanup. Keep request logs separate from audit history. Show incidents with a safe message and useful reference. Restrict access to technical logs. Avoid accumulating unnecessary personal data. The company handles backups. Document that restoration requires consistent configuration, MySQL and Samba state.
 
-## Samba y archivos
+## Samba and files
 
-- Montaje fuera del docroot, cuenta de servicio de privilegios mínimos; preferir permisos SMB/ACL que impidan borrado de contenido existente cuando sea viable. La aplicación no ofrece acciones de borrado ni listado documental.
-- Verificar montaje disponible y raíz autorizada antes de copiar/subir; evitar escribir en directorio local si Samba cae. No aceptar paths arbitrarios de cliente. Validar/sanitizar nombre de expediente y archivo, caracteres reservados, longitud, `..`, separadores, enlaces simbólicos y resolución de rutas. Mantener código y espacio en carpeta destino; tratar incompatibilidad explícitamente.
-- Límites configurables, tipos permitidos según necesidad, streaming, no ejecutar archivos, no sobrescribir silenciosamente ni seguir enlaces fuera de raíz. Prever colisiones y fallo parcial sin eliminar documentos existentes. No guardar binarios en BBDD ni servirlos mediante Apache. Registrar incidencia segura ante error.
-- No exponer credenciales SMB, ruta absoluta ni estructura de carpetas en API o UI. Solo endpoints de subida autorizados. Hard delete de expediente no invoca operaciones Samba.
+- Mount outside the document root and use a least-privilege service account. Prefer SMB/ACL permissions that prevent deletion of existing content where feasible. The application provides no document deletion or listing actions.
+- Verify that the mount is available and the root is authorized before copying or uploading. Prevent writes to the local directory when Samba goes down. Reject arbitrary client paths. Validate or sanitize case and file names, reserved characters, length, `..`, separators, symlinks and path resolution. Preserve the code and space in the destination folder and handle incompatibility explicitly.
+- Use configurable limits, allowed types as needed and streaming. Never execute files, silently overwrite them or follow links outside the root. Handle collisions and partial failures without deleting existing documents. Keep binaries out of the database and prevent Apache from serving them. Record an incident without sensitive details when a failure occurs.
+- Keep SMB credentials, absolute paths and folder structure out of the API and UI. Provide only authorized upload endpoints. Hard deletion of a case must never invoke Samba operations.
 
-## Producción y cadena de suministro
+## Production and supply chain
 
-Apache document root `public/`, desactivar debug y directory listing, permisos de archivos mínimos, dependencias soportadas, configuración cacheable, logs rotados, scheduler por cron. Mantener secretos fuera de Git y artefactos. Auditorías Composer/npm, Gitleaks, CodeQL y ZAP en CI según CI.md; analizar y resolver alertas relevantes. No escanear sistemas de empresas sin autorización. Acciones CI con privilegios mínimos, datos sintéticos y runners aislados.
+Use `public/` as the Apache document root. Disable debug and directory listing, minimize file permissions, use supported dependencies, keep configuration cacheable, rotate logs and run the scheduler through cron. Keep secrets out of Git and artifacts. Run Composer/npm audits, Gitleaks, CodeQL and ZAP in CI according to CI.md. Analyze and resolve relevant alerts. Scan company systems only with authorization. Use least privilege, synthetic data and isolated runners in CI.
 
-## Pruebas
+## Tests
 
-Casos negativos para 401/403, CSRF, rate limiting, escalada de roles, IDOR, soft/hard delete, inyección, XSS, CSV, traversal, colisiones, montaje ausente, tokens revocados y datos sensibles no expuestos. Ver TESTING.md. La validación de seguridad final Q no sustituye controles desde B.
+Include negative cases for 401/403, CSRF, rate limiting, role escalation, IDOR, soft and hard deletion, injection, XSS, CSV, path traversal, collisions, missing mounts, revoked tokens and sensitive data exposure. See TESTING.md. Continue security checks from B through the final security validation in Q.
 
 ## Phase B checks and finding management
 
@@ -53,3 +53,15 @@ Build the frontend and use the guarded testing database before running `bash scr
 The secure-cookie default is enabled and the HTTPS regression checks Secure and SameSite=Lax on both cookies plus HttpOnly on the session cookie. The isolated HTTP harness explicitly sets `SESSION_SECURE_COOKIE=false`. Keep HTTPS and Secure enabled for production. Enable Apache `mod_headers` and allow FileInfo overrides for the public document root, or apply equivalent directives in the virtual host. With compiled assets, the Vue frontend uses the enforced policy. Laravel local development with a Vite hot file emits the policy in report-only mode for HMR. Testing and production enforce it even if a hot file exists.
 
 A fresh unfiltered scan after the header changes reported only the expected root XSRF cookie and the informational session finding. With the scoped disposition, the scan passed. The wrapper also checks each fresh JSON report entry for Low or higher risk with nonzero confidence. This preserves the gate when ZAP groups a false-positive and a confirmed alert under the same rule. A deliberate `SESSION_HTTP_ONLY=false` run confirmed that the real session-cookie finding still fails the gate. The Composer audit was verified by the hosted workflow because the local proxy denied Packagist advisories. The local npm audit reported moderate development-chain findings and passed its High threshold.
+
+### Post-merge dependency review
+
+The hosted security job passed at `f33b90f`, and the manual extended run passed the dynamic security gate. CodeQL execution also passed. Review the alert inventory through an authorized GitHub session for an independent severity assessment. [Main run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832019557) · [Manual extended run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832795169)
+
+| Proposal | Compatibility and evidence |
+| --- | --- |
+| [PR #2](https://github.com/alexbonavila/ExpedFlow/pull/2), actions/checkout 7.0.1 | The pinned action uses its own Node 24 runtime. Ubuntu 24.04 hosted checks passed. The workflow uses `pull_request`, so the new fork safeguards for privileged events do not affect its current checkout path. [PR run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832174531) |
+| [PR #3](https://github.com/alexbonavila/ExpedFlow/pull/3), @types/node 26.6.6 | Frozen install, declaration check and Vitest passed under the pinned Node 24.22.3. Node 26 declarations can permit APIs absent at runtime on Node 24. Keep the declaration major aligned with the current runtime. [PR run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832205215) |
+| [PR #4](https://github.com/alexbonavila/ExpedFlow/pull/4), jsdom 31.0.1 | Its Node 24 range starts at 24.15.0. The pinned 24.22.3 satisfies it and Vitest 5.1.2 accepts the jsdom peer. Frozen install, Vitest, type check and Vite build passed in isolation. [PR run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832265102) |
+
+The [npm Dependabot updater run 45832034121](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832034121) failed separately from those PR checks. The public run exposed a generic updater error. Its [detailed log](https://github.com/alexbonavila/ExpedFlow/network/updates/1732729864) requires write access. The current Node configuration and tested dependency proposals did not reproduce an incompatibility. Inspect the detailed updater error before attributing the failure or changing dependency policy.

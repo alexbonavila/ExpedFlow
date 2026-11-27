@@ -1,43 +1,43 @@
-# Estrategia de pruebas
+# Testing strategy
 
-## Objetivo de B
+## Objective of B
 
-Configurar antes de toda funcionalidad de negocio las herramientas, configuración, entornos, comandos reproducibles y ejecución CI de las categorías aplicables. Crear pruebas mínimas reales del proyecto base y de los harnesses. Las pruebas de dominio se escriben con su implementación; no crear casos vacíos, skips permanentes ni cobertura artificial. No existe obligación de usar simultáneamente herramientas duplicadas ni probar funciones que no existen.
+Set up the tools, configuration, environments, reproducible commands and CI execution for applicable test categories before implementing any business functionality. Write minimal real tests for the base project and test harnesses. Add domain tests alongside their implementation. Avoid empty cases, permanent skips and artificial coverage. There is no requirement to use duplicate tools or test unimplemented functionality.
 
-## Matriz de pruebas
+## Test matrix
 
-| Categoría | Herramienta preferente | Evidencia inicial en B / ampliación posterior |
+| Category | Preferred tool | Initial evidence in B / later expansion |
 |---|---|---|
-| Unitarias | Pest/PHPUnit | Aserción real de comportamiento propio/base; reglas de dominio C–K |
-| Feature / HTTP | Laravel HTTP Testing | Ruta base, respuesta y error; flujos API D–K |
-| Integración | Pest + Laravel | Arranque de contenedor y servicios reales |
-| MySQL / migraciones | Laravel DB Testing | migrate/rollback/migrate, constraints y conexión MySQL real |
-| Modelos / relaciones / factories / seeders | Laravel + Pest | Validar elementos base existentes; totalidad del esquema en C |
-| Transacciones / concurrencia | Pest + procesos/conexiones MySQL independientes | Demostrar commit/rollback y contención aislados; numeración y Kanban en F/H |
-| API / contratos | HTTP assertions + OpenAPI validator | JSON de un endpoint mínimo y esquema verificable; contratos v1 en K |
-| Autenticación / autorización | Laravel, Sanctum, Policies | Harness y guard base; sesiones, tokens, CSRF, roles en D/E |
-| Validación / middleware | Laravel HTTP Tests | Error real de validación del harness; reglas de cada recurso |
-| Artisan / scheduler | Laravel Console Tests | Comando base real; inicialización y limpieza en D/J |
-| Eventos / listeners / jobs / colas | Laravel fakes + integración si se utilizan | Verificar capacidades del harness; pruebas de eventos y jobs efectivamente usados |
-| Mail / recuperación | Mail/Notification fake | Verificar envío simulado sin SMTP productivo; flujo D |
-| Filesystem | Storage::fake + integración | Escritura/lectura técnica en disco de prueba; Samba real en I |
-| Samba real | recurso SMB desechable en runner compatible | Preparar servicio/fixture y smoke de montaje/copia aislada, sin datos reales |
-| Localización | Laravel/Pest | Existencia de es/ca/en, paridad claves y fallback; mensajes de cada fase |
-| Arquitectura | Pest Architecture | Regla aplicable real (p.ej. no debug en código propio, dependencias permitidas) |
-| Regresión | Pest/Vitest/Playwright | Casos añadidos con cada corrección |
-| Snapshots | Pest o herramienta del frontend | Solo salidas deterministas justificadas, revisiones explícitas |
-| Cobertura / tipos | Pest + driver de cobertura; type coverage | Informes reproducibles, umbral calibrado sobre código propio |
-| Mutación | Pest Mutation | Validar ejecución sobre lógica propia comprobable; no exigir mutaciones del framework |
-| Frontend unitario / componentes / integración | Vitest + Vue Test Utils | Componente mínimo de harness, interacción y error de prueba real |
-| E2E | Playwright Test | Navegador real contra servidor y build; navegación y resultado observable, ampliar por fase |
-| Compatibilidad navegadores | Playwright Chromium, Firefox, WebKit | Smoke en los tres motores, matriz por funcionalidades |
-| Accesibilidad | axe-core + Playwright | Escaneo real de página harness; teclado y flujo manual/automatizado en UI |
-| Rendimiento | k6 | Smoke con presupuesto medible y sin saturar infraestructura; carga de datos realista en Q |
-| Seguridad dinámica | OWASP ZAP baseline / pruebas HTTP negativas | Escaneo del entorno efímero autorizado; autenticación, CSRF e IDOR en fases funcionales |
+| Unit | Pest/PHPUnit | Assert actual application or baseline behavior. Domain rules follow in C–K |
+| Feature / HTTP | Laravel HTTP Testing | Base route, response and error. API flows follow in D–K |
+| Integration | Pest + Laravel | Start the container and real services |
+| MySQL / migrations | Laravel DB Testing | migrate/rollback/migrate, constraints and a real MySQL connection |
+| Models / relationships / factories / seeders | Laravel + Pest | Verify existing base elements. Verify the full schema in C |
+| Transactions / concurrency | Pest + independent MySQL processes or connections | Demonstrate isolated commit, rollback and contention. Numbering and Kanban follow in F/H |
+| API / contracts | HTTP assertions + OpenAPI validator | JSON from a minimal endpoint and a verifiable schema. v1 contracts follow in K |
+| Authentication / authorization | Laravel, Sanctum, Policies | Test harness and baseline guard. Sessions, tokens, CSRF and roles follow in D/E |
+| Validation / middleware | Laravel HTTP Tests | Real validation error from the harness. Add each resource's rules when implemented |
+| Artisan / scheduler | Laravel Console Tests | Real baseline command. Initialization and cleanup follow in D/J |
+| Events / listeners / jobs / queues | Laravel fakes + integration where used | Verify harness capabilities. Test events and jobs when they are actually used |
+| Mail / recovery | Mail/Notification fake | Verify simulated delivery without production SMTP. Recovery flow follows in D |
+| Filesystem | Storage::fake + integration | Write to and read from a test disk. Real Samba follows in I |
+| Real Samba | Disposable SMB share on a compatible runner | Prepare the service and fixtures and smoke test an isolated mount and copy without real data |
+| Localization | Laravel/Pest | Verify that es/ca/en exist, keys match and fallback works. Test each phase's messages |
+| Architecture | Pest Architecture | Apply a real rule, such as forbidding debug calls in first-party code or controlling dependencies |
+| Regression | Pest/Vitest/Playwright | Add cases with each fix |
+| Snapshots | Pest or a frontend tool | Cover only justified deterministic outputs and review changes explicitly |
+| Coverage / types | Pest + coverage driver and type coverage | Reproducible reports and a threshold calibrated against first-party code |
+| Mutation | Pest Mutation | Run against testable first-party logic. Framework mutations are outside the requirement |
+| Frontend unit / component / integration | Vitest + Vue Test Utils | Minimal harness component, interaction and a real failure case |
+| E2E | Playwright Test | Test real navigation and observable outcomes in a browser against the server and built assets. Expand by phase |
+| Browser compatibility | Playwright Chromium, Firefox, WebKit | Smoke tests on all three engines and a feature matrix |
+| Accessibility | axe-core + Playwright | Scan a real harness page and exercise keyboard, manual and automated UI flows |
+| Performance | k6 | Smoke test with a measurable budget and without saturating infrastructure. Realistic data load follows in Q |
+| Dynamic security | OWASP ZAP baseline / negative HTTP tests | Scan an authorized temporary environment. Authentication, CSRF and IDOR follow in functional phases |
 
-Los fakes no sustituyen integración: las pruebas de numeración/concurrencia requieren MySQL real, y el almacenamiento SMB debe validarse realmente en un entorno aislado. SQLite opcional para casos no específicos del motor; nunca único motor de integración. No enviar correo ni archivos reales.
+Numbering and concurrency tests require real MySQL. Verify SMB storage in a real isolated environment. Fakes are useful at boundaries, but these integration checks require the named services. SQLite is optional for engine-independent cases. Include MySQL in integration coverage. Use simulated mail and synthetic files.
 
-## Organización propuesta
+## Proposed organization
 
 ```text
 tests/
@@ -57,28 +57,28 @@ performance/
 security/
 ```
 
-Crear directorios y suites cuando tengan función real. Configurar descubrimiento de todos los tests, incluyendo suites no predeterminadas; comprobar que no quedan fuera de CI. Una única fuente de comandos compartidos entre local y CI (scripts Composer/npm propuestos). Configurar `.env.testing` sin secretos reales, DB desechable y guardas contra producción. Para paralelismo, bases/schemas aislados por worker; los tests concurrentes explícitos usan conexiones independientes sobre una misma DB de prueba. No envolverlos en transacciones invisibles para otras conexiones.
+Create directories and suites when they serve a real purpose. Configure discovery for every suite, including non-default ones, and confirm CI includes them all. Share one command source between local development and CI through the proposed Composer and npm scripts. Configure `.env.testing` with a disposable database, guards against production and no real secrets. Isolate the database or schema per parallel worker. Explicit concurrency tests use independent connections to the same test database. Avoid enclosing those tests in a transaction whose changes the other connections cannot see.
 
-## Casos obligatorios por dominio
+## Mandatory cases by domain
 
-- C: migraciones desde cero y rollback, índices/constraints/relaciones, seed idempotente, factories, idioma, unicidad, fecha sin hora y hora sin fecha rechazada. Soft delete y restauración de modelos según alcance.
-- D/E: login web, token móvil, logout/revocación, recuperación, registro público bloqueado, rate limit, CSRF, 401/403, escalada de privilegios, admin inicial idempotente. Usuario normal no puede hard delete aunque llame directamente a API; puede restaurar. Roles/permiso y políticas coherentes.
-- F: clientes únicos y referencias, representado opcional, código nueve cifras con ceros, 001/999/1000, cambio de año y zona horaria, tipos de código único/inmutable, creación simultánea sin duplicados, eliminación no libera número.
-- G: múltiples asignados y no duplicados, fecha nullable con hora opcional, comentarios ajenos editables y actor auditado, checklist sin fecha, restauración de expediente sin revivir tareas previamente borradas.
-- H: catálogo compartido, estado seleccionado, eliminación de estado en uso impedida incluso soft deleted, plantillas copiadas independientes con checklist y descripción, etiquetas únicas/color, ocultación privada y listado completo, nuevo expediente al final, cambio de columna al final para otros usuarios, orden personal y orden común de tareas, concurrencia.
-- I: copia recursiva correcta, montaje ausente, carpeta de origen ausente, colisión, fallo parcial, permisos, reintento sin duplicidad, subida válida y rechazo de traversal/oversize/symlink, no borrar ni listar Samba, incidencia persistida y respuesta honesta. Probar que una carpeta local bajo punto desmontado no recibe archivos accidentalmente.
-- J: actor, fecha, diferencias, cambios de relaciones y comentarios, redacción de secretos, borrado/retención de auditoría al año con límites temporales y scheduler. Incidencias útiles y separadas de auditoría.
-- K: cobertura de endpoints y permisos, JSON incluso en errores, no paginación, OpenAPI sincronizado, filtros/orden permitidos, no exposición de datos sensibles.
-- L–P: flujos E2E de login, recuperación en entorno simulado, admin/usuario, clientes, expedientes, plantillas, Kanban dos usuarios, papelera/restauración, tareas múltiples, comentarios y checklist, calendario día completo/hora, CSV, idiomas, incidencias. No navegador de Samba.
-- Q/R: instalación limpia y actualización, navegadores, teclado, accesibilidad, carga, seguridad, smoke de Apache y configuración productiva de referencia; documentación reproducible.
+- C covers migrations from scratch and rollback, indexes, constraints, relationships, idempotent seeding, factories, language, uniqueness, date-only values and rejection of time without a date. Test model soft deletion and restoration where in scope.
+- D/E covers web login, mobile token, logout and revocation, recovery, blocked public registration, rate limits, CSRF, 401/403, privilege escalation and idempotent administrator initialization. Ordinary users can restore records and must be denied hard deletion even through direct API requests. Verify that roles, permissions and policies agree.
+- F covers unique clients and references, optional represented clients, nine-digit codes with leading zeroes, 001/999/1000, year rollover and time zone, unique immutable type codes, simultaneous creation without duplicates and preservation of assigned numbers after deletion.
+- G covers multiple assignees without duplicates, nullable date with optional time, editing other users' comments with the actor audited, date-free checklists, and case restoration that keeps separately deleted tasks deleted.
+- H covers the shared catalog, explicit status selection, prevention of deleting in-use statuses including references from soft-deleted records, independent template copies with checklists and descriptions, unique tags and color, private hiding with the full list still available, new cases at the bottom, moved cases at the bottom for other users, personal ordering, shared task ordering and concurrency.
+- I covers correct recursive copies, missing mounts, missing source folders, collisions, partial failures, permissions, idempotent retries without duplication, valid uploads, and rejection of traversal, oversize files and symlinks. Verify that Samba files cannot be deleted or listed, incidents persist and responses reflect the real outcome. Verify that the local directory under an unmounted share stays free of accidental writes.
+- J covers actor, date, differences, relationship and comment changes, secret redaction, one-year audit deletion and retention at time boundaries, and the scheduler. Verify useful incidents separately from auditing.
+- K covers endpoints and permissions, JSON including errors, unpaginated responses, synchronized OpenAPI, allowed filters and sorting, and exclusion of sensitive fields.
+- L–P covers E2E login, simulated recovery, administrator and user flows, clients, cases, templates, two-user Kanban, trash and restoration, multiple tasks, comments and checklists, all-day and timed calendar events, CSV, languages and incidents. Keep Samba browsing out of the UI.
+- Q/R covers clean installation and upgrades, browsers, keyboard use, accessibility, load, security, an Apache smoke test and reference production configuration with reproducible documentation.
 
-## Cobertura y gates
+## Coverage and gates
 
-Propuesta de objetivos iniciales a validar en B: cobertura de líneas PHP propias >=90%, tipos PHP medibles 100%, mutation score >=80%, 100% de escenarios críticos definidos ejecutados (no equivale a 100% de líneas), cero fallos y errores de análisis, cero vulnerabilidades altas/críticas sin resolver. Definir denominadores, rutas incluidas, driver, informes y casos sin código medible; no excluir código propio complejo para inflar valores. Mutation/type coverage no son sustitutos de buenas aserciones. Umbrales numéricos propuestos, no requisitos de producto previamente aceptados; registrar los valores definitivos y su justificación en B. Gates operativos y no vacíos antes de C.
+Propose initial targets for validation in B of at least 90% first-party PHP line coverage, 100% measurable PHP type coverage, at least 80% mutation score, execution of 100% of defined critical scenarios, zero failures or analysis errors and zero unresolved High or Critical vulnerabilities. Track critical scenario execution separately from line coverage. Define denominators, included paths, the driver, reports and cases without measurable code. Keep complex first-party code in scope so metrics reflect the codebase. Pair mutation and type coverage metrics with meaningful assertions. The numerical thresholds are proposals. Record the final values and reasons in B and require working, nonempty gates before C.
 
-## Evidencia
+## Evidence
 
-JUnit, cobertura, informes análisis, trazas/capturas E2E solo con datos sintéticos, resultados k6/ZAP, logs redactados. Registrar comandos, versiones, commit y resultados. No presentar tests planificados como ejecutados.
+Keep JUnit, coverage and analysis reports, E2E traces and screenshots with synthetic data only, k6 and ZAP results, and redacted logs. Record commands, versions, commit and outcomes. Report only tests that were actually run.
 
 ## Phase B inventory and traceability
 
@@ -143,3 +143,7 @@ With built assets and the testing database available, run `bash scripts/testing/
 Use `bash scripts/testing/storage.sh` on an isolated Linux runner with Docker, passwordless sudo, `cifs-utils` and kernel CIFS support. The GitHub-hosted job installs the helper and loads the kernel module. Samba runs in a disposable container with an SMB3 listener bound to loopback. The runner mounts the test share using generated writer and reader accounts, verifies I/O and permissions, stops Samba, then checks that an unavailable share leaves the underlying directory empty. For the guard alone, run `bash scripts/testing/storage.sh --check-unmounted`. macOS developers need an isolated Linux VM or a hosted runner for a real CIFS mount.
 
 The first two hosted attempts used a container-side mount. The managed cloud rejected the container mount capability, and the hosted CIFS smoke returned exit 2. The revised implementation performs the mount on the isolated Linux runner and preserves stage diagnostics. Its loopback Samba server and missing-mount guard were exercised locally. The revised full mount check passed in [GitHub Actions run 45819539665](https://github.com/alexbonavila/ExpedFlow/actions/runs/45819539665).
+
+### Merged baseline verification
+
+The test, coverage and declaration gates passed on `main` at `f33b90f` in [run 45832019557](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832019557). The actual manual workflow at the same commit passed mutation, k6 and ZAP alongside the core tests. The authored local mutation baseline above measured 85.71% against the configured 80% minimum. [Manual extended run 45832795169](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832795169)

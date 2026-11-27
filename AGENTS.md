@@ -1,40 +1,41 @@
-# AGENTS.md — instrucciones de desarrollo
+# AGENTS.md — Development instructions
 
-## 1. Autoridad y alcance
+## 1. Authority and scope
 
-Estos documentos describen ExpedFlow. `docs/REQUIREMENTS.md` contiene los requisitos de producto; `docs/DEVELOPMENT_PLAN.md` delimita las fases; los demás documentos fijan contratos y reglas técnicas. Las propuestas y decisiones técnicas pendientes se distinguen de los requisitos confirmados. Si existe un conflicto real, identificarlo y no alterar unilateralmente un requisito confirmado. Una instrucción explícita posterior del responsable prevalece; actualizar la documentación correspondiente.
+These documents describe ExpedFlow. `docs/REQUIREMENTS.md` contains the product requirements. `docs/DEVELOPMENT_PLAN.md` defines the phases. The other documents establish technical contracts and rules. Proposals and pending technical decisions are identified separately from confirmed requirements. Identify any actual conflict and obtain approval before changing a confirmed requirement. A later explicit instruction from the project owner takes precedence. Update the relevant documentation accordingly.
 
-## 2. Secuencia no negociable
+## 2. Mandatory sequence
 
-- A: Laravel y repositorio base. B: infraestructura completa de pruebas y CI. C: toda la base de datos funcional. No anticipar C durante A/B.
-- No implementar funcionalidades de negocio antes de aceptar B. No desarrollar frontend funcional antes de aceptar el backend (K). Una pantalla de prueba mínima para validar E2E en B sí está permitida, sin lógica de negocio.
-- Cada fase tiene alcance, evidencias y criterio de salida. No mezclar fases ni declarar terminada una fase con fallos, exclusiones ocultas o pruebas pendientes obligatorias.
+- A establishes Laravel and the base repository. B completes the testing and CI infrastructure. C implements the full functional database. Keep C work out of A and B.
+- Implement business functionality only after B is accepted. Develop the functional frontend only after the backend is accepted in K. A minimal E2E test page is allowed in B if it contains no business logic.
+- Each phase has its own scope, evidence and exit criteria. Keep phases separate. Failures, hidden exclusions and pending mandatory tests each prevent completion.
 
-## 3. Reglas de implementación
+## 3. Implementation rules
 
-- KISS, DRY, SOLID, YAGNI, inyección de dependencias, convenciones Laravel y separación de responsabilidades. No crear abstracciones sin una necesidad comprobable.
-- Priorizar componentes nativos oficiales de Laravel; después paquetes consolidados y compatibles. No duplicar capacidades existentes. Justificar nuevas dependencias y comprobar versiones, seguridad y mantenimiento.
-- API REST `/api/v1`, respuestas JSON, sin paginación de API. Autorización en servidor siempre. MySQL real en integración. Sanctum; Spatie Laravel Permission. ES/CA/EN desde el inicio.
-- No añadir multitenancy, microservicios, servicios externos obligatorios, notificaciones, gestor documental, funcionalidades de fechas adicionales ni otras características ajenas al alcance.
-- Nunca guardar secretos, datos reales o credenciales en Git, logs, fixtures o artefactos CI. Nunca operar sobre Samba, MySQL o servidores productivos durante pruebas.
-- No modificar la configuración de protección, umbrales, exclusiones o reglas para ocultar errores. No desactivar tests para conseguir un resultado verde.
+- Follow KISS, DRY, SOLID, YAGNI, dependency injection, Laravel conventions and separation of responsibilities. Add abstractions only when a demonstrable need exists.
+- Prefer official Laravel components, followed by established, compatible packages. Avoid duplicating existing capabilities. Justify new dependencies and check their versions, security and maintenance.
+- Use REST API `/api/v1`, JSON responses and unpaginated API responses. Enforce authorization on the server for every request. Use real MySQL for integration tests. Use Sanctum and Spatie Laravel Permission. Support Spanish, Catalan and English from the start.
+- Keep multitenancy, microservices, mandatory external services, notifications, document management, additional date features and other out-of-scope features out of the implementation.
+- Keep secrets, real data and credentials out of Git, logs, fixtures and CI artifacts. Keep tests away from production Samba shares, MySQL instances and servers.
+- Maintain protection settings, thresholds, exclusions and rules so failures remain visible. Keep tests enabled even when they fail.
+- English is mandatory for source code, technical documentation, comments, identifiers, diagnostic messages, commit messages and pull requests. Localized user-facing content and localization tests are exempt.
 
-## 4. Protocolo de cada tarea
+## 4. Task procedure
 
-1. Leer los documentos aplicables y comprobar rama, estado del árbol y resultados previos.
-2. Identificar alcance, criterios de aceptación, riesgos y pruebas necesarias. Respetar modificaciones existentes; no revertir trabajo ajeno.
-3. Implementar el cambio mínimo coherente con el diseño; añadir pruebas reales en el mismo cambio. Actualizar documentación y contrato API si corresponde.
-4. Ejecutar comprobaciones locales pertinentes y, antes de integrar, los controles exigidos por CI. Si no se pueden ejecutar, declarar exactamente qué queda sin comprobar y por qué.
-5. Revisar el diff, seguridad, localización y regresiones. No dejar credenciales, archivos temporales o cambios no relacionados.
-6. Entregar resumen de cambios, archivos, comandos ejecutados, resultados reales, limitaciones y estado de aceptación. No inventar resultados, commits, pushes ni checks.
+1. Read the applicable documents and check the branch, working tree and previous results.
+2. Identify the scope, acceptance criteria, risks and required tests. Preserve existing changes and other contributors' work.
+3. Make the smallest change consistent with the design and add real tests in the same change. Update the documentation and API contract where applicable.
+4. Run relevant local checks and all required CI checks before integration. Report exactly what could not be verified and why.
+5. Review the diff, security, localization and regressions. Clear credentials, temporary files and unrelated changes from the delivery.
+6. Report the changes, files, commands, actual results, limitations and acceptance status. Report only results, commits, pushes and checks that occurred.
 
-## 5. Decisiones y cambios
+## 5. Decisions and changes
 
-Resolver detalles de implementación dentro del alcance, documentando sus consecuencias. Si una decisión cambia reglas de negocio, contratos públicos, permisos o datos existentes, dejarla explícita y obtener validación antes de convertirla en requisito. Usar decisiones técnicas pequeñas en los documentos correspondientes en lugar de proliferar archivos. No iniciar automáticamente la fase siguiente.
+Resolve implementation details within scope and document their consequences. If a decision changes business rules, public contracts, permissions or existing data, describe the change explicitly and obtain approval before making it a requirement. Record small technical decisions in the relevant existing documents to keep the file set focused. Do not start the next phase automatically.
 
-## 6. Definición de terminado
+## 6. Definition of done
 
-Código y documentación coherentes, pruebas relevantes reproducibles, gates obligatorios superados, sin regresiones conocidas ni omisiones encubiertas. La aceptación de una fase se basa en evidencias, no en un checklist marcado sin ejecución.
+Code and documentation agree, relevant tests are reproducible, mandatory gates pass, and there are no known regressions or undisclosed omissions. Acceptance requires evidence from checks that were actually run.
 
 ===
 
