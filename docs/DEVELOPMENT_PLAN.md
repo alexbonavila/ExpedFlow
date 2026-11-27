@@ -89,8 +89,8 @@ Phase D was accepted and integrated through [PR #11](https://github.com/alexbona
 
 ## Phase E authorization
 
-The implementation branch is `feat/authorization-roles-e`. Phase E delivers the fixed permission catalog, protected system roles, authorized role and membership management, and reusable domain policies. The [authorization matrix](SECURITY.md#phase-e-authorization-matrix) records the scope. Owner acceptance and protected integration precede Phase F.
+The implementation branch is `feat/authorization-roles-e`. Phase E delivers the fixed permission catalog, protected system roles, authorized role and membership management, and reusable domain policies. The [authorization matrix](SECURITY.md#phase-e-authorization-matrix) records the scope. The owner accepted E and E.1 after protected integration through PR #12 at `b16f3329813e884c7b2c4ec1a222cfc9c05d8620`.
 
 ## Phase E.1 CI scalability
 
-Phase E.1 continues on `feat/authorization-roles-e` and PR #12. It introduces isolated distributed mutation testing, global evidence reconciliation, locked dependency-download caches and same-run asset reuse. ExpedFlow CI retains its required `quality-gate` check. See CI.md for the baseline, workflow filename transition and verification procedure. The hosted equivalent results and owner acceptance precede Phase F.
+Phase E.1 continues on `feat/authorization-roles-e` and PR #12. It introduces isolated distributed mutation testing, global evidence reconciliation, locked dependency-download caches and same-run asset reuse. ExpedFlow CI retains its required `quality-gate` check. See CI.md for the baseline, workflow filename transition and verification procedure. The accepted four- and eight-runner checks reproduced the sequential results. Post-merge CI passed, and the owner authorized Phase F. Eight workers are the Phase F default.
