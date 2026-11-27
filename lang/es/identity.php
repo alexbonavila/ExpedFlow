@@ -56,4 +56,5 @@ return [
     'task_order_exhausted' => 'No hay ninguna posición disponible para la tarea.',
     'task_status_changed' => 'El estado de la tarea cambió. Actualiza e inténtalo de nuevo.',
     'task_position_invalid' => 'Elige una posición dentro de la columna de destino.',
+    'task_assignee_invalid' => 'Elige usuarios existentes y asigna solo usuarios activos.',
 ];

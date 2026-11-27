@@ -56,4 +56,5 @@ return [
     'task_order_exhausted' => 'No hi ha cap posició disponible per a la tasca.',
     'task_status_changed' => 'L’estat de la tasca ha canviat. Actualitza i torna-ho a provar.',
     'task_position_invalid' => 'Tria una posició dins de la columna de destinació.',
+    'task_assignee_invalid' => 'Tria usuaris existents i assigna només usuaris actius.',
 ];

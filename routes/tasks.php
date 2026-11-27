@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TaskAssigneeController;
 use App\Http\Controllers\TaskController;
 use App\Http\Middleware\RequirePermission;
 use App\Support\PermissionKey;
@@ -15,6 +16,11 @@ Route::middleware(RequirePermission::class.':'.PermissionKey::ViewExpedients->va
             ->middleware(RequirePermission::class.':'.PermissionKey::ReorderTasks->value);
         Route::patch('tasks/{task}', [TaskController::class, 'update'])->whereNumber('task')
             ->middleware(RequirePermission::class.':'.PermissionKey::UpdateTasks->value);
+        Route::get('tasks/{task}/assignees', [TaskAssigneeController::class, 'index'])->whereNumber('task');
+        Route::put('tasks/{task}/assignees', [TaskAssigneeController::class, 'replace'])->whereNumber('task')
+            ->middleware(RequirePermission::class.':'.PermissionKey::AssignTasks->value);
+        Route::get('tasks/{task}/assignee-candidates', [TaskAssigneeController::class, 'candidates'])->whereNumber('task')
+            ->middleware(RequirePermission::class.':'.PermissionKey::AssignTasks->value);
         Route::get('tasks/{task}', [TaskController::class, 'show'])->whereNumber('task');
     });
 });

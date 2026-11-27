@@ -56,4 +56,5 @@ return [
     'task_order_exhausted' => 'No task position is available.',
     'task_status_changed' => 'The task status changed. Refresh and try again.',
     'task_position_invalid' => 'Choose a position within the destination column.',
+    'task_assignee_invalid' => 'Choose existing users and assign only active users.',
 ];

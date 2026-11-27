@@ -8,6 +8,7 @@ use App\Support\AuthorizationCatalog;
 use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\Process\Process;
 use Tests\Support\CaseHttp;
 use Tests\Support\TestingDatabase;
@@ -66,3 +67,46 @@ test('a second task writer sees committed ranks after a contending move', functi
     expect($result['status'])->toBe($create ? 201 : 200)->and($result['data']['position'])->toBe(2);
     expect($case->tasks()->where('status_id', $dest->id)->orderBy('position')->pluck('position')->all())->toBe([1, 2]);
 })->with(['create' => true, 'move' => false]);
+
+test('assignment replacement is serialized with a competing replacement or account disable', function (bool $disable): void {
+    $admin = $this->authorizationBearer($this->authorizationAdmin());
+    $writer = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $user = User::factory()->create();
+    $alternative = User::factory()->create();
+    $task = Task::factory()->create();
+    $path = "/api/v1/tasks/{$task->id}/assignees";
+    DB::beginTransaction();
+    AuthorizationCatalog::lockAdministratorRole();
+
+    $result = commitAgainstTaskContender([
+        'method' => 'PUT', 'path' => $path, 'authorization' => $writer['Authorization'],
+        'body' => ['user_ids' => [$user->id]],
+    ], function () use ($disable, $user, $alternative, $admin, $path): void {
+        if ($disable) {
+            $this->api('POST', "/api/v1/users/{$user->id}/disable", headers: $admin)->assertOk();
+        } else {
+            $this->api('PUT', $path, ['user_ids' => [$alternative->id]], $admin)->assertOk();
+        }
+    });
+    expect($result['status'])->toBe($disable ? 422 : 200);
+    expect($task->assignees()->pluck('users.id')->all())->toBe($disable ? [] : [$user->id]);
+})->with(['replacement' => false, 'disable' => true]);
+
+test('assignment grant revoked while a writer waits is rechecked inside the transaction', function (): void {
+    $role = Role::create(['name' => 'assigner', 'guard_name' => 'web'])
+        ->givePermissionTo(['expedients.view', 'tasks.view', 'tasks.assign']);
+    $writer = $this->authorizationBearer(User::factory()->create()->assignRole($role));
+    $admin = $this->authorizationBearer($this->authorizationAdmin());
+    $assignee = User::factory()->create();
+    $task = Task::factory()->create();
+    DB::beginTransaction();
+    AuthorizationCatalog::lockAdministratorRole();
+
+    $result = commitAgainstTaskContender([
+        'method' => 'PUT', 'path' => "/api/v1/tasks/{$task->id}/assignees",
+        'authorization' => $writer['Authorization'], 'body' => ['user_ids' => [$assignee->id]],
+    ], fn () => $this->api('PUT', "/api/v1/roles/{$role->id}/permissions",
+        ['permissions' => ['expedients.view', 'tasks.view']], $admin)->assertOk());
+    expect($result['status'])->toBe(403);
+    $this->assertDatabaseEmpty('task_user');
+});
