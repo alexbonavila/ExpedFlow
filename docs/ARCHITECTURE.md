@@ -102,3 +102,11 @@ The existing `routes/api.php` Sanctum group loads `routes/expedients.php`. Clien
 | J | The write boundary knows the actual actor and case ID. Later auditing must record appropriate business diffs and relationship changes without secrets. Define event policy, retention and audit visibility in J. |
 
 Template copying, when H adds it, must persist its database rows inside the same creation transaction as the case and number. G/H/I may proceed together only after owner acceptance of F. Before their integration, jointly verify parent deletion versus task creation or modification, restore collisions and markers, shared status lock ordering, preference preservation and post-commit storage failures without renumbering.
+
+## Phase H catalogs and personal Kanban
+
+Phase H starts from the owner-accepted Phase F integration at `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b`. Its routes are included in the existing authenticated and active-identity group through `routes/catalogs.php`. Phase F retains the existing type and status list routes and their resource projections. H owns catalog mutations, type-scoped template blueprints, tags and case associations, and personal case Kanban preferences. G owns ordinary tasks and their shared order. I owns storage provisioning after the case transaction returns.
+
+Every H HTTP mutation runs inside `BusinessWrite` and uses its freshly authorized actor. Parent scopes and composite grants are checked before dependent reads and rechecked in the transaction. H routes use strict JSON field validation and the existing localized error response. New behavior is registered only when implemented.
+
+`ExpedientWriter::create` locks both explicit statuses in one ascending acquisition and calls `TemplateCopier` within the existing creation transaction. Ordered templates and checklist items become independent, newly numbered tasks and incomplete checklist items. The new tasks have no schedule or assignees. The case, annual number and all copies commit together. G uses the existing task schema and active-position constraint. I can provision storage after the HTTP write returns and reuse the same case identity on retries.

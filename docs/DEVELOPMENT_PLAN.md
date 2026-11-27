@@ -98,3 +98,11 @@ Phase E.1 continued on `feat/authorization-roles-e` and PR #12. It introduces is
 ## Phase F clients and cases
 
 Phase F implements client and case routes, read-only lookups, annual numbering, transactional parent lifecycle and a shared status-order foundation on `feat/clients-expedients-f`. The API and architecture documents specify the contracts for later parallel G/H/I development. Owner acceptance and protected integration follow hosted validation on the exact candidate. A separate authorized maintenance change can then rename the workflow file while retaining `quality-gate`.
+
+## Phase H catalogs and personal Kanban
+
+The owner accepted Phase F through PR #13 at `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b`. H is developed on `feat/catalogs-h` from that commit. The candidate implements H01–H08 and requires hosted validation and owner acceptance before protected integration.
+
+The H route include in `routes/api.php` needs reconciliation with the G and I includes. H extends `ExpedientRequest` and `ExpedientWriter` only for opt-in copying. I can retain the existing HTTP creation boundary for post-commit provisioning. H also extends localization in `IdentityError`, intentionally updates F's unsupported status POST test and case creation fixture, and reuses the F contention helper from `CaseHttp`. Reconcile these shared files and the appended documentation when combining the phases.
+
+After integration, verify G task writes against status deletion, case lifecycle, copied task positions and checklists. Verify I storage failures and retries preserve the same case, number and already committed database copy. J defines audit and retention rules for actual catalog, template, tag, association, copy and global move changes. K consolidates API contracts and case tag filtering. O consumes the full private board order.

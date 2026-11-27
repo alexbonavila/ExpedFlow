@@ -26,6 +26,8 @@ final class ExpedientRequest extends FormRequest
         $required = $this->isMethod('post') ? ['required'] : ['sometimes', 'required'];
         $reference = [...$required, 'integer:strict', 'min:1'];
 
+        $copy = $this->isMethod('post') && ($this->validationData()['copy_template'] ?? false) === true;
+
         return [
             'name' => ['bail', ...$required, 'string', 'max:255'],
             'expedient_type_id' => $reference,
@@ -38,7 +40,8 @@ final class ExpedientRequest extends FormRequest
                 }
             }],
             'template_id' => ['missing'],
-            'copy_template' => ['missing'],
+            'copy_template' => $this->isMethod('post') ? ['sometimes', 'required', 'boolean:strict'] : ['missing'],
+            'template_status_id' => $copy ? ['required', 'integer:strict', 'min:1'] : ['missing'],
             'tag_ids' => ['missing'],
             'tags' => ['missing'],
             'move' => ['missing'],

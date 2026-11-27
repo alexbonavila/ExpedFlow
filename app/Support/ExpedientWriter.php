@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Client;
 use App\Models\Expedient;
 use App\Models\ExpedientType;
+use App\Models\Status;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
@@ -17,15 +18,21 @@ final class ExpedientWriter
         private readonly AnnualNumbering $numbering,
         private readonly CaseOrdering $ordering,
         private readonly ExpedientLifecycle $lifecycle,
+        private readonly TemplateCopier $templates,
     ) {}
 
     /** @param array<string, mixed> $input Validated case fields from the protected write transaction. */
     public function create(User $actor, array $input): Expedient
     {
         Gate::forUser($actor)->authorize('create', Expedient::class);
+        $templateStatus = null;
+        if (Arr::boolean($input, 'copy_template', false)) {
+            $this->templates->authorize($actor);
+            $templateStatus = Arr::integer($input, 'template_status_id');
+        }
         $keys = $this->numbering->allocate();
         $status = Arr::integer($input, 'status_id');
-        $this->ordering->lockStatuses($status);
+        $this->lockCreationStatuses($status, $templateStatus);
         $type = $this->lockReferences($input);
         $data = Arr::only($input, ['name', 'description', 'requester_client_id', 'represented_client_id']);
 
@@ -37,6 +44,9 @@ final class ExpedientWriter
             'column_version' => 1,
         ]);
         $this->save($case);
+        if ($templateStatus !== null) {
+            $this->templates->copy($actor, $case, $type, $templateStatus);
+        }
 
         return $case;
     }
@@ -61,6 +71,25 @@ final class ExpedientWriter
         $this->save($case);
 
         return $case;
+    }
+
+    private function lockCreationStatuses(int $status, ?int $templateStatus): void
+    {
+        if ($templateStatus === null || $templateStatus === $status) {
+            $this->ordering->lockStatuses($status);
+
+            return;
+        }
+
+        try {
+            $this->ordering->lockStatuses($status, $templateStatus);
+        } catch (ValidationException $error) {
+            if (Status::query()->whereKey($status)->lockForUpdate()->first(['id']) !== null) {
+                throw ValidationException::withMessages(['template_status_id' => __('identity.case_reference_invalid')]);
+            }
+
+            throw $error;
+        }
     }
 
     private function save(Expedient $case): void
