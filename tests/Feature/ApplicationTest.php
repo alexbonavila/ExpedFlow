@@ -8,7 +8,7 @@ test('the welcome page renders the application name', function () {
 
     $this->get('/')
         ->assertOk()
-        ->assertSee('<title>ExpedFlow Phase B deliberate failure</title>', escape: false);
+        ->assertSee('<title>ExpedFlow</title>', escape: false);
 });
 
 test('the health endpoint reports that Laravel booted', function () {
