@@ -450,6 +450,155 @@
                     }
                 }
             }
+        },
+        "/api/v1/users/{user}/authorization": {
+            "parameters": [
+                {
+                    "name": "user",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                }
+            ],
+            "get": {
+                "summary": "Read web role memberships and effective permissions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserAuthorization"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{user}/roles": {
+            "parameters": [
+                {
+                    "name": "user",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                }
+            ],
+            "put": {
+                "summary": "Replace a user’s web role memberships",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "Cache-Control": {
+                                "description": "Prevents storage of sensitive authorization data",
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "no-store"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserAuthorization"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Http404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Http409"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "role_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "minimum": 1
+                                        },
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "role_ids"
+                                ],
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -605,6 +754,47 @@
                 "required": [
                     "id",
                     "name",
+                    "permissions"
+                ],
+                "additionalProperties": false
+            },
+            "RoleAssignment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "additionalProperties": false
+            },
+            "UserAuthorization": {
+                "type": "object",
+                "properties": {
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RoleAssignment"
+                        }
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PermissionKey"
+                        },
+                        "uniqueItems": true,
+                        "maxItems": 38
+                    }
+                },
+                "required": [
+                    "roles",
                     "permissions"
                 ],
                 "additionalProperties": false

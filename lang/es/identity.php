@@ -37,4 +37,6 @@ return [
     'restricted_permissions' => 'Los permisos solicitados no cumplen las reglas de administración.',
     'unknown_permissions' => 'Uno o más permisos no están disponibles.',
     'role_deleted' => 'El rol se ha eliminado.',
+    'unknown_roles' => 'Uno o más roles no están disponibles.',
+    'self_demotion' => 'No puedes retirar tu propia pertenencia al rol de administrador.',
 ];

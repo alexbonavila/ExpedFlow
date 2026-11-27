@@ -125,3 +125,12 @@ The existing HTTPS, Sanctum, active-account, real SPA CSRF, locale and `Cache-Co
 Each role exposes `id`, `name` and its assigned known `permissions` keys in ascending order. Custom names are user-authored, trimmed and limited to 125 characters. MySQL's `utf8mb4_unicode_ci` uniqueness for the web guard is case and accent insensitive. Reserved-name variants collide with their system role. Permission replacement accepts a complete JSON list of unique keys, including an empty list where permitted. Each essential administrator key must remain assigned to `admin`, and every other role is limited to delegable keys. The two system roles cannot be renamed or deleted.
 
 Missing or non-web resources return `404 not_found`. Conflicts return `409 role_name_conflict`, `system_role` or `role_assigned`. Invalid or unavailable permission keys, duplicate keys and restricted grant violations return `422 validation_failed` with localized field errors. Guests and invalid credentials receive 401. Active clients without the required authority receive 403.
+
+| Method and path | Permission | Request and success |
+|---|---|---|
+| `GET /api/v1/users/{user}/authorization` | `roles.assign` | 200 with the account's `data.roles` and `data.permissions`. |
+| `PUT /api/v1/users/{user}/roles` | `roles.assign` | `role_ids` is the complete list of distinct positive integer web role IDs. 200 with the updated authorization in `data`. |
+
+Assigned roles are objects with `id` and `name` in ascending ID order. `permissions` uses the same sorted effective keys as `/me`. It combines catalog grants from assigned web roles with existing direct web grants, subject to account state and the admin prerequisite for restricted keys. An account with no web role retains identity access only. Its direct grants are dormant until it is assigned a web role. A disabled account has no effective permissions. Assignments preserve existing direct grants and leave other guards outside the web API. There is no direct-grant write endpoint. Future resource checks also enforce parent scope, deletion state and personal ownership where applicable.
+
+New accounts receive `user` atomically. Profile updates ignore role and permission input. Role replacement accepts an empty list for other accounts, including a disabled target, subject to the administrator membership invariant. Self-demotion and loss of the last active administrator are conflicts (`self_demotion`, `last_active_admin`). Changes apply on subsequent requests using existing SPA sessions and bearer tokens.

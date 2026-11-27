@@ -69,7 +69,7 @@ test('administrators manage ordinary accounts with explicit fields and a complet
     $this->api('POST', '/api/v1/users', [...$input, 'locale' => 'ru', 'password' => 'too short'], $auth)
         ->assertUnprocessable()->assertJsonValidationErrors(['locale', 'password']);
     $this->api('DELETE', "/api/v1/users/$id", headers: $auth)->assertMethodNotAllowed();
-    $this->api('POST', "/api/v1/users/$id/roles", ['role' => 'admin'], $auth)->assertNotFound();
+    $this->api('POST', "/api/v1/users/$id/roles", ['role' => 'admin'], $auth)->assertMethodNotAllowed();
     $this->assertModelExists($user);
 });
 
@@ -102,10 +102,11 @@ test('disabling an account revokes credentials and re-enabling does not restore 
     $admin = managementAdmin();
     $auth = ['Authorization' => 'Bearer '.$admin->createToken('Admin fixture')->plainTextToken];
     $user = User::factory()->create();
-    $user->givePermissionTo(Permission::findOrCreate('synthetic-permission', 'web'));
+    $user->assignRole(Role::query()->create(['name' => 'Minimal client', 'guard_name' => 'web']));
+    $user->givePermissionTo(Permission::findOrCreate('tasks.update', 'web'));
     $this->freshCsrf();
     $this->spa('POST', '/auth/login', ['email' => $user->email, 'password' => 'password'])
-        ->assertOk()->assertJsonPath('data.permissions', ['synthetic-permission']);
+        ->assertOk()->assertJsonPath('data.permissions', ['tasks.update']);
     $session = DB::table('sessions')->where('user_id', $user->id)->sole();
     $mobile = $user->createToken('Stale client');
     Password::broker()->createToken($user);
@@ -115,7 +116,7 @@ test('disabling an account revokes credentials and re-enabling does not restore 
     $this->api('POST', "/api/v1/users/{$user->id}/disable", headers: $auth)->assertOk()->assertJsonPath('data.active', false);
     expect($user->fresh()->auth_version)->toBe(1)
         ->and($user->fresh()->remember_token)->toBeNull()
-        ->and($user->fresh()->hasPermissionTo('synthetic-permission'))->toBeTrue();
+        ->and($user->fresh()->hasPermissionTo('tasks.update'))->toBeTrue();
     $this->assertModelMissing($mobile->accessToken);
     $this->assertDatabaseMissing('sessions', ['id' => $session->id]);
     $this->assertDatabaseMissing('password_reset_tokens', ['email' => $user->email]);

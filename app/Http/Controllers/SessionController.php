@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\IdentityResource;
 use App\Models\User;
 use App\Support\AuthenticateCredentials;
+use App\Support\IdentityError;
 use App\Support\IdentityInput;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,6 +37,6 @@ final class SessionController extends Controller
 
     public function show(Request $request): IdentityResource
     {
-        return new IdentityResource($request->user());
+        return new IdentityResource($request->user() ?? throw new IdentityError(401, 'unauthenticated'));
     }
 }

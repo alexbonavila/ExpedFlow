@@ -5,6 +5,7 @@ use App\Http\Controllers\PasswordRecoveryController;
 use App\Http\Controllers\PersonalTokenController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\UserAuthorizationController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Middleware\ActiveIdentity;
 use App\Http\Middleware\RequireAdministrator;
@@ -39,6 +40,13 @@ Route::prefix('v1')->group(function (): void {
                 Route::patch('roles/{role}', 'update')->whereNumber('role');
                 Route::put('roles/{role}/permissions', 'replacePermissions')->whereNumber('role');
                 Route::delete('roles/{role}', 'destroy')->whereNumber('role');
+            });
+
+        Route::prefix('users/{user}')->whereNumber('user')
+            ->middleware(RequirePermission::class.':'.PermissionKey::AssignRoles->value)
+            ->controller(UserAuthorizationController::class)->group(function (): void {
+                Route::get('authorization', 'show');
+                Route::put('roles', 'update');
             });
 
         Route::prefix('users')->middleware(RequireAdministrator::class)->controller(UserManagementController::class)->group(function (): void {

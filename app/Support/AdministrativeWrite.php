@@ -15,21 +15,23 @@ final class AdministrativeWrite
     /**
      * @template TResult
      *
-     * @param  Closure(Role): TResult  $operation
+     * @param  Closure(Role, User): TResult  $operation
      * @return TResult
      */
-    public function run(User $actor, PermissionKey $permission, Closure $operation): mixed
+    public function run(User $actor, PermissionKey $permission, Closure $operation, ?User $target = null): mixed
     {
-        return DB::transaction(function () use ($actor, $permission, $operation): mixed {
+        return DB::transaction(function () use ($actor, $permission, $operation, $target): mixed {
             $adminRole = AuthorizationCatalog::lockAdministratorRole();
-            $account = User::query()->lockForUpdate()->findOrFail($actor->id);
+            $targetId = $target->id ?? $actor->id;
+            $accounts = User::query()->whereKey([$actor->id, $targetId])->orderBy('id')->lockForUpdate()->get();
+            $account = $accounts->findOrFail($actor->id);
 
-            if ($account->disabled_at !== null) {
+            if ($account->disabled_at !== null || $account->auth_version !== $actor->auth_version) {
                 throw new IdentityError(401, 'unauthenticated');
             }
             Gate::forUser($account)->allowIf(fn (User $user): bool => $this->permissions->allows($user, $permission));
 
-            return $operation($adminRole);
+            return $operation($adminRole, $accounts->findOrFail($targetId));
         }, 3);
     }
 }

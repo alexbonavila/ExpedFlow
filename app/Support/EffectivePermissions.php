@@ -24,6 +24,7 @@ final class EffectivePermissions
 
         return array_values(AuthorizationCatalog::permissions()
             ->whereExists($active)
+            ->whereExists($roles)
             ->where(fn (Builder $grants): Builder => $grants->whereIn('permissions.id', $direct)
                 ->orWhereHas('roles', fn (Builder $assigned): Builder => $assigned->whereIn('roles.id', $roles)))
             ->where(fn (Builder $allowed): Builder => $allowed->whereNotIn('name', array_column($restricted, 'value'))

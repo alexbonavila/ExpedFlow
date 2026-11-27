@@ -37,4 +37,6 @@ return [
     'restricted_permissions' => 'The requested grants do not satisfy the administrator permission rules.',
     'unknown_permissions' => 'One or more permissions are not available.',
     'role_deleted' => 'The role was deleted.',
+    'unknown_roles' => 'One or more roles are not available.',
+    'self_demotion' => 'You cannot remove your own administrator membership.',
 ];

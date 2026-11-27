@@ -5,36 +5,25 @@ use App\Support\PermissionKey;
 use Database\Seeders\AuthorizationSeeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use Tests\Support\IdentityHttp;
+use Tests\Support\AuthorizationHttp;
 use Tests\Support\RefreshGuardedMySql;
 
-uses(IdentityHttp::class, RefreshGuardedMySql::class);
+uses(AuthorizationHttp::class, RefreshGuardedMySql::class);
 
 beforeEach(function (): void {
     $this->seed(AuthorizationSeeder::class);
     $this->identityHttp();
 });
 
-function roleAdmin(string $locale = 'en'): User
-{
-    return User::factory()->create(['locale' => $locale])->assignRole('admin');
-}
-
-/** @return array<string, string> */
-function roleBearer(User $user): array
-{
-    return ['Authorization' => 'Bearer '.$user->createToken('Authorization fixture', ['*'])->plainTextToken];
-}
-
 test('only an active administrator with a grant can read role and permission administration', function (): void {
     $ordinary = User::factory()->create()->assignRole('user')->givePermissionTo('roles.manage');
     $disabled = User::factory()->create(['disabled_at' => now()])->assignRole('admin');
-    $admin = roleAdmin();
+    $admin = $this->authorizationAdmin();
     $this->api('GET', '/api/v1/roles')->assertUnauthorized();
     $this->api('GET', '/api/v1/permissions', headers: ['Authorization' => 'Bearer invalid'])->assertUnauthorized();
-    $this->api('GET', '/api/v1/roles', headers: roleBearer($ordinary))->assertForbidden();
-    $this->api('GET', '/api/v1/roles', headers: roleBearer($disabled))->assertUnauthorized();
-    $headers = roleBearer($admin);
+    $this->api('GET', '/api/v1/roles', headers: $this->authorizationBearer($ordinary))->assertForbidden();
+    $this->api('GET', '/api/v1/roles', headers: $this->authorizationBearer($disabled))->assertUnauthorized();
+    $headers = $this->authorizationBearer($admin);
     $this->api('GET', '/api/v1/roles', headers: $headers)->assertOk()
         ->assertJsonPath('data.0.name', 'admin')->assertJsonPath('data.1.name', 'user')
         ->assertHeader('Cache-Control', 'no-store, private');
@@ -43,7 +32,7 @@ test('only an active administrator with a grant can read role and permission adm
 });
 
 test('permission metadata is complete and localized with stable keys', function (string $locale, string $label): void {
-    $response = $this->api('GET', '/api/v1/permissions', headers: roleBearer(roleAdmin($locale)))
+    $response = $this->api('GET', '/api/v1/permissions', headers: $this->authorizationBearer($this->authorizationAdmin($locale)))
         ->assertOk()->assertJsonCount(count(PermissionKey::cases()), 'data')
         ->assertJsonPath('data.0.key', 'users.manage')->assertJsonPath('data.0.group', 'users')
         ->assertJsonPath('data.0.label', $label)->assertJsonPath('data.0.restricted', true)
@@ -53,7 +42,7 @@ test('permission metadata is complete and localized with stable keys', function 
 })->with([['en', 'Manage users'], ['es', 'Gestionar usuarios'], ['ca', 'Gestionar usuaris']]);
 
 test('administrators create rename replace and delete custom roles without exposing pivots', function (): void {
-    $headers = roleBearer(roleAdmin());
+    $headers = $this->authorizationBearer($this->authorizationAdmin());
     $response = $this->api('POST', '/api/v1/roles', [
         'name' => '  Case reviewer  ', 'permissions' => ['tasks.view', 'expedients.view'],
         'guard_name' => 'api', 'id' => 42, 'description' => 'ignored',
@@ -73,7 +62,7 @@ test('administrators create rename replace and delete custom roles without expos
 });
 
 test('custom role name collisions follow MySQL case and accent rules', function (): void {
-    $headers = roleBearer(roleAdmin('ca'));
+    $headers = $this->authorizationBearer($this->authorizationAdmin('ca'));
     $this->api('POST', '/api/v1/roles', ['name' => 'Càtaleg', 'permissions' => []], $headers)->assertCreated();
     foreach ([' CATALEG ', ' ÁDMIN ', 'UsÉr'] as $name) {
         $this->api('POST', '/api/v1/roles', ['name' => $name, 'permissions' => []], $headers)
@@ -84,7 +73,7 @@ test('custom role name collisions follow MySQL case and accent rules', function 
 });
 
 test('role replacements reject restricted and malformed grants without partial changes', function (): void {
-    $headers = roleBearer(roleAdmin());
+    $headers = $this->authorizationBearer($this->authorizationAdmin());
     $role = Role::query()->create(['name' => 'Reviewers', 'guard_name' => 'web']);
     $role->givePermissionTo('tasks.view');
     $path = "/api/v1/roles/{$role->id}/permissions";
@@ -110,7 +99,7 @@ test('role replacements reject restricted and malformed grants without partial c
 });
 
 test('role deletion preserves disabled assignments and system roles', function (): void {
-    $headers = roleBearer(roleAdmin());
+    $headers = $this->authorizationBearer($this->authorizationAdmin());
     $custom = Role::query()->create(['name' => 'Assigned', 'guard_name' => 'web']);
     $disabled = User::factory()->create(['disabled_at' => now()])->assignRole($custom);
     $foreign = Role::query()->create(['name' => 'External', 'guard_name' => 'api']);
