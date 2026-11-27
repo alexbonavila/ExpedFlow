@@ -24,7 +24,7 @@ final class RevokeCredentials
             'remember_token' => null,
         ])->save();
 
-        Password::broker()->deleteToken($user);
+        Password::deleteToken($user);
         $user->tokens()->delete();
         DB::table(config()->string('session.table'))->where('user_id', $user->id)->delete();
     }

@@ -24,14 +24,9 @@ final class ActiveIdentity
             throw new IdentityError(401, 'unauthenticated');
         }
 
-        $previous = app()->getLocale();
         $request->attributes->set('identity.locale', $user->locale);
         app()->setLocale($user->locale);
 
-        try {
-            return $next($request);
-        } finally {
-            app()->setLocale($previous);
-        }
+        return $next($request);
     }
 }

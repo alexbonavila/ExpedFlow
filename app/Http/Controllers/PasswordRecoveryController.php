@@ -19,7 +19,7 @@ final class PasswordRecoveryController extends Controller
     public function send(Request $request): JsonResponse
     {
         $input = IdentityInput::validate($request->all(), [
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'email' => IdentityInput::emailRules(),
         ]);
 
         SendPasswordRecovery::dispatch(Arr::string($input, 'email'));
@@ -30,7 +30,7 @@ final class PasswordRecoveryController extends Controller
     public function reset(Request $request, RevokeCredentials $credentials): JsonResponse
     {
         $input = IdentityInput::validate($request->all(), [
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'email' => IdentityInput::emailRules(),
             'token' => ['required', 'string', 'max:255'],
             'password' => [...IdentityInput::newPassword(), 'confirmed'],
         ]);

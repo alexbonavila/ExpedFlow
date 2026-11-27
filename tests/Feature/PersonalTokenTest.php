@@ -45,7 +45,7 @@ test('bearer logout revokes exactly its own token and does not accept an SPA ses
 
     $this->api('DELETE', '/api/v1/auth/token', ['id' => $independent->accessToken->id], [
         'Authorization' => 'Bearer '.$first->plainTextToken,
-    ])->assertOk()->assertJsonPath('code', 'token_revoked');
+    ])->assertOk()->assertJsonPath('code', 'token_revoked')->assertJsonStructure(['code', 'message']);
 
     $this->api('GET', '/api/v1/me', headers: ['Authorization' => 'Bearer '.$first->plainTextToken])->assertUnauthorized();
     $this->api('GET', '/api/v1/me', headers: ['Authorization' => 'Bearer invalid|token'])->assertUnauthorized();
@@ -58,6 +58,13 @@ test('bearer logout revokes exactly its own token and does not accept an SPA ses
     $this->spa('DELETE', '/auth/token')->assertForbidden()->assertJsonPath('code', 'bearer_required');
     $this->spa('POST', '/auth/token', ['device_name' => 'No password'])->assertUnprocessable()->assertJsonValidationErrors(['email', 'password']);
     $this->assertModelExists($second->accessToken);
+
+    $this->freshCsrf();
+    $this->spa('POST', '/auth/logout')->assertOk();
+    $this->api('POST', '/api/v1/auth/logout', headers: [
+        'X-XSRF-TOKEN' => $this->browserCookies['XSRF-TOKEN'],
+        'Authorization' => 'Bearer '.$second->plainTextToken,
+    ], browser: true)->assertForbidden()->assertJsonPath('code', 'session_required');
 
     $this->api('POST', '/api/v1/auth/logout', headers: ['Authorization' => 'Bearer '.$second->plainTextToken])
         ->assertForbidden()->assertJsonPath('code', 'session_required');

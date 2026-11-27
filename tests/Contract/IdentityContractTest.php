@@ -52,6 +52,7 @@ test('unexpected v1 errors hide all internal details even with debug configured'
         'message' => 'An unexpected error occurred.',
         'code' => 'server_error',
     ])->assertHeaderMissing('Location');
+    $this->get('/api/v1')->assertNotFound()->assertJsonMissingPath('trace');
     $this->get('/identity-test-missing')->assertNotFound()->assertHeader('Content-Type', 'text/html; charset=utf-8');
 });
 

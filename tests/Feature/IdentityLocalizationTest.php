@@ -45,6 +45,10 @@ test('request-specific language state is restored and unsupported languages use 
         ->assertUnauthorized()->assertExactJson(['message' => 'Inicia sesión para continuar.', 'code' => 'unauthenticated']);
     $this->api('GET', '/api/v1/me')->assertUnauthorized()->assertJsonPath('message', 'Sign in to continue.');
 
+    App::setLocale('ca');
+    $this->api('GET', '/api/v1/me', headers: ['Accept-Language' => 'xx'])
+        ->assertUnauthorized()->assertJsonPath('message', 'Inicia la sessió per continuar.');
+
     App::setLocale('xx');
     $this->api('GET', '/api/v1/me')->assertUnauthorized()->assertJsonPath('message', 'Sign in to continue.');
     expect(app()->getLocale())->toBe('xx');

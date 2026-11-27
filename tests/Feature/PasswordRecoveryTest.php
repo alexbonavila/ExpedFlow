@@ -3,13 +3,17 @@
 use App\Jobs\SendPasswordRecovery;
 use App\Models\User;
 use App\Notifications\PasswordRecoveryLink;
+use App\Support\IdentityInput;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Mail\Factory as MailFactory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\Support\IdentityHttp;
 use Tests\Support\RefreshGuardedMySql;
@@ -18,7 +22,7 @@ uses(IdentityHttp::class, RefreshGuardedMySql::class);
 
 beforeEach(function () {
     $this->identityHttp();
-    config(['app.url' => 'https://trusted.example', 'mail.default' => 'smtp']);
+    config(['app.url' => 'https://trusted.example/', 'mail.default' => 'smtp']);
 });
 
 test('recovery has one public response and only delivers a trusted link to an eligible account', function () {
@@ -44,6 +48,7 @@ test('recovery has one public response and only delivers a trusted link to an el
             ->and($url['scheme'])->toBe('https')
             ->and($url['host'])->toBe('trusted.example')
             ->and($url['path'])->toBe('/reset-password')
+            ->and($mail->outroLines[0])->toBe('This link expires after 60 minutes.')
             ->and($url)->not->toHaveKey('query')
             ->and($query['email'])->toBe($active->email)
             ->and(Password::broker()->tokenExists($active, $query['token']))->toBeTrue();
@@ -98,7 +103,9 @@ test('a usable password reset consumes the token and revokes the old database se
     $password = '  synthetic password ñ  ';
     $reset = ['email' => $user->email, 'token' => $token, 'password' => $password, 'password_confirmation' => $password];
 
-    $this->api('POST', '/api/v1/auth/reset-password', $reset)->assertOk()->assertJsonPath('code', 'password_reset');
+    Event::fake([PasswordReset::class]);
+    $this->api('POST', '/api/v1/auth/reset-password', $reset)->assertOk()->assertJsonPath('code', 'password_reset')->assertJsonStructure(['code', 'message']);
+    Event::assertDispatched(PasswordReset::class, fn (PasswordReset $event): bool => $event->user->is($user));
     expect(Hash::check($password, $user->fresh()->password))->toBeTrue()
         ->and($user->fresh()->remember_token)->toBeNull()
         ->and($user->fresh()->auth_version)->toBe(1);
@@ -156,4 +163,42 @@ test('a log mailer cannot create a recovery token or receive the recovery messag
     $this->assertDatabaseEmpty('password_reset_tokens');
     Notification::assertNothingSent();
     Log::shouldHaveReceived('warning')->with('Password recovery requires an SMTP mailer.')->once();
+});
+
+test('password changes enforce the exact bcrypt byte boundary and keep valid spaces', function () {
+    $user = User::factory()->create();
+    $token = Password::broker()->createToken($user);
+    $base = ['email' => $user->email, 'token' => $token];
+    $limit = str_repeat('é', 35).' x';
+    $oversized = $limit.'x';
+
+    $this->api('POST', '/api/v1/auth/reset-password', $base + ['password' => $oversized, 'password_confirmation' => $oversized])
+        ->assertUnprocessable()->assertJsonPath('errors.password.0', 'The password must not exceed 72 bytes with bcrypt.');
+    $this->api('POST', '/api/v1/auth/reset-password', $base + ['password' => $limit, 'password_confirmation' => $limit])
+        ->assertOk();
+
+    expect(Hash::check($limit, $user->fresh()->password))->toBeTrue();
+});
+
+test('recovery and reset validate their own inputs before issuing work or touching a token', function () {
+    Queue::fake();
+    $user = User::factory()->create();
+    $token = Password::broker()->createToken($user);
+    foreach ([null, 'invalid', str_repeat('a', 247).'@example.test'] as $invalid) {
+        $this->api('POST', '/api/v1/auth/forgot-password', ['email' => $invalid])->assertUnprocessable()->assertJsonValidationErrors('email');
+    }
+    $valid = ['email' => $user->email, 'token' => $token, 'password' => 'synthetic reset value', 'password_confirmation' => 'synthetic reset value'];
+    foreach ([['email' => 'invalid'], ['token' => 123], ['token' => str_repeat('x', 256)], ['password' => 'short']] as $invalid) {
+        $this->api('POST', '/api/v1/auth/reset-password', $invalid + $valid)->assertUnprocessable()->assertJsonValidationErrors(array_keys($invalid));
+    }
+    Queue::assertNothingPushed();
+    expect(Password::broker()->tokenExists($user, $token))->toBeTrue();
+});
+
+test('the new password length limit remains explicit for a non-bcrypt hasher', function () {
+    config(['hashing.driver' => 'argon2id']);
+    $rules = ['password' => IdentityInput::newPassword()];
+
+    expect(Validator::make(['password' => str_repeat('x', 73)], $rules)->passes())->toBeTrue();
+    expect(Validator::make(['password' => str_repeat('x', 1025)], $rules)->fails())->toBeTrue();
 });

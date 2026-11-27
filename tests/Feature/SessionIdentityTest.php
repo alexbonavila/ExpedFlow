@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Auth\Events\CurrentDeviceLogout;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Tests\Support\IdentityHttp;
 use Tests\Support\RefreshGuardedMySql;
@@ -35,10 +37,12 @@ test('a real browser session rotates identifiers at login and ends at logout', f
     $this->assertDatabaseMissing('sessions', ['id' => $anonymous]);
 
     $this->spa('GET', '/me')->assertOk()->assertJsonPath('data.id', $user->id);
-    $oldToken = $this->browserCookies['XSRF-TOKEN'];
+    $oldToken = session()->token();
     $mobile = $user->createToken('Synthetic client')->accessToken;
+    Event::fake([CurrentDeviceLogout::class]);
     $this->spa('POST', '/auth/logout')->assertOk()->assertJsonPath('code', 'logged_out');
-    expect($this->browserCookies['XSRF-TOKEN'])->not->toBe($oldToken);
+    Event::assertDispatched(CurrentDeviceLogout::class);
+    expect(session()->token())->toBeString()->not->toBeEmpty()->not->toBe($oldToken);
     $this->assertDatabaseMissing('sessions', ['id' => $id]);
     $this->assertModelExists($mobile);
     $this->spa('GET', '/me')->assertUnauthorized()->assertJsonPath('code', 'unauthenticated');
@@ -84,7 +88,7 @@ test('a legitimate old password can sign in and its hash is upgraded', function 
 });
 
 test('non-testing deployments require HTTPS for identity requests', function () {
-    $this->get('http://expedflow.example/api/v1/me')->assertForbidden()->assertJsonPath('code', 'https_required');
+    $this->get('http://expedflow.example/api/v1/me')->assertForbidden()->assertJsonPath('code', 'https_required')->assertHeader('Cache-Control', 'no-store, private');
     $this->api('PUT', '/api/v1/me')->assertMethodNotAllowed()->assertJsonPath('code', 'method_not_allowed');
 });
 
@@ -106,3 +110,33 @@ test('SPA logout clears only the active session and retains unrelated remembered
     $this->spa('POST', '/auth/logout')->assertOk();
     expect($user->fresh()->remember_token)->toBe($user->remember_token);
 });
+
+test('rate limit floors protect each IP and each normalized email and IP pair', function (array $limits) {
+    config($limits);
+    $input = ['email' => 'first@example.test', 'password' => 'synthetic password', 'device_name' => 'Fixture'];
+
+    $this->api('POST', '/api/v1/auth/token', $input, ip: '192.0.2.10')->assertUnauthorized();
+    $this->api('POST', '/api/v1/auth/token', $input, ip: '192.0.2.10')->assertTooManyRequests();
+    $this->api('POST', '/api/v1/auth/token', $input, ip: '192.0.2.11')->assertUnauthorized();
+})->with([
+    'IP floor' => [['identity.limits.attempts_per_ip' => 0, 'identity.limits.attempts_per_identity' => 5]],
+    'identity floor' => [['identity.limits.attempts_per_ip' => 30, 'identity.limits.attempts_per_identity' => 0]],
+]);
+
+test('the credential routes validate each input field independently', function (array $invalid, string $field) {
+    $user = User::factory()->create();
+    $valid = ['email' => $user->email, 'password' => 'password', 'device_name' => 'Fixture'];
+    $this->api('POST', '/api/v1/auth/token', $invalid + $valid)
+        ->assertUnprocessable()->assertJsonValidationErrors($field);
+    $this->assertDatabaseEmpty('personal_access_tokens');
+})->with([
+    'missing email' => [['email' => null], 'email'],
+    'malformed email' => [['email' => 'bad address'], 'email'],
+    'long email' => [['email' => str_repeat('a', 247).'@example.test'], 'email'],
+    'missing password' => [['password' => null], 'password'],
+    'non-string password' => [['password' => 1234], 'password'],
+    'oversize password' => [['password' => str_repeat('x', 4097)], 'password'],
+    'missing client name' => [['device_name' => null], 'device_name'],
+    'non-string client name' => [['device_name' => 1234], 'device_name'],
+    'long client name' => [['device_name' => str_repeat('a', 101)], 'device_name'],
+]);

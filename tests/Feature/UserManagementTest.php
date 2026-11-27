@@ -136,7 +136,7 @@ test('administrator password replacement revokes credentials and hashes the new 
     $this->api('PATCH', "/api/v1/users/{$user->id}/password", ['password' => $password], $auth)
         ->assertUnprocessable()->assertJsonValidationErrors('password');
     $this->api('PATCH', "/api/v1/users/{$user->id}/password", ['password' => $password, 'password_confirmation' => $password], $auth)
-        ->assertOk()->assertJsonPath('code', 'password_replaced');
+        ->assertOk()->assertJsonPath('code', 'password_replaced')->assertJsonStructure(['code', 'message']);
     expect(Hash::check($password, $user->fresh()->password))->toBeTrue();
     $this->assertModelMissing($oldToken->accessToken);
 });
@@ -176,4 +176,20 @@ test('management validates account name, email and password boundaries before sa
     }
     $this->api('POST', '/api/v1/users', [], $auth)->assertUnprocessable()->assertJsonValidationErrors(['name', 'email', 'password']);
     $this->assertDatabaseCount('users', 1);
+});
+
+test('managed account updates validate each individual field and preserve the original record', function () {
+    $admin = managementAdmin();
+    $user = User::factory()->create()->refresh();
+    $original = $user->getRawOriginal();
+    $auth = ['Authorization' => 'Bearer '.$admin->createToken('Admin fixture')->plainTextToken];
+    foreach ([
+        ['name' => '   '], ['name' => 1234], ['name' => str_repeat('n', 256)],
+        ['email' => 'invalid'], ['email' => str_repeat('e', 247).'@example.test'],
+        ['locale' => 'zz'], ['locale' => ['es']], ['locale' => null],
+    ] as $invalid) {
+        $this->api('PATCH', "/api/v1/users/{$user->id}", $invalid, $auth)
+            ->assertUnprocessable()->assertJsonValidationErrors(array_keys($invalid));
+    }
+    expect($user->refresh()->getRawOriginal())->toBe($original);
 });

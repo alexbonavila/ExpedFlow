@@ -6,16 +6,40 @@ use Closure;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 
 final class IdentityInput
 {
-    public const array LOCALES = ['es', 'ca', 'en'];
+    /** @return list<string> */
+    public static function locales(): array
+    {
+        return ['es', 'ca', 'en'];
+    }
+
+    /** @return list<string> */
+    public static function nameRules(): array
+    {
+        return ['required', 'string', 'max:255'];
+    }
+
+    /** @return list<string> */
+    public static function emailRules(): array
+    {
+        return ['required', 'email', 'max:255'];
+    }
+
+    /** @return list<string|In> */
+    public static function localeRules(): array
+    {
+        return ['required', 'string', Rule::in(self::locales())];
+    }
 
     /** @return array<string, list<string>> */
     public static function credentials(): array
     {
         return [
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'email' => self::emailRules(),
             'password' => ['required', 'string', 'max:4096'],
         ];
     }

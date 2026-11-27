@@ -159,3 +159,5 @@ The owner accepted Phase C after integration at `942e5cdc416947a586ac4167a9a3c5a
 ## Phase D candidate delivery
 
 Use one regular pull request from `feat/authentication-users-d` to `main`. The existing **Phase B** workflow runs core checks automatically on the PR. Select the same branch from **Actions → Phase B → Run workflow** to exercise the extended mutation, dynamic security and performance checks on the candidate. Match both runs to the reviewed head SHA. Record the candidate and its actual run conclusions in the PR and proceed only after owner authorization.
+
+The initial candidate `4654bc4` failed `backend-quality` because the injected password broker interface does not declare the token deletion method. The follow-up uses Laravel's documented facade. Review only the run for the final head when deciding acceptance. [Initial Phase D core run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45972628346)

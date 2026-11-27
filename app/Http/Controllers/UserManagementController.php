@@ -16,7 +16,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rule;
 
 final class UserManagementController extends Controller
 {
@@ -33,9 +32,9 @@ final class UserManagementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $input = IdentityInput::validate($request->all(), [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255'],
-            'locale' => ['sometimes', 'required', 'string', Rule::in(IdentityInput::LOCALES)],
+            'name' => IdentityInput::nameRules(),
+            'email' => IdentityInput::emailRules(),
+            'locale' => ['sometimes', ...IdentityInput::localeRules()],
             'password' => IdentityInput::newPassword(),
         ]);
         $input['password'] = Hash::make(Arr::string($input, 'password'));
@@ -47,15 +46,15 @@ final class UserManagementController extends Controller
     public function update(Request $request, User $user): UserResource
     {
         $input = IdentityInput::validate($request->all(), [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'string', 'email', 'max:255'],
-            'locale' => ['sometimes', 'required', 'string', Rule::in(IdentityInput::LOCALES)],
+            'name' => ['sometimes', ...IdentityInput::nameRules()],
+            'email' => ['sometimes', ...IdentityInput::emailRules()],
+            'locale' => ['sometimes', ...IdentityInput::localeRules()],
         ]);
 
         $account = DB::transaction(function () use ($user, $input): User {
             $account = User::query()->lockForUpdate()->findOrFail($user->id);
             if (isset($input['email']) && $input['email'] !== $account->email) {
-                Password::broker()->deleteToken($account);
+                Password::deleteToken($account);
                 $account->email_verified_at = null;
             }
 

@@ -33,11 +33,12 @@ class AppServiceProvider extends ServiceProvider
     {
         $email = $request->input('email');
         $identity = is_string($email) ? IdentityInput::email($email) : '';
-        $ip = (string) $request->ip();
+        $ip = $request->ip() ?? 'unknown';
+        $accountAndIp = hash('sha256', serialize([$identity, $ip]));
 
         return [
-            Limit::perMinute(max(1, config()->integer('identity.limits.attempts_per_ip')))->by('ip:'.$ip),
-            Limit::perMinute(max(1, config()->integer('identity.limits.attempts_per_identity')))->by('identity:'.hash('sha256', $identity).'@'.$ip),
+            Limit::perMinute(max(1, config()->integer('identity.limits.attempts_per_ip')))->by($ip),
+            Limit::perMinute(max(1, config()->integer('identity.limits.attempts_per_identity')))->by($accountAndIp),
         ];
     }
 }

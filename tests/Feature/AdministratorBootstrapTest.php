@@ -21,6 +21,8 @@ test('only the explicit initializer creates the first administrator and a rerun 
     expect($user->email)->toBe('initial@example.test')
         ->and($user->locale)->toBe('es')
         ->and($user->hasRole(User::ADMIN_ROLE, 'web'))->toBeTrue()
+        ->and($user->roles()->sole()->created_at)->not->toBeNull()
+        ->and($user->roles()->sole()->updated_at)->not->toBeNull()
         ->and(Hash::check('synthetic first password', $user->password))->toBeTrue();
 
     config(['identity.bootstrap.password' => 'synthetic changed input']);
@@ -37,11 +39,18 @@ test('initializer refuses unsafe values or an ambiguous reserved role', function
     }
     config(['identity.bootstrap' => $values]);
 
-    $this->artisan('expedflow:admin:init')->assertFailed();
+    $command = $this->artisan('expedflow:admin:init');
+    if (! $withRole) {
+        $command->expectsOutputToContain('Set valid ADMIN_NAME');
+    }
+    $command->assertFailed();
     expect(User::query()->count())->toBe(0);
     expect(Role::query()->count())->toBe((int) $withRole);
 })->with([
     'missing' => [[], false],
+    'missing name' => [['email' => 'first@example.test', 'password' => 'adequate password'], false],
+    'blank name' => [['name' => '   ', 'email' => 'first@example.test', 'password' => 'adequate password'], false],
+    'missing email' => [['name' => 'Owner', 'password' => 'adequate password'], false],
     'invalid email' => [['name' => 'Owner', 'email' => 'wrong', 'password' => 'adequate password'], false],
     'short password' => [['name' => 'Owner', 'email' => 'first@example.test', 'password' => 'short'], false],
     'bcrypt byte limit' => [['name' => 'Owner', 'email' => 'first@example.test', 'password' => str_repeat('ñ', 37)], false],

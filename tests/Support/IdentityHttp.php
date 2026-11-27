@@ -17,7 +17,7 @@ trait IdentityHttp
     }
 
     /** @param array<string, mixed> $input @param array<string, string> $headers */
-    protected function api(string $method, string $path, array $input = [], array $headers = [], bool $browser = false): TestResponse
+    protected function api(string $method, string $path, array $input = [], array $headers = [], bool $browser = false, string $ip = '127.0.0.1'): TestResponse
     {
         Auth::forgetGuards();
         $this->app->forgetInstance('auth.driver');
@@ -27,6 +27,7 @@ trait IdentityHttp
 
         $server = [
             'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => $ip,
             'HTTP_ORIGIN' => $browser ? 'https://expedflow.example' : '',
         ];
 

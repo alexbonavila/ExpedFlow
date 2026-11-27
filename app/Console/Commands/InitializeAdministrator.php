@@ -23,8 +23,8 @@ final class InitializeAdministrator extends Command
     {
         try {
             $input = IdentityInput::validate(config()->array('identity.bootstrap'), [
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255'],
+                'name' => IdentityInput::nameRules(),
+                'email' => IdentityInput::emailRules(),
                 'password' => IdentityInput::newPassword(),
             ]);
         } catch (ValidationException) {

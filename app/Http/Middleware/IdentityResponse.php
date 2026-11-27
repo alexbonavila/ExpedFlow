@@ -13,13 +13,13 @@ final class IdentityResponse
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->is('api/v1/*')) {
+        if (! $request->is('api/v1', 'api/v1/*')) {
             return $next($request);
         }
 
         $previous = app()->getLocale();
-        $fallback = in_array($previous, IdentityInput::LOCALES, true) ? $previous : 'en';
-        $locale = $request->getPreferredLanguage([$fallback, ...IdentityInput::LOCALES]) ?? $fallback;
+        $fallback = in_array($previous, IdentityInput::locales(), true) ? $previous : 'en';
+        $locale = $request->getPreferredLanguage([$fallback, ...IdentityInput::locales()]) ?? $fallback;
         $request->attributes->set('identity.locale', $locale);
         app()->setLocale($locale);
 
