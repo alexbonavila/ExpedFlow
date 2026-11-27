@@ -102,3 +102,11 @@ The existing `routes/api.php` Sanctum group loads `routes/expedients.php`. Clien
 | J | The write boundary knows the actual actor and case ID. Later auditing must record appropriate business diffs and relationship changes without secrets. Define event policy, retention and audit visibility in J. |
 
 Template copying, when H adds it, must persist its database rows inside the same creation transaction as the case and number. G/H/I may proceed together only after owner acceptance of F. Before their integration, jointly verify parent deletion versus task creation or modification, restore collisions and markers, shared status lock ordering, preference preservation and post-commit storage failures without renumbering.
+
+## Phase I storage identity
+
+The Phase I adapter has dedicated settings in `config/samba.php`. Installation config identifies the exact private Linux CIFS mountpoint and expected UNC source. The template and case roots are separate, relative, case-insensitively disjoint subtrees. The installation provisions both roots. The last two digits of the assigned case code select the template directory, including on retries after type changes.
+
+The case intent keeps the original relative path. Its folder name begins with the nine-digit code and a single space. The name portion uses NFC Unicode, replaces unsafe characters with underscores and trims trailing dots and spaces. It is truncated on a UTF-8 boundary to fit a 255-byte component, with an underscore for an empty result. A malformed case-root setting reserves the canonical default path in MySQL while storage operations fail configuration validation. Correcting that configuration must agree with the reserved path. Case names in MySQL retain their business value.
+
+The adapter will claim only a directory it creates. Private signed markers bind ownership, template revision and verified completion to the case identity and installation. A preexisting unclaimed directory, including one left by a crash after directory creation and before the claim is recorded, requires operator review.
