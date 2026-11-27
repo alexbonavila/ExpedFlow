@@ -17,6 +17,10 @@ use Spatie\Permission\Traits\HasRoles;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    public const string ADMIN_ROLE = 'admin';
+
+    public const string SESSION_VERSION = 'identity.auth_version';
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
@@ -29,6 +33,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'disabled_at' => 'immutable_datetime',
+            'auth_version' => 'integer',
             'password' => 'hashed',
         ];
     }
