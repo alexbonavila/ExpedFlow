@@ -8,4 +8,6 @@ return [
     'order_membership_conflict' => 'The order must include every item in the current scope.',
     'status_referenced' => 'This status is referenced by a case or task.',
     'status_deleted' => 'Status deleted.',
+    'template_deleted' => 'Task template deleted.',
+    'template_item_deleted' => 'Template checklist item deleted.',
 ];

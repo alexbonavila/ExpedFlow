@@ -8,4 +8,6 @@ return [
     'order_membership_conflict' => 'L’ordre ha d’incloure tots els elements de l’àmbit actual.',
     'status_referenced' => 'Un expedient o una tasca fa referència a aquest estat.',
     'status_deleted' => 'Estat eliminat.',
+    'template_deleted' => 'Plantilla de tasca eliminada.',
+    'template_item_deleted' => 'Element de la llista de la plantilla eliminat.',
 ];

@@ -8,4 +8,6 @@ return [
     'order_membership_conflict' => 'El orden debe incluir todos los elementos del ámbito actual.',
     'status_referenced' => 'Un expediente o una tarea hace referencia a este estado.',
     'status_deleted' => 'Estado eliminado.',
+    'template_deleted' => 'Plantilla de tarea eliminada.',
+    'template_item_deleted' => 'Elemento de la lista de la plantilla eliminado.',
 ];

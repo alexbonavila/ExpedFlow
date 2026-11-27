@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ExpedientTypeCatalogController;
 use App\Http\Controllers\StatusCatalogController;
+use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\TemplateChecklistController;
 use App\Http\Middleware\RequirePermission;
 use App\Support\PermissionKey;
 use Illuminate\Support\Facades\Route;
@@ -26,3 +28,25 @@ Route::prefix('statuses')->controller(StatusCatalogController::class)->group(fun
         Route::delete('{status}', 'destroy')->whereNumber('status');
     });
 });
+
+Route::prefix('expedient-types/{type}/task-templates')->whereNumber('type')
+    ->middleware(RequirePermission::class.':'.PermissionKey::ViewExpedientTypes->value)
+    ->group(function (): void {
+        Route::middleware(RequirePermission::class.':'.PermissionKey::ViewTaskTemplates->value)->group(function (): void {
+            Route::get('/', [TaskTemplateController::class, 'index']);
+            Route::get('{template}', [TaskTemplateController::class, 'show'])->whereNumber('template');
+            Route::get('{template}/checklist', [TemplateChecklistController::class, 'index'])->whereNumber('template');
+            Route::get('{template}/checklist/{item}', [TemplateChecklistController::class, 'show'])->whereNumber(['template', 'item']);
+        });
+
+        Route::middleware(RequirePermission::class.':'.PermissionKey::ManageTaskTemplates->value)->group(function (): void {
+            Route::post('/', [TaskTemplateController::class, 'store']);
+            Route::put('order', [TaskTemplateController::class, 'reorder']);
+            Route::patch('{template}', [TaskTemplateController::class, 'update'])->whereNumber('template');
+            Route::delete('{template}', [TaskTemplateController::class, 'destroy'])->whereNumber('template');
+            Route::post('{template}/checklist', [TemplateChecklistController::class, 'store'])->whereNumber('template');
+            Route::put('{template}/checklist/order', [TemplateChecklistController::class, 'reorder'])->whereNumber('template');
+            Route::patch('{template}/checklist/{item}', [TemplateChecklistController::class, 'update'])->whereNumber(['template', 'item']);
+            Route::delete('{template}/checklist/{item}', [TemplateChecklistController::class, 'destroy'])->whereNumber(['template', 'item']);
+        });
+    });
