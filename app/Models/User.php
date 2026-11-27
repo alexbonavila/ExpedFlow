@@ -44,4 +44,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(TaskComment::class, 'author_user_id');
     }
+
+    /** @return HasMany<ExpedientUserPreference, $this> */
+    public function expedientPreferences(): HasMany
+    {
+        return $this->hasMany(ExpedientUserPreference::class);
+    }
 }

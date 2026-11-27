@@ -27,12 +27,11 @@ test('MySQL 8.4 migrates the scaffold, rolls it back and migrates it again', fun
     expect(Schema::getTableListing(schemaQualified: false))->toContain('users', 'sessions', 'cache', 'jobs');
 });
 
-test('the scaffold seeder and factory produce usable users without exposing credentials', function () {
+test('the user factory produces usable users and initialization creates no accounts', function () {
     $this->seed(DatabaseSeeder::class);
-    $seeded = User::query()->where('email', 'test@example.com')->sole();
+    $this->assertDatabaseEmpty('users');
     $user = User::factory()->unverified()->create(['password' => 'synthetic-password']);
 
-    expect($seeded->name)->toBe('Test User');
     expect($user->email_verified_at)->toBeNull();
     expect(Hash::check('synthetic-password', $user->password))->toBeTrue();
     expect($user->toArray())->not->toHaveKeys(['password', 'remember_token']);

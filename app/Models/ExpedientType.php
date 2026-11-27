@@ -14,4 +14,10 @@ class ExpedientType extends Model
     {
         return $this->hasMany(Expedient::class);
     }
+
+    /** @return HasMany<TaskTemplate, $this> */
+    public function templates(): HasMany
+    {
+        return $this->hasMany(TaskTemplate::class);
+    }
 }
