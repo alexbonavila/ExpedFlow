@@ -66,3 +66,19 @@ test('ordinary direct grants cannot administer statuses and trash still holds re
         $this->api('DELETE', $path.'/'.$id, headers: $headers)->assertConflict();
     }
 });
+
+test('a failed status reorder rolls back every position and append cannot overflow', function (): void {
+    $headers = $this->authorizationBearer($this->authorizationAdmin());
+    $one = Status::factory()->create(['position' => 1]);
+    $two = Status::factory()->create(['position' => 2]);
+    $three = Status::factory()->create(['position' => PHP_INT_MAX]);
+    Status::updating(fn (Status $status): bool => $status->id !== $one->id);
+
+    $this->api('PUT', '/api/v1/statuses/order', ['status_ids' => [$two->id, $one->id, $three->id]], $headers)
+        ->assertInternalServerError()->assertJsonPath('code', 'server_error');
+    Status::flushEventListeners();
+    expect(Status::query()->orderBy('id')->pluck('position')->all())->toBe([1, 2, PHP_INT_MAX]);
+    $this->api('POST', '/api/v1/statuses', ['name' => 'Overflow'], $headers)
+        ->assertConflict()->assertJsonPath('code', 'case_order_exhausted');
+    $this->assertDatabaseCount('statuses', 3);
+});

@@ -230,3 +230,18 @@ Initiate the candidate's hosted checks and record exact URLs and SHA. Let long-r
 | R12 and F08 contracts and CI | `PhaseFContractTest` validates live responses against the new OpenAPI fixture and retains earlier suites. `ExpedientApiTest` checks complete lists and bounded relation queries. Existing mutation planner and aggregate tests verify both worker options and the required gate. |
 
 Use the guarded MySQL connection before destructive tests. Full mutation verification runs in the hosted matrix. Phase F tests use synthetic data and independent database processes with query barriers for contention.
+
+## Phase H requirement-to-test matrix
+
+| Requirements | Evidence |
+|---|---|
+| R02 authorization and R12 HTTP | `PhaseHContractTest` validates authenticated JSON against `tests/Fixtures/phase-h-openapi.json` and checks bearer/session parity, CSRF, localized errors, roleless and disabled access. `CatalogContentionTest` checks current grants and credentials after waiting on authorization. |
+| R04 type and atomic copy | `ExpedientTypeCatalogTest`, `TaskTemplateCatalogTest` and `TemplateCopyTest` check immutable types, exact nested scopes, independent ordered copies, explicit status, grant checks and rollback of the annual counter. |
+| R06 statuses | `StatusCatalogTest` covers initial localization, rename/reseed, complete ordering, active and trashed references, rollback, and reserved-admin enforcement. |
+| R07 and R09 private board and lifecycle | `PersonalKanbanTest` covers private ranks and visibility, same and cross-column movement, bounds, generic F transitions, and cleanup after physical deletion. |
+| R08 tags | `TagCatalogTest` covers collation uniqueness, exact RGB input, private response fields, replacement rollback and link lifecycle. |
+| R04, R06–R09 MySQL contention | `CatalogContentionTest` uses independent processes, query barriers and guarded MySQL to exercise type uniqueness and references, status references and removal, template snapshots, tag replacement and same/cross-column ordering. |
+
+Run the dedicated database guard before destructive tests. Phase H uses the existing isolated test schema and the accepted lifecycle and task schema. The integrated candidate still needs joint H/G/I regression for actual task endpoints and post-commit storage recovery.
+
+The final isolated MySQL pass ran `APP_ENV=testing php tests/Support/check-database.php` followed by `XDEBUG_MODE=coverage php -d memory_limit=512M vendor/bin/pest --coverage --min=90 --coverage-clover=coverage/clover.xml --log-junit=test-results/phpunit.xml --compact`. All 237 tests passed with 2,720 assertions and 99.0% line coverage. `composer test:types` passed at 100% measurable declaration coverage. `composer validate --strict --no-check-publish`, `vendor/bin/pint --dirty --format agent`, `composer analyse --no-ansi` at Larastan level 8, and the 14 tests from `python3 -B -m unittest discover -s scripts/testing -p test_mutation.py` also passed.

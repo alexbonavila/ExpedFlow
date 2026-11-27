@@ -13,7 +13,6 @@ use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
-use Symfony\Component\Process\Process;
 use Tests\Support\CaseHttp;
 use Tests\Support\TestingDatabase;
 
@@ -29,30 +28,6 @@ beforeEach(function (): void {
 afterEach(function (): void {
     RefreshDatabaseState::$migrated = false;
 });
-
-/** @param array<string, mixed> $operation @return array<string, mixed> */
-function commitAgainstCaseContender(array $operation, ?Closure $beforeCommit = null): array
-{
-    $process = new Process(['php', 'tests/Fixtures/CaseContender.php'], base_path(), ['APP_ENV' => 'testing']);
-    $process->setTimeout(15)->setInput(json_encode($operation, JSON_THROW_ON_ERROR));
-    $process->start();
-    try {
-        expect($process->waitUntil(fn (string $type, string $output): bool => $type === Process::OUT && str_contains($output, "ready\n")))
-            ->toBeTrue('The contender must reach the expected MySQL statement.');
-        $beforeCommit?->__invoke();
-        DB::commit();
-
-        expect($process->wait())->toBe(0, $process->getErrorOutput());
-        expect(preg_match('/^result:(.+)$/m', $process->getOutput(), $matches))->toBe(1, $process->getOutput());
-
-        return json_decode($matches[1], true, flags: JSON_THROW_ON_ERROR);
-    } finally {
-        if (DB::transactionLevel() > 0) {
-            DB::rollBack();
-        }
-        $process->stop();
-    }
-}
 
 test('parallel case creation waits on the same annual row on first use and at the final slot', function (int $previous): void {
     $clock = '2030-09-01 13:00:00 UTC';
@@ -72,7 +47,7 @@ test('parallel case creation waits on the same annual row on first use and at th
     DB::beginTransaction();
     // Exercise the allocator directly so the peer can reach the annual row instead of the authorization lock.
     $winner = app(ExpedientWriter::class)->create($actor, $one);
-    $result = commitAgainstCaseContender([
+    $result = $this->commitAgainstCaseContender([
         'method' => 'POST', 'path' => '/api/v1/expedients', 'authorization' => $headers['Authorization'],
         'clock' => $clock, 'body' => $two, 'barrier' => 'insert into `expedient_sequences`',
     ]);
@@ -98,7 +73,7 @@ test('competing case moves append to the same destination without losing either 
 
     DB::beginTransaction();
     AuthorizationCatalog::lockAdministratorRole();
-    $result = commitAgainstCaseContender([
+    $result = $this->commitAgainstCaseContender([
         'method' => 'PATCH', 'path' => "/api/v1/expedients/{$second->id}", 'authorization' => $b['Authorization'],
         'body' => $move, 'barrier' => 'for update',
     ], fn () => $this->api('PATCH', "/api/v1/expedients/{$first->id}", $move, $a)
@@ -111,7 +86,7 @@ test('MySQL resolves competing Unicode client inserts and the API reports the du
     $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
     DB::beginTransaction();
     $winner = Client::factory()->create(['name' => 'Pérfil']);
-    $result = commitAgainstCaseContender([
+    $result = $this->commitAgainstCaseContender([
         'method' => 'POST', 'path' => '/api/v1/clients', 'authorization' => $headers['Authorization'],
         'body' => ['name' => '  PERFIL  '], 'barrier' => 'insert into `clients`',
     ]);
@@ -126,7 +101,7 @@ test('a newly committed case reference prevents concurrent catalog deletion', fu
     DB::beginTransaction();
     $case = Expedient::factory()->create(['requester_client_id' => $client->id]);
 
-    $result = commitAgainstCaseContender([
+    $result = $this->commitAgainstCaseContender([
         'method' => 'DELETE', 'path' => "/api/v1/clients/{$client->id}", 'authorization' => $headers['Authorization'],
         'barrier' => 'select * from `clients`',
     ]);
@@ -143,7 +118,7 @@ test('the case parent lock makes a contending child writer recheck the active pa
     DB::beginTransaction();
     $this->api('DELETE', "/api/v1/expedients/{$case->id}", headers: $headers)->assertOk();
 
-    $result = commitAgainstCaseContender(['parent' => $case->id, 'barrier' => 'from `expedients`']);
+    $result = $this->commitAgainstCaseContender(['parent' => $case->id, 'barrier' => 'from `expedients`']);
 
     expect($result['status'])->toBe(404);
     expect(Task::withTrashed()->sole()->is($existing))->toBeTrue();
@@ -160,7 +135,7 @@ test('an already authenticated case writer is denied after a concurrent credenti
     DB::beginTransaction();
     AuthorizationCatalog::lockAdministratorRole();
 
-    $result = commitAgainstCaseContender([
+    $result = $this->commitAgainstCaseContender([
         'method' => 'POST', 'path' => '/api/v1/expedients', 'authorization' => $headers['Authorization'],
         'body' => $input, 'barrier' => 'for update',
     ], function () use ($token, $headers, $admin, $creator): void {
@@ -187,7 +162,7 @@ test('an admitted SPA writer cannot commit after its database session is logged 
     DB::beginTransaction();
     AuthorizationCatalog::lockAdministratorRole();
 
-    $result = commitAgainstCaseContender([
+    $result = $this->commitAgainstCaseContender([
         'method' => 'POST', 'path' => '/api/v1/expedients', 'body' => $input,
         'browser' => $this->caseBrowserCredentials(), 'barrier' => 'for update',
     ], fn () => $this->spa('POST', '/auth/logout')->assertOk());

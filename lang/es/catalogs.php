@@ -15,4 +15,5 @@ return [
     'tag_reference_invalid' => 'Cada etiqueta debe corresponder a una etiqueta existente.',
     'board_membership_conflict' => 'El tablero ha cambiado. Recárgalo antes de mover el expediente.',
     'move_position_invalid' => 'La posición solicitada está fuera de la columna de destino.',
+    'object_required' => 'El cuerpo de la solicitud debe ser un objeto JSON.',
 ];

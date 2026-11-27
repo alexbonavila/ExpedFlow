@@ -16,6 +16,11 @@ final class CatalogInput
      */
     public static function validate(Request $request, array $rules): array
     {
+        $content = $request->getContent();
+        if (! str_starts_with(ltrim($content), '{') || ! json_validate($content)) {
+            throw ValidationException::withMessages(['body' => __('catalogs.object_required')]);
+        }
+
         $fields = AuthorizationInput::fields($request);
         if (is_string($fields['name'] ?? null)) {
             $fields['name'] = Str::trim($fields['name']);

@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Models\ExpedientType;
 use App\Models\Status;
-use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +12,7 @@ use Illuminate\Support\Facades\Gate;
 final class CatalogWrite
 {
     /** Call after BusinessWrite has checked the catalog management permission. */
-    public static function delete(User $actor, ExpedientType|Status|Tag $record, string $conflict): void
+    public static function delete(User $actor, ExpedientType|Status $record, string $conflict): void
     {
         if (Gate::forUser($actor)->denies('delete', $record)) {
             throw new IdentityError(409, $conflict, 'catalogs');

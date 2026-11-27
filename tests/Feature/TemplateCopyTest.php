@@ -27,7 +27,7 @@ test('case creation copies independent ordered tasks and checklist items only wh
     $early = TaskTemplate::factory()->create([
         'expedient_type_id' => $type->id, 'name' => 'Early', 'position' => 3, 'description' => 'Independent text',
     ]);
-    TaskTemplate::factory()->create();
+    TaskTemplate::factory()->create(['expedient_type_id' => ExpedientType::factory()->create(['code' => '08'])->id]);
     foreach ([['Late item', 7], ['Early item', 1], ['Tie', 1]] as [$name, $position]) {
         TaskTemplateChecklistItem::factory()->create(['task_template_id' => $early->id, 'position' => $position, 'name' => $name]);
     }
@@ -58,7 +58,7 @@ test('case creation copies independent ordered tasks and checklist items only wh
     $early->forceFill(['name' => 'Changed source'])->save();
     $early->delete();
     $late->delete();
-    $newType = ExpedientType::factory()->create();
+    $newType = ExpedientType::factory()->create(['code' => '09']);
     $this->api('PATCH', "/api/v1/expedients/$id", ['expedient_type_id' => $newType->id], $headers)->assertOk();
     $this->api('DELETE', "/api/v1/expedients/$id", headers: $headers)->assertOk();
     $this->api('POST', "/api/v1/expedients/$id/restore", headers: $headers)->assertOk();
