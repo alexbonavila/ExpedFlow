@@ -24,7 +24,6 @@ final class IncidentRecorder
                     'user_id' => $user?->id,
                     'expedient_id' => $parent?->id,
                     'expedient_code' => $case->code,
-                    'created_at' => now('UTC'),
                 ]);
 
                 if (! $incident->exists) {

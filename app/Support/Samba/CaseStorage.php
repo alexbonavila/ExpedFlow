@@ -73,15 +73,20 @@ final class CaseStorage
             return new StorageOutcome(Failure::AdmissionChanged);
         }
 
+        $admitted = false;
         try {
-            $this->lock->run($case->id, function () use ($request, $case, $operation, $work): void {
-                $work($this->admit($request, $case->id, $operation));
+            $this->lock->run($case->id, function () use ($request, $case, $operation, $work, &$admitted): void {
+                $active = $this->admit($request, $case->id, $operation);
+                $admitted = true;
+                $work($active);
                 $this->admit($request, $case->id, $operation);
             });
 
             return new StorageOutcome;
         } catch (AuthorizationException|IdentityError|ModelNotFoundException) {
-            return new StorageOutcome(Failure::AdmissionChanged);
+            return $admitted
+                ? $this->failed($request, $case, $operation, new StorageFailure(Failure::AdmissionChanged))
+                : new StorageOutcome(Failure::AdmissionChanged);
         } catch (StorageFailure|QueryException $failure) {
             return $this->failed($request, $case, $operation, $failure);
         }

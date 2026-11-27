@@ -20,4 +20,5 @@ return [
     'upload_invalid_name' => 'Usa un nombre de archivo seguro con una extensión permitida.',
     'upload_too_large' => 'El archivo supera el límite de tamaño de subida.',
     'storage_directory_limit' => 'La carpeta del expediente no puede aceptar otra subida de forma segura.',
+    'incident_unknown' => 'Se ha registrado una incidencia operativa.',
 ];
