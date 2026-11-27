@@ -87,3 +87,35 @@ Remove the three bootstrap values immediately after success and regenerate cache
 ### SMTP recovery
 
 Configure `APP_URL` with the trusted HTTPS installation origin. Set `MAIL_MAILER=smtp` and configure `MAIL_HOST`, `MAIL_PORT`, `MAIL_SCHEME`, `MAIL_USERNAME`, `MAIL_PASSWORD` and `MAIL_FROM_ADDRESS` privately as appropriate for the provider. Use TLS. Run the existing database queue with a supervised `php artisan queue:work database` process. All valid recovery requests enqueue identical work regardless of eligibility. The encrypted job stores the normalized email. The broker creates the hashed reset token in MySQL and the plaintext appears only in the recipient's mail. Recovery requires an SMTP transport. Log and array transports cannot receive recovery notices or cause token issuance. Failed SMTP delivery rolls back the token and records a credential-free warning. The reset link uses a URL fragment to keep its values out of HTTP access logs. Verify real SMTP and the reset screen in the later installation and frontend phases.
+
+## Phase E authorization matrix
+
+Spatie's `web` guard applies to both Sanctum transports. An authenticated active account can use its own identity, locale and applicable logout endpoints without a role. Other access requires an effective permission from the fixed catalog. The initial `admin` role receives the entire catalog. The initial `user` role receives every delegable key. Administrators may tailor delegable grants on either role or on custom roles. Restricted keys always require an active member of `admin` and an explicit grant. Ordinary, roleless and custom-role accounts never gain restricted access from direct grants or token abilities.
+
+| Resource and operation | Permission keys | Assignment and scope |
+|---|---|---|
+| Accounts, passwords, activation and deactivation | `users.manage` | Restricted. No account deletion. |
+| Permission catalog and role administration | `roles.manage` | Restricted. Both system roles are protected. |
+| Inspect account authorization and replace role memberships | `roles.assign` | Restricted. An administrator cannot demote themself or leave zero active administrators. |
+| Shared statuses | `statuses.view`, `statuses.manage` | View is delegable. Creation, editing, reordering and removal are restricted. MySQL references include deleted records. |
+| Clients and case types | `clients.view`, `clients.manage`; `expedient-types.view`, `expedient-types.manage` | Delegable. Catalog management includes removal subject to database references. |
+| Cases | `expedients.view`, `expedients.create`, `expedients.update`, `expedients.delete`, `expedients.restore`, `expedients.force-delete` | Authorized access covers all cases without ownership or assignment filtering. Soft deletion and restoration are delegable. Permanent deletion is restricted. |
+| Tasks | `tasks.view`, `tasks.create`, `tasks.update`, `tasks.assign`, `tasks.reorder`, `tasks.delete`, `tasks.restore`, `tasks.force-delete` | Check the declared case, its active state and case access. Only permanent deletion is restricted. |
+| Task comments | `task-comments.create`, `task-comments.update`, `task-comments.delete`, `task-comments.restore`, `task-comments.force-delete` | Check the declared task and case. Active comments are read with task access. Authorized changes can affect another user's comment. Only permanent deletion is restricted. |
+| Task checklists | `task-checklists.manage` | Delegable. Check the declared task and case. Active items are read with task access. No checklist trash. |
+| Templates and template checklists | `task-templates.view`, `task-templates.manage` | Delegable. Check the template's declared type and the item's declared template. No template or template checklist trash. |
+| Tags and case-tag associations | `tags.view`, `tags.manage`, `tags.associate` | Delegable. Associating tags also requires access to the active case. Catalog deletion uses the declared relational behavior. |
+| Personal Kanban preferences | `kanban.manage` | Delegable. Only the actor's preferences for accessible active cases. |
+| Calendar | `calendar.view` | Delegable. Only active dated tasks assigned to the actor, with access to their cases and tasks. |
+| Case uploads and incidents | `case-files.upload`, `incidents.view` | Delegable. Upload requires access to the active case. Incidents use a future safe projection. Samba browsing, listing, downloads and removal are unavailable to all roles. |
+| Audit log visibility | Reserved for J | Audit visibility and incident retention remain undecided. Never expose raw logs or operational secrets. |
+
+Phase E implements the authorization boundaries. F through J must wire the applicable decisions into real routes and transactions, with no per-case ACL, hierarchical roles or tenancy.
+
+### Transactional authorization and cache
+
+Run authentication and authorization before binding account records so unprivileged callers cannot probe for their existence. Every administrative write acquires the reserved `admin` web role row first, then locks relevant user rows by ascending ID and locks any additional target roles by ID. The first-administrator command and catalog installer use the same reserved row. Recheck actor activity, credential generation, administrator membership and the operation's current permission inside the write transaction. The disable and membership paths share the last-active-administrator check. Conflicts roll back without modifying credentials or assignments. Proposed business writes in later phases must recheck their permissions and invariants inside the relevant mutation transaction.
+
+The authoritative decision queries current Spatie web memberships and permission pivots in MySQL. It avoids reliance on cached Gate guesses, previously loaded Eloquent relationships and client claims. Catalog and role graph changes clear the native Spatie cache after commit using the configured store. Rollbacks leave the previously valid cache intact. In-flight reads that already passed authorization may finish with their earlier result. Newly admitted requests read committed authorization. The credential revocation rules for disabling and password changes remain in effect.
+
+Phase J should record the actor, target, timestamp and role or permission differences for successful security and assignment changes. Never include secrets, passwords, hashes, tokens or session data. The proposal to omit transient personal Kanban ordering and visibility events requires an explicit decision in J. Audit visibility and incident retention remain open.

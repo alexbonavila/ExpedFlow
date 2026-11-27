@@ -31,4 +31,12 @@ return [
     'self_disable' => 'No pots desactivar el teu compte.',
     'last_active_admin' => 'No es pot desactivar l’últim compte d’administració actiu.',
     'password_replaced' => 'S’ha canviat la contrasenya i s’han revocat els accessos existents.',
+    'role_name_conflict' => 'Aquest nom de rol ja es fa servir.',
+    'system_role' => 'Els rols del sistema no es poden reanomenar ni suprimir.',
+    'role_assigned' => 'Retira totes les assignacions de comptes abans de suprimir aquest rol.',
+    'restricted_permissions' => 'Els permisos sol·licitats no compleixen les regles d’administració.',
+    'unknown_permissions' => 'Un o més permisos no estan disponibles.',
+    'role_deleted' => 'El rol s’ha suprimit.',
+    'unknown_roles' => 'Un o més rols no estan disponibles.',
+    'self_demotion' => 'No pots retirar la teva pertinença al rol d’administrador.',
 ];

@@ -1,0 +1,35 @@
+<?php
+
+return [
+    'groups' => [
+        'users' => 'usuaris',
+        'roles' => 'rols',
+        'statuses' => 'estats',
+        'clients' => 'clients',
+        'expedient-types' => 'tipus d’expedient',
+        'expedients' => 'expedients',
+        'tasks' => 'tasques',
+        'task-templates' => 'plantilles de tasques',
+        'task-checklists' => 'llistes de comprovació de tasques',
+        'task-comments' => 'comentaris de tasques',
+        'tags' => 'etiquetes',
+        'kanban' => 'preferències personals del Kanban',
+        'calendar' => 'calendari personal',
+        'case-files' => 'fitxers d’expedients',
+        'incidents' => 'incidències',
+    ],
+    'actions' => [
+        'manage' => 'Gestionar :resource',
+        'assign' => 'Assignar :resource',
+        'view' => 'Veure :resource',
+        'create' => 'Crear :resource',
+        'update' => 'Modificar :resource',
+        'delete' => 'Suprimir :resource',
+        'restore' => 'Restaurar :resource',
+        'force-delete' => 'Suprimir definitivament :resource',
+        'reorder' => 'Reordenar :resource',
+        'associate' => 'Associar :resource',
+        'upload' => 'Pujar :resource',
+    ],
+    'description' => 'Autoritza l’operació següent: :action.',
+];

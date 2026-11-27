@@ -13,7 +13,7 @@ jq -e --arg extended "$extended" '
     "frontend-tests", "api-contract", "security", "codeql", "build", "e2e",
     "accessibility", "storage-integration"
   ];
-  def nightly: ["mutation", "performance", "dynamic-security"];
+  def nightly: ["mutation-plan", "mutation-shards", "mutation", "performance", "dynamic-security"];
   (keys == ((core + nightly) | sort))
   and ([. as $needs | core[] | $needs[.].result] | all(. == "success"))
   and ([. as $needs | nightly[] | $needs[.].result] | all(. == $extended))

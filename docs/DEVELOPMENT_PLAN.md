@@ -77,7 +77,7 @@ The Phase 0 package documents the plan and records A–S as pending at that base
 
 Phase A is closed on the owner's supplied baseline evidence for commit `22528be`. The cloud reran the two inherited tests and Pint and confirmed the base Laravel page. The original cloud Vite configuration depended on a font CDN that the proxy blocked. The Phase B build now bundles the same font from the npm lockfile and ran locally.
 
-Phase B was integrated through PR #1 at `f33b90f`. The default-branch push and actual manual extended workflow passed. The English documentation and acceptance audit were integrated through PR #5 at `5436acb`. Actual protected-PR merge blocking was verified in PR #6; its deliberate fault was reverted. The Node declaration update policy was integrated through PR #7. The [CI closeout record](CI.md) identifies final run verification and outstanding operational event checks; [SECURITY.md](SECURITY.md) records dependency and alert-review follow-up. The owner accepted Phase B and authorized Phase C from protected main commit `430c9a4`. Scheduled and published-release event verification and the independent CodeQL alert inventory review remain operational follow-up.
+Phase B was integrated through PR #1 at `f33b90f`. The default-branch push and actual manual extended workflow passed. The English documentation and acceptance audit were integrated through PR #5 at `5436acb`. Actual protected-PR merge blocking was verified in PR #6; its deliberate fault was reverted. The Node declaration update policy was integrated through PR #7. The [CI closeout record](CI.md) identifies final run verification and outstanding operational event checks; [SECURITY.md](SECURITY.md) records dependency and alert-review follow-up. The owner accepted Phase B and authorized Phase C from protected main commit `430c9a4`. The scheduled workflow passed. Published-release event verification and independent CodeQL alert inventory review remain operational follow-up.
 
 ## Phase C status
 
@@ -85,4 +85,12 @@ The candidate on `feat/database-schema-c` delivers the functional schema, Eloque
 
 ## Phase D status
 
-The implementation branch is `feat/authentication-users-d`. Phase D delivers the API identity layer, explicit first-administrator provisioning, secure SPA and mobile authentication, SMTP recovery, account lifecycle and localized responses. The [identity contract](API.md#phase-d-identity-contract) and [testing matrix](TESTING.md#phase-d-identity-verification) describe the candidate. Phase E follows the required hosted runs, owner acceptance and integration of Phase D.
+Phase D was accepted and integrated through [PR #11](https://github.com/alexbonavila/ExpedFlow/pull/11) at `6d8eef9c00f683f2e48e17ff80a18e6019702c11`. The [post-merge workflow](https://github.com/alexbonavila/ExpedFlow/actions/runs/45997572529) passed. The owner accepted Phase D and authorized Phase E from that protected baseline.
+
+## Phase E authorization
+
+The implementation branch is `feat/authorization-roles-e`. Phase E delivers the fixed permission catalog, protected system roles, authorized role and membership management, and reusable domain policies. The [authorization matrix](SECURITY.md#phase-e-authorization-matrix) records the scope. Owner acceptance and protected integration precede Phase F.
+
+## Phase E.1 CI scalability
+
+Phase E.1 continues on `feat/authorization-roles-e` and PR #12. It introduces isolated distributed mutation testing, global evidence reconciliation, locked dependency-download caches and same-run asset reuse. ExpedFlow CI retains its required `quality-gate` check. See CI.md for the baseline, workflow filename transition and verification procedure. The hosted equivalent results and owner acceptance precede Phase F.

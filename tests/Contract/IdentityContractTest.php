@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use cebe\openapi\Reader;
+use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use League\OpenAPIValidation\PSR7\OperationAddress;
@@ -14,6 +15,7 @@ use Tests\Support\RefreshGuardedMySql;
 uses(IdentityHttp::class, RefreshGuardedMySql::class);
 
 test('Phase D identity contract validates real Laravel success and error responses', function () {
+    $this->seed(AuthorizationSeeder::class);
     $this->identityHttp();
     $specification = base_path('tests/Fixtures/phase-d-openapi.json');
     $document = Reader::readFromJsonFile($specification);
@@ -21,7 +23,7 @@ test('Phase D identity contract validates real Laravel success and error respons
     $validator = (new ValidatorBuilder)->fromJsonFile($specification)->getResponseValidator();
     $user = User::factory()->create();
     $admin = User::factory()->create();
-    $admin->assignRole(Role::create(['name' => User::ADMIN_ROLE, 'guard_name' => 'web']));
+    $admin->assignRole(Role::query()->where('name', User::ADMIN_ROLE)->firstOrFail());
     $adminHeaders = ['Authorization' => 'Bearer '.$admin->createToken('Contract fixture')->plainTextToken];
     $this->freshCsrf();
     Queue::fake();

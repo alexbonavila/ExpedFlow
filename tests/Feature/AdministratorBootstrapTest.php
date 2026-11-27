@@ -13,7 +13,7 @@ uses(RefreshGuardedMySql::class);
 test('only the explicit initializer creates the first administrator and a rerun preserves credentials', function () {
     $this->seed(DatabaseSeeder::class);
     expect(User::query()->count())->toBe(0);
-    expect(Role::query()->count())->toBe(0);
+    expect(Role::query()->orderBy('name')->pluck('name')->all())->toBe(['admin', 'user']);
     config(['identity.bootstrap' => ['name' => 'First Administrator', 'email' => '  INITIAL@example.test ', 'password' => 'synthetic first password']]);
 
     $this->artisan('expedflow:admin:init')->expectsOutputToContain('Administrator initialized.')->assertSuccessful();

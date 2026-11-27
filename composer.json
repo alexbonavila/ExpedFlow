@@ -87,7 +87,7 @@
         "test:types": "@php -d memory_limit=512M vendor/bin/pest --type-coverage --min=100 --type-coverage-json=test-results/type-coverage.json",
         "test:mutation": [
             "Composer\\Config::disableProcessTimeout",
-            "pest --mutate --path=app,routes,bootstrap/app.php --min=80 --no-cache"
+            "@php -d memory_limit=512M vendor/bin/pest --mutate --path=app,routes,bootstrap/app.php --min=80 --no-cache"
         ]
     },
     "extra": {

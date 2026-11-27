@@ -1,4 +1,4 @@
-# CI and quality gates — Phase B
+# ExpedFlow CI and quality gates
 
 ## Objective
 
@@ -68,9 +68,9 @@ Save references to runs and outcomes. Keep deliberate faults, detectable synthet
 
 Run all applicable checks on a specific commit. Use real PHP, MySQL, Vue, browser, contract and security harnesses. Document local commands, verify scheduling and branch protection, record adversarial test evidence and verify a clean, green main branch. Document categories that lack functional logic and the tests deferred with them. Start C only after resolving infrastructure blockers and demonstrating every mandatory control.
 
-## Phase B workflow configuration
+## ExpedFlow CI configuration
 
-`phase-b.yml` runs on pull requests, pushes to `main` and the Phase B feature branch, a daily schedule, release publication and manual dispatch. The schedule follows GitHub's UTC cron. All events require the core jobs. Scheduled, release and manual events also require mutation, performance and passive ZAP checks. On PR and push events the gate expects those three jobs to be skipped. The feature-branch push trigger allows CI evidence while authenticated PR access is unavailable. The aggregate gate fails if any required job fails, is skipped or is cancelled, or if the configured job list differs from the gate's list.
+ExpedFlow CI runs on pull requests, pushes to `main`, a daily UTC schedule, release publication and manual dispatch. All events require the core jobs. The three mutation stages, performance and passive ZAP are required for scheduled, release and manual events. Pull requests and pushes expect those five job groups to be skipped. The aggregate gate enforces both the exact job inventory and every required outcome. See the filename transition below for the active dispatch path.
 
 The backend test job runs each Pest suite once and captures line coverage, type coverage and JUnit. The `database-tests` and `api-contract` jobs verify the nonempty Integration and Contract suite outcomes from that report. Each job that uses MySQL gets a separate service. It provisions a random password for the restricted testing account and passes values to later steps through the GitHub environment file with masking. Keep all credentials and reports scoped to synthetic data. Frontend and browser jobs install from the npm lock. The E2E and accessibility jobs each install all three browser engines. CodeQL analyzes JavaScript and TypeScript in a dedicated job. Laravel PHP gets Larastan, Pest and the dependency audit.
 
@@ -116,7 +116,7 @@ The restricted behavioral mutation scope and the focused security disposition ar
 
 1. Open the comparison from `feat/testing-ci-infrastructure` into `main` and create the PR. Match the advertised head SHA to the candidate verification. Wait for the actual PR workflow.
 2. In GitHub, open **Settings → Rules → Rulesets** and create an active branch ruleset targeting the default branch `main`. Require a pull request before merging, require status checks, require the branch to be up to date, and block force pushes and deletion. Keep the bypass list empty. Configure reviews in line with repository ownership.
-3. Require the GitHub Actions check named `quality-gate` from the `Phase B` workflow. GitHub may display it as `Phase B / quality-gate`. The database, contract, browser, accessibility and storage checks are required by this aggregate. Keep CodeQL alert review enabled where available.
+3. Require the GitHub Actions check named `quality-gate` from ExpedFlow CI. Historical runs used the Phase B display name. The database, contract, browser, accessibility and storage checks are required by this aggregate. Keep CodeQL alert review enabled where available.
 4. Confirm the rule applies to `main` and verify an actual failing PR check prevents integration. Record the PR workflow and rule evidence, then obtain explicit owner authorization before integrating.
 5. After authorized integration, verify the protected `main` push. Run the manual extended workflow from the default branch, observe the actual scheduled workflow and record release-event verification when an authorized release occurs.
 6. Review both `validation/` branches against their recorded implementation base. Preserve run URLs and any needed review history. The temporary trigger and deliberate fault can be reverted on their branches. Retire the remote branches only after owner authorization.
@@ -131,7 +131,7 @@ The implementation was merged through [PR #1](https://github.com/alexbonavila/Ex
 | Push to `main` at `f33b90f` | [45832019557](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832019557) | All core jobs and the aggregate passed. |
 | Manual dispatch on `main` at `f33b90f` | [45832795169](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832795169) | All 16 jobs passed, including mutation, performance, dynamic security and the aggregate. |
 | Push to `main` at `5436acb` | [45951197131](https://github.com/alexbonavila/ExpedFlow/actions/runs/45951197131) | GitHub reported success after English documentation integration. |
-| Daily schedule | [Schedule history](https://github.com/alexbonavila/ExpedFlow/actions/workflows/phase-b.yml?query=event%3Aschedule) | No scheduled run was visible on November 27, 2026 after the 02:17 UTC slot, 03:17 in Madrid. Record the run ID, head SHA and job results when a scheduled run appears. |
+| Daily schedule | [Scheduled run 45986529932](https://github.com/alexbonavila/ExpedFlow/actions/runs/45986529932) | The actual `schedule` event passed all 16 jobs on `942e5cdc416947a586ac4167a9a3c5a76197e100`. |
 | Published release | [Release-event history](https://github.com/alexbonavila/ExpedFlow/actions/workflows/phase-b.yml?query=event%3Arelease) | No release-triggered run was visible on November 27, 2026. The workflow is configured for `release.published`, and manual dispatch already exercised the extended jobs. Deferring event verification to the first owner-authorized release requires owner approval. An owner-approved disposable repository could verify the trigger mechanics for that repository. |
 
 [Ruleset 28167262](https://github.com/alexbonavila/ExpedFlow/rules/28167262) is active and targets the default branch. Its public rules require a PR, the GitHub Actions check `quality-gate` and an up-to-date branch. They block deletion and force pushes. The public ruleset response independently confirms `bypass_actors: []` and `current_user_can_bypass: never`.
@@ -150,14 +150,51 @@ The temporary validation branches were absent from the remote at the start of Ph
 
 The owner requested repository cleanup and final Phase B closeout on November 27, 2026. [PR #7](https://github.com/alexbonavila/ExpedFlow/pull/7) passed [run 45952196316](https://github.com/alexbonavila/ExpedFlow/actions/runs/45952196316) and was merged at `5f06ab87461bfe719249c94353f8f1405a68c8d8`. The corresponding [main run 45952681738](https://github.com/alexbonavila/ExpedFlow/actions/runs/45952681738) passed. [PR #8](https://github.com/alexbonavila/ExpedFlow/pull/8) passed [run 45952822548](https://github.com/alexbonavila/ExpedFlow/actions/runs/45952822548). The [main run 45955325050](https://github.com/alexbonavila/ExpedFlow/actions/runs/45955325050) passed at the Phase C starting commit `430c9a4`.
 
-The owner accepted Phase B for progression to Phase C from `430c9a4`. Actual scheduled and published-release executions and independent review of the CodeQL alert inventory remain open operational follow-up. Retain the existing triggers and gates. The prior manual extended run verified the shared jobs. Record the first actual scheduled run, the first authorized published-release run and the GitHub Security inventory review when available. See [SECURITY.md](SECURITY.md) for the dependency updater issue.
+The owner accepted Phase B for progression to Phase C from `430c9a4`. Published-release execution and independent review of the CodeQL alert inventory remain open operational follow-up. Retain the existing triggers and gates. The prior manual extended run verified the shared jobs. Record the first authorized published-release run and the GitHub Security inventory review when available. See [SECURITY.md](SECURITY.md) for the dependency updater issue.
 
 ## Integrated Phase C
 
-The owner accepted Phase C after integration at `942e5cdc416947a586ac4167a9a3c5a76197e100` through [PR #10](https://github.com/alexbonavila/ExpedFlow/pull/10). The [core run 45959448962](https://github.com/alexbonavila/ExpedFlow/actions/runs/45959448962), [extended run 45959904640](https://github.com/alexbonavila/ExpedFlow/actions/runs/45959904640) and [main run 45960606761](https://github.com/alexbonavila/ExpedFlow/actions/runs/45960606761) each passed. The Phase B schedule event, published release event and independent CodeQL alert inventory review remain operational follow-up.
+The owner accepted Phase C after integration at `942e5cdc416947a586ac4167a9a3c5a76197e100` through [PR #10](https://github.com/alexbonavila/ExpedFlow/pull/10). The [core run 45959448962](https://github.com/alexbonavila/ExpedFlow/actions/runs/45959448962), [extended run 45959904640](https://github.com/alexbonavila/ExpedFlow/actions/runs/45959904640) and [main run 45960606761](https://github.com/alexbonavila/ExpedFlow/actions/runs/45960606761) each passed. The published release event and independent CodeQL alert inventory review remain operational follow-up.
 
 ## Phase D candidate delivery
 
-Use one regular pull request from `feat/authentication-users-d` to `main`. The existing **Phase B** workflow runs core checks automatically on the PR. Select the same branch from **Actions → Phase B → Run workflow** to exercise the extended mutation, dynamic security and performance checks on the candidate. Match both runs to the reviewed head SHA. Record the candidate and its actual run conclusions in the PR and proceed only after owner authorization.
+Phase D used one regular pull request from `feat/authentication-users-d` to `main`. Core CI ran automatically and the historical Phase B workflow supplied extended checks by manual dispatch on the same candidate.
 
 The initial candidate `4654bc4` failed `backend-quality` because the injected password broker interface does not declare the token deletion method. The follow-up uses Laravel's documented facade. Review only the run for the final head when deciding acceptance. [Initial Phase D core run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45972628346)
+
+The owner accepted Phase D and authorized Phase E from `6d8eef9c00f683f2e48e17ff80a18e6019702c11`. The [post-merge push 45997572529](https://github.com/alexbonavila/ExpedFlow/actions/runs/45997572529) passed on that exact commit.
+
+## Phase E review evidence
+
+Phase E uses `feat/authorization-roles-e` and [PR #12](https://github.com/alexbonavila/ExpedFlow/pull/12). The core run passed all 13 required jobs and the original extended run passed all 16 jobs on `dcff07bc1724576a0c294772960abe11bad4ff32`. [Core run 46002765726](https://github.com/alexbonavila/ExpedFlow/actions/runs/46002765726) · [Extended run 46002780640](https://github.com/alexbonavila/ExpedFlow/actions/runs/46002780640)
+
+The real scheduled event is verified above. A published-release event and independent CodeQL alert inventory review remain operational follow-up. A passing CodeQL workflow is evidence of scanner execution.
+
+## Phase E.1 distributed mutation testing
+
+### Diagnosis and reference
+
+Phase C took 23 seconds for mutation execution, Phase D took 1,012 seconds and Phase E took 2,464.69 seconds. Phase E generated 836 mutations in 51 files, with 743 detected, 80 surviving and 13 uncovered for 88.88%. The reference core run took 2 minutes 11 seconds and extended CI took 43 minutes 2 seconds. The hosted mutation job occupied 42 minutes 50 seconds including setup. [Reference core](https://github.com/alexbonavila/ExpedFlow/actions/runs/46002765726) · [Reference extended](https://github.com/alexbonavila/ExpedFlow/actions/runs/46002780640)
+
+Pest 5.3.7 and mutation plugin 5.0.2 run an initial coverage suite, then spawn a PHP/Pest subprocess with the covering tests for each covered mutation. Child runs repeat framework startup, guarded schema refresh and data setup. In the existing local Phase E JUnit report the identity concurrency group used 22.45 seconds of test time and the MySQL group used 10.79 seconds. The concurrency group resets and seeds its schema repeatedly for independently committed transactions. The installed native `--parallel` option supplies worker tokens, while the database guard deliberately fixes one schema and account. Pest test sharding limits which tests run, and does not partition mutation IDs. The existing 128 MB local CLI limit exhausted memory during native generation. Mutation execution now has a 512 MB PHP allowance.
+
+### Distribution and scoring
+
+- The planner asks the installed plugin to generate the full inventory under `app`, `routes` and `bootstrap/app.php` with its default operators. It assigns every portable ID to one worker. The ID hashes the repository-relative path, operator and complete rendered mutant. Each worker's artifact also records Pest's original checkout-specific ID.
+- Four hosted jobs start independent MySQL service containers. Each has its own credentials and schema guarded by the existing provisioning and safety checks. Each runs the full initial coverage suite and Pest's original subprocess runner serially. A version-pinned generation subscriber compares the entire native inventory with the plan and selects the assigned IDs.
+- Assignments spread each file across runners with deterministic cost tie-breaking. Locally the four-runner plan assigned 209 IDs each with estimated weights of 604–607. The eight-runner plan assigned 103–106 IDs each with weights of 300–304. Eight runners are available by manual dispatch after the new workflow definition is integrated. Those estimates measure distribution only. Eight-runner wall time and capacity are unverified.
+- Every result is bound to the commit, mutation configuration, run ID, attempt and exact plan SHA-256. The aggregate checks planned IDs against generated IDs and final outcomes, rejects duplicates, missing reports and invalid values, and computes detected divided by generated over the complete inventory. Shards have no individual minimum. The global gate requires at least 80%.
+- Pest's tested, untested, uncovered and timeout classifications are retained in diagnostic artifacts. The adapter checks fresh PHPUnit evidence and process exit status before admitting a result to the gate. It rejects infrastructure failures and unverified timeouts. Pest normally credits timeouts as detected, so timeout investigations require explicit evidence before considering an adapter change.
+- The full summary JSON records all results, including survivors and uncovered IDs, wall seconds per worker, combined mutation command runner seconds, slowest worker and worker utilization. Worker utilization is the sum of shard times divided by runner count and longest shard time. For the final comparison, sum the Actions job durations to include setup and infrastructure, and compare the resulting critical path with the two reference runs. Compute end-to-end parallel efficiency as the sequential mutation job time divided by runner count and the elapsed planner-to-aggregate time. Validate totals and classifications against 836/743/80/13 and report any differences. The original run retained aggregate text and no complete per-mutation ID ledger. Equivalent generation can be checked against the unchanged Phase E sources with the pinned generator. Historical per-ID classifications cannot be reconstructed from totals alone.
+
+### CI efficiency and filename transition
+
+Composer caches only locked distribution archives. npm caches only registry downloads. Keys include the lockfile, platform, selected runtime and relevant setup configuration. Each job still installs from the lockfile. The successful Vite build uploads compiled assets once for the four same-run browser, performance and passive security consumers. Each browser job still installs Playwright and exercises Chromium, Firefox and WebKit against its own MySQL service. No test outcome is cached.
+
+The display name and concurrency prefix are now `ExpedFlow CI` and `expedflow-ci`. The required check retains the exact name `quality-gate`. Phase E.1 retains `.github/workflows/phase-b.yml` in PR #12 so GitHub can dispatch an existing default-branch workflow on the candidate ref. The obsolete Phase B feature-branch push trigger is removed.
+
+For the candidate extended run, use `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/authorization-roles-e`. The PR triggers core CI. Record both run URLs and the exact SHA, then leave the runs to finish independently. After a failed partial rerun, start a fresh dispatch so all mutation artifacts share one attempt.
+
+After owner-approved integration, complete the filename transition in an authorized follow-up by running `git mv .github/workflows/phase-b.yml .github/workflows/ci.yml` and updating the current dispatch instructions. Keep the workflow definition and job name `quality-gate` during that move. Check the renamed workflow's PR gate, then after its authorized integration dispatch `gh workflow run ci.yml --repo alexbonavila/ExpedFlow --ref main` and verify the new workflow's extended job results. Preserve historical workflow and run references.
+
+Phase E.1 acceptance requires the hosted candidate runs, equivalent verification scope and measured performance. The objectives are under five minutes for core CI and about 15 minutes or less for extended CI.

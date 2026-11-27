@@ -40,7 +40,8 @@ test('initialization seeds one localized ordered catalog and preserves later cus
     $this->seed(DatabaseSeeder::class);
 
     $this->assertDatabaseCount('statuses', 5);
-    $this->assertDatabaseCount('seeded_catalogs', 1);
+    expect(DB::table('seeded_catalogs')->orderBy('catalog')->pluck('catalog')->all())
+        ->toBe(['authorization_admin_pending', 'authorization_v1', 'initial_statuses']);
     $this->assertModelMissing($removed);
     expect($edited->refresh()->name)->toBe('Customized');
     expect($edited->position)->toBe(50);

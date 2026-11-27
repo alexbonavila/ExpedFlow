@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Middleware\ActiveIdentity;
 use App\Http\Middleware\IdentityResponse;
+use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\IdentityError;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append([SecurityHeaders::class, IdentityResponse::class]);
         $middleware->statefulApi();
+        $middleware->prependToPriorityList(SubstituteBindings::class, ActiveIdentity::class);
+        $middleware->prependToPriorityList(SubstituteBindings::class, RequirePermission::class);
         $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/');
         $middleware->trimStrings(except: ['name']);
     })

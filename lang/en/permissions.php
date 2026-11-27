@@ -1,0 +1,35 @@
+<?php
+
+return [
+    'groups' => [
+        'users' => 'users',
+        'roles' => 'roles',
+        'statuses' => 'statuses',
+        'clients' => 'clients',
+        'expedient-types' => 'case types',
+        'expedients' => 'cases',
+        'tasks' => 'tasks',
+        'task-templates' => 'task templates',
+        'task-checklists' => 'task checklists',
+        'task-comments' => 'task comments',
+        'tags' => 'tags',
+        'kanban' => 'personal Kanban preferences',
+        'calendar' => 'personal calendar',
+        'case-files' => 'case files',
+        'incidents' => 'incidents',
+    ],
+    'actions' => [
+        'manage' => 'Manage :resource',
+        'assign' => 'Assign :resource',
+        'view' => 'View :resource',
+        'create' => 'Create :resource',
+        'update' => 'Update :resource',
+        'delete' => 'Delete :resource',
+        'restore' => 'Restore :resource',
+        'force-delete' => 'Permanently delete :resource',
+        'reorder' => 'Reorder :resource',
+        'associate' => 'Associate :resource',
+        'upload' => 'Upload :resource',
+    ],
+    'description' => 'Authorizes the following operation: :action.',
+];

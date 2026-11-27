@@ -72,7 +72,7 @@ Phases D–K define the exact routes and schemas for this planned API. CRUD mean
 
 | Resource | Operations |
 |---|---|
-| `/clients` | List, create, edit, delete and restore according to integrity rules |
+| `/clients` | List, create, edit and remove subject to references from cases |
 | `/expedient-types` | CRUD for types with immutable codes |
 | `/expedient-types/{id}/task-templates` | Manage the template and checklist |
 | `/statuses` | List statuses, with administration and ordering reserved for administrators |
@@ -98,7 +98,7 @@ Represent case code `202600105` and type code `05` as strings. A task has one fu
 
 ## Moves and deletion
 
-The server calculates and validates status and position within a transaction. A client cannot edit another user's preferences by supplying an arbitrary user_id. The ordinary API excludes soft-deleted records and provides an explicit trash view with authorized restoration. Force-delete is reserved for administrators and leaves Samba untouched. Validate child resources against the specified parent and block access to tasks belonging to deleted cases.
+The server calculates and validates status and position within a transaction. A client cannot edit another user's preferences by supplying an arbitrary user_id. The ordinary API excludes soft-deleted records and provides an explicit trash view with authorized restoration. Force-delete requires the reserved role and an explicit grant on a trashed record and leaves Samba untouched. Validate child resources against the specified parent and block access to tasks belonging to deleted cases.
 
 ## Uploads and Samba errors
 
@@ -107,3 +107,32 @@ Validate the size, name and allowed format. The server resolves the destination 
 ## OpenAPI and tests
 
 Generate and validate a reproducible OpenAPI specification with authentication, schemas, synthetic examples and errors. Prefer Scramble if compatible. Contract tests compare actual responses with schemas and verify JSON, status codes, permissions, unpaginated responses and the absence of sensitive fields. Breaking changes require review and a versioning strategy. Keep credentials and real internal URLs out of published documentation.
+
+## Phase E authorization contract
+
+The existing HTTPS, Sanctum, active-account, real SPA CSRF, locale and `Cache-Control: no-store` rules apply. The endpoints below require both membership in the reserved `web` role `admin` and the listed effective permission. Token abilities cannot satisfy either condition. Only the source-controlled keys in the [permission matrix](SECURITY.md#phase-e-authorization-matrix) can be assigned.
+
+| Method and path | Permission | Request and success |
+|---|---|---|
+| `GET /api/v1/permissions` | `roles.manage` | 200 with `data`, the complete catalog in declaration order. Each item has `key`, `group`, localized `label` and `description`, and boolean `restricted`. |
+| `GET /api/v1/roles` | `roles.manage` | 200 with every web role in ascending ID order in `data`. |
+| `POST /api/v1/roles` | `roles.manage` | `name` and `permissions` list. 201 with the new role in `data`. |
+| `GET /api/v1/roles/{role}` | `roles.manage` | 200 with the web role in `data`. |
+| `PATCH /api/v1/roles/{role}` | `roles.manage` | `name`. 200 with the renamed custom role in `data`. |
+| `PUT /api/v1/roles/{role}/permissions` | `roles.manage` | `permissions` list. 200 with the updated role in `data`. |
+| `DELETE /api/v1/roles/{role}` | `roles.manage` | 200 with localized `message` and `code: role_deleted` for an unassigned custom role. |
+
+Each role exposes `id`, `name` and its assigned known `permissions` keys in ascending order. Custom names are user-authored, trimmed and limited to 125 characters. MySQL's `utf8mb4_unicode_ci` uniqueness for the web guard is case and accent insensitive. Reserved-name variants collide with their system role. Permission replacement accepts a complete JSON list of unique keys, including an empty list where permitted. Each essential administrator key must remain assigned to `admin`, and every other role is limited to delegable keys. The two system roles cannot be renamed or deleted.
+
+Missing or non-web resources return `404 not_found`. Conflicts return `409 role_name_conflict`, `system_role` or `role_assigned`. Invalid or unavailable permission keys, duplicate keys and restricted grant violations return `422 validation_failed` with localized field errors. Guests and invalid credentials receive 401. Active clients without the required authority receive 403.
+
+| Method and path | Permission | Request and success |
+|---|---|---|
+| `GET /api/v1/users/{user}/authorization` | `roles.assign` | 200 with the account's `data.roles` and `data.permissions`. |
+| `PUT /api/v1/users/{user}/roles` | `roles.assign` | `role_ids` is the complete list of distinct positive integer web role IDs. 200 with the updated authorization in `data`. |
+
+Assigned roles are objects with `id` and `name` in ascending ID order. `permissions` uses the same sorted effective keys as `/me`. It combines catalog grants from assigned web roles with existing direct web grants, subject to account state and the admin prerequisite for restricted keys. An account with no web role retains identity access only. Its direct grants are dormant until it is assigned a web role. A disabled account has no effective permissions. Assignments preserve existing direct grants and leave other guards outside the web API. There is no direct-grant write endpoint. Future resource checks also enforce parent scope, deletion state and personal ownership where applicable.
+
+New accounts receive `user` atomically. Profile updates ignore role and permission input. Role replacement accepts an empty list for other accounts, including a disabled target, subject to the administrator membership invariant. Self-demotion and loss of the last active administrator are conflicts (`self_demotion`, `last_active_admin`). Changes apply on subsequent requests using existing SPA sessions and bearer tokens.
+
+The [Phase E OpenAPI fixture](../tests/Fixtures/phase-e-openapi.json) covers the authorization additions. The [Phase D fixture](../tests/Fixtures/phase-d-openapi.json) continues to define the existing identity operations. Phase E uses positive canonical integer path IDs within the server's integer range. Invalid IDs return 404.
