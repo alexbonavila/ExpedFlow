@@ -35,7 +35,7 @@ final class UserManagementController extends Controller
         $input = IdentityInput::validate($request->all(), [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
-            'locale' => ['sometimes', 'required', Rule::in(IdentityInput::LOCALES)],
+            'locale' => ['sometimes', 'required', 'string', Rule::in(IdentityInput::LOCALES)],
             'password' => IdentityInput::newPassword(),
         ]);
         $input['password'] = Hash::make(Arr::string($input, 'password'));
@@ -49,7 +49,7 @@ final class UserManagementController extends Controller
         $input = IdentityInput::validate($request->all(), [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => ['sometimes', 'required', 'string', 'email', 'max:255'],
-            'locale' => ['sometimes', 'required', Rule::in(IdentityInput::LOCALES)],
+            'locale' => ['sometimes', 'required', 'string', Rule::in(IdentityInput::LOCALES)],
         ]);
 
         $account = DB::transaction(function () use ($user, $input): User {

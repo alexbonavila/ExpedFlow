@@ -37,12 +37,8 @@ final class PasswordRecoveryController extends Controller
 
         DB::transaction(function () use ($input, $credentials): void {
             $email = Arr::string($input, 'email');
-            $user = User::query()->where('email', $email)->lockForUpdate()->first();
-            if ($user === null || $user->disabled_at !== null) {
-                throw new IdentityError(422, 'invalid_reset_token');
-            }
-
-            $status = Password::broker()->reset($input, function (User $user, #[\SensitiveParameter] string $password) use ($credentials): void {
+            User::query()->where('email', $email)->lockForUpdate()->first();
+            $status = Password::broker()->reset($input + ['disabled_at' => null], function (User $user, #[\SensitiveParameter] string $password) use ($credentials): void {
                 $credentials->replacePassword($user, $password);
                 event(new PasswordReset($user));
             });

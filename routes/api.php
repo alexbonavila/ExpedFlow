@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LocalePreferenceController;
 use App\Http\Controllers\PasswordRecoveryController;
 use App\Http\Controllers\PersonalTokenController;
 use App\Http\Controllers\SessionController;
@@ -23,6 +24,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('auth/logout', [SessionController::class, 'logout'])->middleware(RequireSpaSession::class);
         Route::delete('auth/token', [PersonalTokenController::class, 'destroy']);
         Route::get('me', [SessionController::class, 'show']);
+        Route::patch('me/locale', [LocalePreferenceController::class, 'update']);
 
         Route::prefix('users')->middleware('can:manage-accounts')->controller(UserManagementController::class)->group(function (): void {
             Route::get('/', 'index');
