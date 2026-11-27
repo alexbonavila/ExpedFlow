@@ -39,4 +39,7 @@ return [
     'role_deleted' => 'El rol s’ha suprimit.',
     'unknown_roles' => 'Un o més rols no estan disponibles.',
     'self_demotion' => 'No pots retirar la teva pertinença al rol d’administrador.',
+    'client_name_conflict' => 'Aquest nom de client ja es fa servir.',
+    'client_referenced' => 'Un expedient fa referència a aquest client.',
+    'client_deleted' => 'El client s’ha suprimit.',
 ];

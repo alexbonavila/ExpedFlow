@@ -39,4 +39,7 @@ return [
     'role_deleted' => 'El rol se ha eliminado.',
     'unknown_roles' => 'Uno o más roles no están disponibles.',
     'self_demotion' => 'No puedes retirar tu propia pertenencia al rol de administrador.',
+    'client_name_conflict' => 'Este nombre de cliente ya está en uso.',
+    'client_referenced' => 'Un expediente hace referencia a este cliente.',
+    'client_deleted' => 'El cliente se ha eliminado.',
 ];

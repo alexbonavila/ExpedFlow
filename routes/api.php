@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\CaseLookupController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\LocalePreferenceController;
 use App\Http\Controllers\PasswordRecoveryController;
 use App\Http\Controllers\PersonalTokenController;
@@ -29,6 +31,22 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('auth/token', [PersonalTokenController::class, 'destroy']);
         Route::get('me', [SessionController::class, 'show']);
         Route::patch('me/locale', [LocalePreferenceController::class, 'update']);
+
+        Route::prefix('clients')->controller(ClientController::class)->group(function (): void {
+            Route::middleware(RequirePermission::class.':'.PermissionKey::ViewClients->value)->group(function (): void {
+                Route::get('/', 'index');
+                Route::get('{client}', 'show')->whereNumber('client');
+            });
+            Route::middleware(RequirePermission::class.':'.PermissionKey::ManageClients->value)->group(function (): void {
+                Route::post('/', 'store');
+                Route::patch('{client}', 'update')->whereNumber('client');
+                Route::delete('{client}', 'destroy')->whereNumber('client');
+            });
+        });
+        Route::get('expedient-types', [CaseLookupController::class, 'types'])
+            ->middleware(RequirePermission::class.':'.PermissionKey::ViewExpedientTypes->value);
+        Route::get('statuses', [CaseLookupController::class, 'statuses'])
+            ->middleware(RequirePermission::class.':'.PermissionKey::ViewStatuses->value);
 
         Route::middleware(RequirePermission::class.':'.PermissionKey::ManageRoles->value)
             ->controller(RoleManagementController::class)->group(function (): void {

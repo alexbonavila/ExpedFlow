@@ -39,4 +39,7 @@ return [
     'role_deleted' => 'The role was deleted.',
     'unknown_roles' => 'One or more roles are not available.',
     'self_demotion' => 'You cannot remove your own administrator membership.',
+    'client_name_conflict' => 'This client name is already in use.',
+    'client_referenced' => 'This client is referenced by a case.',
+    'client_deleted' => 'The client was deleted.',
 ];
