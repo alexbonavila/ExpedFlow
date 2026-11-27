@@ -10,4 +10,7 @@ return [
     'status_deleted' => 'Estat eliminat.',
     'template_deleted' => 'Plantilla de tasca eliminada.',
     'template_item_deleted' => 'Element de la llista de la plantilla eliminat.',
+    'tag_name_conflict' => 'Ja existeix aquest nom d’etiqueta.',
+    'tag_deleted' => 'Etiqueta eliminada.',
+    'tag_reference_invalid' => 'Cada etiqueta ha de correspondre a una etiqueta existent.',
 ];

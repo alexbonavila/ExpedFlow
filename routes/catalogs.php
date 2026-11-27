@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\ExpedientTagController;
 use App\Http\Controllers\ExpedientTypeCatalogController;
 use App\Http\Controllers\StatusCatalogController;
+use App\Http\Controllers\TagCatalogController;
 use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\TemplateChecklistController;
 use App\Http\Middleware\RequirePermission;
@@ -49,4 +51,23 @@ Route::prefix('expedient-types/{type}/task-templates')->whereNumber('type')
             Route::patch('{template}/checklist/{item}', [TemplateChecklistController::class, 'update'])->whereNumber(['template', 'item']);
             Route::delete('{template}/checklist/{item}', [TemplateChecklistController::class, 'destroy'])->whereNumber(['template', 'item']);
         });
+    });
+
+Route::prefix('tags')->controller(TagCatalogController::class)->group(function (): void {
+    Route::middleware(RequirePermission::class.':'.PermissionKey::ViewTags->value)->group(function (): void {
+        Route::get('/', 'index');
+        Route::get('{tag}', 'show')->whereNumber('tag');
+    });
+
+    Route::middleware(RequirePermission::class.':'.PermissionKey::ManageTags->value)->group(function (): void {
+        Route::post('/', 'store');
+        Route::patch('{tag}', 'update')->whereNumber('tag');
+        Route::delete('{tag}', 'destroy')->whereNumber('tag');
+    });
+});
+
+Route::prefix('expedients/{expedient}/tags')->whereNumber('expedient')->controller(ExpedientTagController::class)
+    ->middleware(RequirePermission::class.':'.PermissionKey::ViewExpedients->value)->group(function (): void {
+        Route::get('/', 'index')->middleware(RequirePermission::class.':'.PermissionKey::ViewTags->value);
+        Route::put('/', 'replace')->middleware(RequirePermission::class.':'.PermissionKey::AssociateTags->value);
     });

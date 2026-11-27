@@ -10,4 +10,7 @@ return [
     'status_deleted' => 'Status deleted.',
     'template_deleted' => 'Task template deleted.',
     'template_item_deleted' => 'Template checklist item deleted.',
+    'tag_name_conflict' => 'This tag name already exists.',
+    'tag_deleted' => 'Tag deleted.',
+    'tag_reference_invalid' => 'Each tag must reference an existing tag.',
 ];

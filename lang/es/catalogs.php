@@ -10,4 +10,7 @@ return [
     'status_deleted' => 'Estado eliminado.',
     'template_deleted' => 'Plantilla de tarea eliminada.',
     'template_item_deleted' => 'Elemento de la lista de la plantilla eliminado.',
+    'tag_name_conflict' => 'Ya existe este nombre de etiqueta.',
+    'tag_deleted' => 'Etiqueta eliminada.',
+    'tag_reference_invalid' => 'Cada etiqueta debe corresponder a una etiqueta existente.',
 ];
