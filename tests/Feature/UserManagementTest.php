@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Support\AccountLifecycle;
 use App\Support\IdentityError;
+use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -14,6 +15,7 @@ use Tests\Support\RefreshGuardedMySql;
 uses(IdentityHttp::class, RefreshGuardedMySql::class);
 
 beforeEach(function () {
+    $this->seed(AuthorizationSeeder::class);
     $this->identityHttp();
 });
 
@@ -53,7 +55,7 @@ test('administrators manage ordinary accounts with explicit fields and a complet
     $id = $response->json('data.id');
     $response->assertExactJson(['data' => ['id' => $id, 'name' => $input['name'], 'email' => 'new@example.test', 'locale' => 'es', 'active' => true]]);
     $user = User::query()->findOrFail($id);
-    expect($user->roles)->toBeEmpty()
+    expect($user->roles()->pluck('name')->all())->toBe(['user'])
         ->and($user->email_verified_at)->toBeNull()
         ->and($user->remember_token)->toBeNull()
         ->and(Hash::check($input['password'], $user->password))->toBeTrue();

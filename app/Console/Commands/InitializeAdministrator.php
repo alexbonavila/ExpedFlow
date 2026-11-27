@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Support\AuthorizationCatalog;
 use App\Support\IdentityInput;
 use Illuminate\Console\Command;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -11,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use LogicException;
-use Spatie\Permission\Models\Role;
 
 final class InitializeAdministrator extends Command
 {
@@ -19,7 +19,7 @@ final class InitializeAdministrator extends Command
 
     protected $description = 'Initialize the first administrator using protected application configuration';
 
-    public function handle(): int
+    public function handle(AuthorizationCatalog $catalog): int
     {
         try {
             $input = IdentityInput::validate(config()->array('identity.bootstrap'), [
@@ -34,7 +34,7 @@ final class InitializeAdministrator extends Command
         }
 
         try {
-            $created = $this->createAdministrator(Arr::string($input, 'name'), Arr::string($input, 'email'), Arr::string($input, 'password'));
+            $created = $this->createAdministrator($catalog, Arr::string($input, 'name'), Arr::string($input, 'email'), Arr::string($input, 'password'));
         } catch (LogicException|UniqueConstraintViolationException) {
             $this->error('Administrator initialization refused. Ask the owner to review the reserved role and account records.');
 
@@ -48,23 +48,18 @@ final class InitializeAdministrator extends Command
         return self::SUCCESS;
     }
 
-    private function createAdministrator(string $name, string $email, #[\SensitiveParameter] string $password): bool
+    private function createAdministrator(AuthorizationCatalog $catalog, string $name, string $email, #[\SensitiveParameter] string $password): bool
     {
-        return DB::transaction(function () use ($name, $email, $password): bool {
-            $created = DB::table('roles')->insertOrIgnore([
-                'name' => User::ADMIN_ROLE,
-                'guard_name' => 'web',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            $role = Role::query()->where('name', User::ADMIN_ROLE)->where('guard_name', 'web')->lockForUpdate()->firstOrFail();
+        return DB::transaction(function () use ($catalog, $name, $email, $password): bool {
+            [$role, $created] = $catalog->ensureAdministratorRole();
             $administrators = User::role($role)->lockForUpdate()->limit(2)->get();
 
             if ($administrators->count() === 1 && IdentityInput::email($administrators->firstOrFail()->email) === $email) {
                 return false;
             }
 
-            if ($created !== 1 || $administrators->isNotEmpty() || User::query()->where('email', $email)->exists()) {
+            $pending = DB::table('seeded_catalogs')->where('catalog', AuthorizationCatalog::BOOTSTRAP_PENDING);
+            if ((! $created && ! $pending->exists()) || $administrators->isNotEmpty() || User::query()->where('email', $email)->exists()) {
                 throw new LogicException('Administrator state requires owner review.');
             }
 
@@ -74,6 +69,8 @@ final class InitializeAdministrator extends Command
                 'password' => Hash::make($password),
             ]);
             $user->assignRole($role);
+            $catalog->install();
+            $pending->delete();
 
             return true;
         }, 3);

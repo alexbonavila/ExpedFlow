@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\AccountLifecycle;
+use App\Support\AuthorizationCatalog;
 use App\Support\IdentityError;
 use App\Support\IdentityInput;
 use App\Support\RevokeCredentials;
@@ -38,7 +39,13 @@ final class UserManagementController extends Controller
             'password' => IdentityInput::newPassword(),
         ]);
         $input['password'] = Hash::make(Arr::string($input, 'password'));
-        $user = $this->save(new User, $input + ['locale' => 'es']);
+        $user = DB::transaction(function () use ($input): User {
+            $role = AuthorizationCatalog::roles()->where('name', AuthorizationCatalog::ORDINARY_ROLE)->firstOrFail();
+            $account = $this->save(new User, $input + ['locale' => 'es']);
+            $account->assignRole($role);
+
+            return $account;
+        }, 3);
 
         return (new UserResource($user))->response()->setStatusCode(201);
     }
