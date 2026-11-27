@@ -14,6 +14,8 @@ return [
     'https_required' => 'This request requires HTTPS.',
     'session_required' => 'This action requires a first-party browser session.',
     'invalid_credentials' => 'The email or password is incorrect.',
+    'bearer_required' => 'This action requires a personal access token.',
+    'token_revoked' => 'This access token was revoked.',
     'logged_out' => 'You have been signed out.',
     'password_bytes' => 'The password must not exceed 72 bytes with bcrypt.',
     'password_unsupported' => 'The password contains an unsupported character.',
