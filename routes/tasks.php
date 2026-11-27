@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\TaskAssigneeController;
+use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Middleware\RequirePermission;
 use App\Support\PermissionKey;
@@ -21,6 +22,22 @@ Route::middleware(RequirePermission::class.':'.PermissionKey::ViewExpedients->va
             ->middleware(RequirePermission::class.':'.PermissionKey::AssignTasks->value);
         Route::get('tasks/{task}/assignee-candidates', [TaskAssigneeController::class, 'candidates'])->whereNumber('task')
             ->middleware(RequirePermission::class.':'.PermissionKey::AssignTasks->value);
+        Route::prefix('tasks/{task}/comments')->whereNumber('task')->controller(TaskCommentController::class)
+            ->group(function (): void {
+                Route::get('/', 'index');
+                Route::get('trash', 'trash');
+                Route::get('trash/{comment}', 'showTrashed')->whereNumber('comment');
+                Route::get('{comment}', 'show')->whereNumber('comment');
+                Route::post('/', 'store')->middleware(RequirePermission::class.':'.PermissionKey::CreateTaskComments->value);
+                Route::patch('{comment}', 'update')->whereNumber('comment')
+                    ->middleware(RequirePermission::class.':'.PermissionKey::UpdateTaskComments->value);
+                Route::delete('{comment}', 'destroy')->whereNumber('comment')
+                    ->middleware(RequirePermission::class.':'.PermissionKey::DeleteTaskComments->value);
+                Route::post('{comment}/restore', 'restore')->whereNumber('comment')
+                    ->middleware(RequirePermission::class.':'.PermissionKey::RestoreTaskComments->value);
+                Route::post('{comment}/force-delete', 'forceDelete')->whereNumber('comment')
+                    ->middleware(RequirePermission::class.':'.PermissionKey::ForceDeleteTaskComments->value);
+            });
         Route::get('tasks/{task}', [TaskController::class, 'show'])->whereNumber('task');
     });
 });

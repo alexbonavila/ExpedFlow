@@ -102,3 +102,7 @@ The existing `routes/api.php` Sanctum group loads `routes/expedients.php`. Clien
 | J | The write boundary knows the actual actor and case ID. Later auditing must record appropriate business diffs and relationship changes without secrets. Define event policy, retention and audit visibility in J. |
 
 Template copying, when H adds it, must persist its database rows inside the same creation transaction as the case and number. G/H/I may proceed together only after owner acceptance of F. Before their integration, jointly verify parent deletion versus task creation or modification, restore collisions and markers, shared status lock ordering, preference preservation and post-commit storage failures without renumbering.
+
+## Phase G audit handoff
+
+Comment writes run in `TaskCommentController` inside `BusinessWrite`. Phase J can record the fresh actor, action, task and comment IDs, original author ID and the authorized change inside that transaction. Capture old values before applying a change and record actual changed fields, keeping the original author on every update and deletion. Centralized recording and retention are pending Phase J.

@@ -57,4 +57,6 @@ return [
     'task_status_changed' => 'L’estat de la tasca ha canviat. Actualitza i torna-ho a provar.',
     'task_position_invalid' => 'Tria una posició dins de la columna de destinació.',
     'task_assignee_invalid' => 'Tria usuaris existents i assigna només usuaris actius.',
+    'task_comment_deleted' => 'El comentari s’ha mogut a la paperera.',
+    'task_comment_force_deleted' => 'El comentari s’ha eliminat definitivament.',
 ];

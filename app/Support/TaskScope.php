@@ -9,7 +9,16 @@ use Illuminate\Support\Facades\Gate;
 
 final class TaskScope
 {
-    public function __construct(private readonly ExpedientLifecycle $lifecycle) {}
+    public function __construct(private readonly ExpedientLifecycle $lifecycle, private readonly EffectivePermissions $permissions) {}
+
+    public function authorizeTrash(PermissionKey $restore, PermissionKey $forceDelete): void
+    {
+        Gate::allowIf(function (User $actor) use ($restore, $forceDelete): bool {
+            $grants = $this->permissions->for($actor);
+
+            return in_array($restore->value, $grants, true) || in_array($forceDelete->value, $grants, true);
+        });
+    }
 
     /** @return array{Task, Expedient} */
     public function read(int $id): array

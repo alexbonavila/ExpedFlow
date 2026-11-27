@@ -57,4 +57,6 @@ return [
     'task_status_changed' => 'The task status changed. Refresh and try again.',
     'task_position_invalid' => 'Choose a position within the destination column.',
     'task_assignee_invalid' => 'Choose existing users and assign only active users.',
+    'task_comment_deleted' => 'Comment moved to trash.',
+    'task_comment_force_deleted' => 'Comment permanently deleted.',
 ];

@@ -57,4 +57,6 @@ return [
     'task_status_changed' => 'El estado de la tarea cambió. Actualiza e inténtalo de nuevo.',
     'task_position_invalid' => 'Elige una posición dentro de la columna de destino.',
     'task_assignee_invalid' => 'Elige usuarios existentes y asigna solo usuarios activos.',
+    'task_comment_deleted' => 'El comentario se ha movido a la papelera.',
+    'task_comment_force_deleted' => 'El comentario se ha eliminado definitivamente.',
 ];

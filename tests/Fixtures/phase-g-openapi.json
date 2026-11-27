@@ -31,84 +31,28 @@
             }
           },
           "401": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http401"
           },
           "403": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http403"
           },
           "404": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http404"
           },
           "409": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http409"
           },
           "419": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http419"
           },
           "422": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
           }
         },
         "parameters": [
@@ -145,84 +89,28 @@
             }
           },
           "401": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http401"
           },
           "403": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http403"
           },
           "404": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http404"
           },
           "409": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http409"
           },
           "419": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http419"
           },
           "422": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
           }
         },
         "parameters": [
@@ -300,84 +188,28 @@
             }
           },
           "401": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http401"
           },
           "403": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http403"
           },
           "404": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http404"
           },
           "409": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http409"
           },
           "419": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http419"
           },
           "422": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
           }
         },
         "parameters": [
@@ -414,84 +246,28 @@
             }
           },
           "401": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http401"
           },
           "403": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http403"
           },
           "404": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http404"
           },
           "409": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http409"
           },
           "419": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http419"
           },
           "422": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
           }
         },
         "parameters": [
@@ -566,84 +342,28 @@
             }
           },
           "401": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http401"
           },
           "403": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http403"
           },
           "404": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http404"
           },
           "409": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http409"
           },
           "419": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http419"
           },
           "422": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
           }
         },
         "parameters": [
@@ -708,84 +428,28 @@
             }
           },
           "401": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http401"
           },
           "403": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http403"
           },
           "404": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http404"
           },
           "409": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http409"
           },
           "419": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http419"
           },
           "422": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
           }
         },
         "parameters": [
@@ -825,84 +489,28 @@
             }
           },
           "401": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http401"
           },
           "403": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http403"
           },
           "404": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http404"
           },
           "409": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http409"
           },
           "419": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http419"
           },
           "422": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
           }
         },
         "parameters": [
@@ -967,89 +575,647 @@
             }
           },
           "401": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http401"
           },
           "403": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http403"
           },
           "404": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http404"
           },
           "409": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http409"
           },
           "419": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http419"
           },
           "422": {
-            "description": "JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
           }
         },
         "parameters": [
           {
             "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/tasks/{task}/comments": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Comment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      },
+      "post": {
+        "responses": {
+          "201": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Comment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "body": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "body"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{task}/comments/{comment}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Comment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          },
+          {
+            "name": "comment",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      },
+      "patch": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Comment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          },
+          {
+            "name": "comment",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "body": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "body"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Action"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          },
+          {
+            "name": "comment",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/tasks/{task}/comments/trash": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TrashedComment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/tasks/{task}/comments/trash/{comment}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/TrashedComment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          },
+          {
+            "name": "comment",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/tasks/{task}/comments/{comment}/restore": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Comment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          },
+          {
+            "name": "comment",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          }
+        ]
+      }
+    },
+    "/api/v1/tasks/{task}/comments/{comment}/force-delete": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Action"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Http409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Http419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Http422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "task",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "path"
+          },
+          {
+            "name": "comment",
             "required": true,
             "schema": {
               "type": "integer",
@@ -1236,6 +1402,179 @@
           "errors"
         ],
         "additionalProperties": false
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "task_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "author_user_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "author": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "body": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "task_id",
+          "author_user_id",
+          "author",
+          "body",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "TrashedComment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "task_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "author_user_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "author": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "body": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "task_id",
+          "author_user_id",
+          "author",
+          "body",
+          "created_at",
+          "updated_at",
+          "deleted_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "Http401": {
+        "description": "JSON response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Http403": {
+        "description": "JSON response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Http404": {
+        "description": "JSON response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Http409": {
+        "description": "JSON response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Http419": {
+        "description": "JSON response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Http422": {
+        "description": "JSON response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Validation"
+            }
+          }
+        }
+      },
+      "Http429": {
+        "description": "JSON response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Http500": {
+        "description": "JSON response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
       }
     }
   }
