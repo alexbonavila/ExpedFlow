@@ -29,7 +29,9 @@ function managementAdmin(): User
 
 test('every management route denies unauthenticated and ordinary clients', function () {
     $ordinary = User::factory()->create();
-    $ordinary->givePermissionTo(Permission::findOrCreate('manage-accounts', 'web'));
+    $ordinary->assignRole('user')->givePermissionTo([
+        Permission::findOrCreate('manage-accounts', 'web'), Permission::findByName('users.manage', 'web'),
+    ]);
     $target = User::factory()->create();
     $bearer = ['Authorization' => 'Bearer '.$ordinary->createToken('Ordinary client', ['*'])->plainTextToken];
     foreach ([
@@ -195,4 +197,14 @@ test('managed account updates validate each individual field and preserve the or
             ->assertUnprocessable()->assertJsonValidationErrors(array_keys($invalid));
     }
     expect($user->refresh()->getRawOriginal())->toBe($original);
+});
+
+test('account routes return 403 when an administrator lacks the explicit management permission', function (): void {
+    $admin = managementAdmin();
+    $headers = ['Authorization' => 'Bearer '.$admin->createToken('Admin fixture')->plainTextToken];
+    $admin->roles()->sole()->revokePermissionTo('users.manage');
+
+    $this->api('GET', '/api/v1/users', headers: $headers)->assertForbidden()->assertJsonPath('code', 'forbidden');
+    $this->api('POST', '/api/v1/users', headers: $headers)->assertForbidden();
+    $this->assertDatabaseCount('users', 1);
 });

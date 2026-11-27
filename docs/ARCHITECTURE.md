@@ -65,3 +65,20 @@ Use `public/` as the Apache document root, HTTPS, private `.env` configuration, 
 ## Phase D identity implementation
 
 Laravel's native guards, session middleware, Sanctum, password broker and notification facilities supply the required flows without an additional package. The API passes credential mutations through the locked account row and uses an inline Laravel Gate that checks the reserved role directly for the reserved role. Recovery jobs use the existing encrypted database queue and send mail through configured SMTP with a trusted origin. Fortify adds no required mechanism for the selected endpoints. The existing welcome and test pages remain the available UI.
+
+## Phase E policy boundaries
+
+The administration routes use an inline Laravel Gate backed by the fixed web permission catalog. Spatie manages the roles and pivots. Its automatic Gate interception is disabled so that stored names cannot answer arbitrary policy abilities. The domain policies are discovered by Laravel from model names. The following are authorization calls for later endpoints and services.
+
+| Operation | Gate arguments and context |
+|---|---|
+| Cases | Pass `Expedient::class` for collection and creation actions and an `Expedient` for record actions. Authorized access covers all cases. Apply the date, sequence, type and relation rules in the domain service. |
+| Tasks | Pass `[Task::class, $expedient]` for collection and creation actions. Pass `[$task, $expedient]` for record actions. The policies enforce the declared case, its active state and visibility. |
+| Comments and checklists | Pass the declared task and case along with the child for record actions. A comment author's identity does not restrict authorized edits. Checklist creation, mutation and ordering use `manage` on `[TaskChecklistItem::class, $task, $expedient]`, including the item for existing records. |
+| Task templates | Pass the declared type with the template or its class for creation and list actions. `manageChecklist` takes the template, type and existing item when one is targeted. |
+| Personal Kanban preferences | Pass `[ExpedientUserPreference::class, $expedient, $owner]` to `manage` and include the existing preference when present. Global case status mutation uses the case update policy. |
+| Calendar | Pass `[$task, $expedient, $owner]` to `calendar`. Apply the equivalent assigned, active and dated predicates to collection queries. |
+| Catalogs and incidents | Use the explicitly defined catalog and incident Gates with keys from the matrix. Return safe incident fields in I. |
+| Uploads and tags | Check `upload` or `associateTags` on an accessible active case. Enforce storage and relationship invariants in the corresponding future service. |
+
+Query current models in the specified parent scope and recheck contextual decisions at the service's locked write boundary. The preloaded model arguments identify the record, parent and owner. Phase E adds policies and tests without exposing unfinished routes.

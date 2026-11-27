@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Support\EffectivePermissions;
 use App\Support\IdentityInput;
+use App\Support\PermissionKey;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,8 +25,18 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot(EffectivePermissions $permissions): void
     {
+        foreach ([
+            PermissionKey::ViewClients, PermissionKey::ManageClients,
+            PermissionKey::ViewExpedientTypes, PermissionKey::ManageExpedientTypes,
+            PermissionKey::ViewStatuses, PermissionKey::ManageStatuses,
+            PermissionKey::ViewTags, PermissionKey::ManageTags,
+            PermissionKey::ViewIncidents,
+        ] as $permission) {
+            Gate::define($permission->value, static fn (User $actor): bool => $permissions->allows($actor, $permission));
+        }
+
         foreach (['identity.credentials', 'identity.recovery'] as $name) {
             RateLimiter::for($name, $this->identityLimits(...));
         }

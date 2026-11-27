@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ uses(IdentityHttp::class);
 beforeEach(function () {
     TestingDatabase::assertSafe($this->app);
     $this->artisan('migrate:fresh', ['--force' => true])->assertSuccessful();
+    $this->seed(AuthorizationSeeder::class);
     $this->identityHttp();
 });
 
@@ -74,7 +76,7 @@ test('two reset requests cannot consume the same reset token', function () {
 });
 
 test('simultaneous administrative disables leave one active administrator', function () {
-    $role = Role::create(['name' => User::ADMIN_ROLE, 'guard_name' => 'web']);
+    $role = Role::findByName(User::ADMIN_ROLE, 'web');
     $first = User::factory()->create();
     $second = User::factory()->create();
     $first->assignRole($role);
@@ -100,7 +102,7 @@ test('simultaneous administrative disables leave one active administrator', func
 
 test('a concurrent token issuance resumes after disable and cannot issue a credential', function () {
     $admin = User::factory()->create();
-    $admin->assignRole(Role::create(['name' => User::ADMIN_ROLE, 'guard_name' => 'web']));
+    $admin->assignRole(Role::findByName(User::ADMIN_ROLE, 'web'));
     $auth = ['Authorization' => 'Bearer '.$admin->createToken('First administrator')->plainTextToken];
     $user = User::factory()->create();
 

@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\Expedient;
+use App\Models\Task;
+use App\Models\User;
+use App\Support\EffectivePermissions;
+use App\Support\PermissionKey;
+
+final class TaskPolicy
+{
+    public function __construct(
+        private readonly EffectivePermissions $permissions,
+        private readonly ExpedientPolicy $expedients,
+    ) {}
+
+    public function viewAny(User $actor, Expedient $expedient): bool
+    {
+        return $this->expedients->view($actor, $expedient)
+            && $this->permissions->allows($actor, PermissionKey::ViewTasks);
+    }
+
+    public function view(User $actor, Task $task, Expedient $expedient): bool
+    {
+        return ! $task->trashed() && $task->expedient_id === $expedient->id && $this->viewAny($actor, $expedient);
+    }
+
+    public function create(User $actor, Expedient $expedient): bool
+    {
+        return $this->expedients->view($actor, $expedient)
+            && $this->permissions->allows($actor, PermissionKey::CreateTasks);
+    }
+
+    public function update(User $actor, Task $task, Expedient $expedient): bool
+    {
+        return $this->view($actor, $task, $expedient) && $this->permissions->allows($actor, PermissionKey::UpdateTasks);
+    }
+
+    public function assign(User $actor, Task $task, Expedient $expedient): bool
+    {
+        return $this->view($actor, $task, $expedient) && $this->permissions->allows($actor, PermissionKey::AssignTasks);
+    }
+
+    public function reorder(User $actor, Task $task, Expedient $expedient): bool
+    {
+        return $this->view($actor, $task, $expedient) && $this->permissions->allows($actor, PermissionKey::ReorderTasks);
+    }
+
+    public function calendar(User $actor, Task $task, Expedient $expedient, User $owner): bool
+    {
+        return $actor->is($owner)
+            && $task->scheduled_date !== null
+            && $this->view($actor, $task, $expedient)
+            && $this->permissions->allows($actor, PermissionKey::ViewCalendar)
+            && $task->assignees()->whereKey($actor->id)->exists();
+    }
+}

@@ -8,7 +8,6 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UserAuthorizationController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Middleware\ActiveIdentity;
-use App\Http\Middleware\RequireAdministrator;
 use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\RequireSpaSession;
 use App\Support\PermissionKey;
@@ -49,7 +48,7 @@ Route::prefix('v1')->group(function (): void {
                 Route::put('roles', 'update');
             });
 
-        Route::prefix('users')->middleware(RequireAdministrator::class)->controller(UserManagementController::class)->group(function (): void {
+        Route::prefix('users')->middleware(RequirePermission::class.':'.PermissionKey::ManageUsers->value)->controller(UserManagementController::class)->group(function (): void {
             Route::get('/', 'index');
             Route::post('/', 'store');
             Route::get('{user}', 'show')->whereNumber('user');
