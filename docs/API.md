@@ -163,3 +163,7 @@ Trim Unicode boundary whitespace from names and accept 1–255 characters. Inter
 Case responses contain numeric ID and foreign keys, string `code`, name, description, selected type, requester, represented client and localized status summaries, `column_position`, `column_version` and UTC ISO 8601 timestamps. Only trash includes `deleted_at`. The resource omits the storage path and hidden task markers. Active and trash lists accept ID equality filters for `status_id`, `expedient_type_id`, `requester_client_id` and `represented_client_id`. `q` matches a literal substring of name or code up to 255 characters. Sort by `code` (default), `name`, `created_at` or `column_position`. Use `direction=asc` (default) or `desc`. Ascending ID breaks ties. Personal board visibility has no effect on these lists.
 
 Install the shared status catalog through the existing seeder. Before H, creating cases requires a type already provisioned in the deployment database under owner control. Phase F exposes read-only lookups and ships no example types or clients. [Verified OpenAPI fixture](../tests/Fixtures/phase-f-openapi.json)
+
+## Phase H catalogs and personal Kanban
+
+`GET /expedient-types/{type}` uses the existing type projection and view grant. The manage grant permits creation with a boundary-trimmed `name` and a two-digit ASCII string `code`. PATCH accepts only `name`. A duplicate code returns `type_code_conflict`. Deleting a type referenced by a case (including trash) or template returns `type_referenced`. Successful deletion returns `type_deleted`.
