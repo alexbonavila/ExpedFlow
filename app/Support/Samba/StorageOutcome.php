@@ -9,7 +9,7 @@ final readonly class StorageOutcome
     /** @return array{status: string, code: string, message: string, incident_id: int|null} */
     public function payload(): array
     {
-        $code = $this->failure?->value ?? 'storage_ready';
+        $code = $this->failure->value ?? 'storage_ready';
 
         return [
             'status' => $this->failure === null ? 'ready' : 'failed',

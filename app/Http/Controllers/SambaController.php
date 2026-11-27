@@ -24,7 +24,7 @@ final class SambaController extends Controller
 
     public function upload(Request $request, string $expedient, CaseStorage $storage): JsonResponse
     {
-        $type = strtolower(trim(explode(';', $request->headers->get('Content-Type', ''), 2)[0]));
+        $type = strtolower(trim(explode(';', $request->headers->get('Content-Type') ?? '', 2)[0]));
         $file = $request->file('file');
         if ($type !== 'multipart/form-data' || ! $file instanceof UploadedFile
             || array_keys($request->all()) !== ['file'] || $request->input() !== []) {

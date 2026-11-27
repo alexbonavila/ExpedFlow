@@ -230,3 +230,7 @@ Initiate the candidate's hosted checks and record exact URLs and SHA. Let long-r
 | R12 and F08 contracts and CI | `PhaseFContractTest` validates live responses against the new OpenAPI fixture and retains earlier suites. `ExpedientApiTest` checks complete lists and bounded relation queries. Existing mutation planner and aggregate tests verify both worker options and the required gate. |
 
 Use the guarded MySQL connection before destructive tests. Full mutation verification runs in the hosted matrix. Phase F tests use synthetic data and independent database processes with query barriers for contention.
+
+## Phase I storage verification
+
+Normal Pest runs exercise the adapter with a test-only mount verifier and a disposable local filesystem, plus the guarded MySQL API. The dedicated storage-integration job runs the same adapter and the Linux verifier against the isolated CIFS fixture. The fixture tests recursive copy, empty directories, Unicode upload integrity, filename conflicts, the reader ACL, a client read-only mount, wrong-source rejection and mount loss during a transfer. It remounts the same share to check that the previous upload survived and that a partial file cannot be replaced. The underlying directory is owned by root and unwritable by the invoking account. The local subset is bash scripts/testing/storage.sh --check-unmounted.

@@ -12,7 +12,7 @@ final readonly class TemplateSnapshot
         $entries = [];
         $bytes = 0;
         $dir = $share->directory($root) ?? throw new StorageFailure(Failure::TemplateMissing);
-        self::collect($share, $root, $dir, '', 1, $entries, $bytes, $privateMarkers);
+        self::collect($share, $root, $dir, '', 1, $entries, $bytes, array_values($privateMarkers));
         ksort($entries, SORT_STRING);
         $digest = hash('sha256', json_encode($entries, JSON_THROW_ON_ERROR));
 

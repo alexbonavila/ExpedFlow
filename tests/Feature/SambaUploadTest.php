@@ -160,3 +160,45 @@ test('reports lost mounts after an exclusive upload opens and preserves ambiguou
         $fixture->clean();
     }
 });
+
+test('withholds confirmation when a token is revoked during a transfer and blocks the next request', function (): void {
+    $fixture = new SambaFixture;
+    try {
+        mkdir($fixture->root.'/PLANTILLAS/05', 0700, true);
+        mkdir($fixture->root.'/EXPEDIENTES');
+        config(['samba' => $fixture->settings()]);
+        $this->app->instance(MountVerifier::class, $fixture);
+        $actor = User::factory()->create()->assignRole('user');
+        $headers = $this->authorizationBearer($actor);
+        $input = $this->caseInput(['expedient_type_id' => ExpedientType::factory()->create(['code' => '05'])->id]);
+        $this->api('POST', '/api/v1/expedients', $input, $headers)->assertCreated()->assertJsonPath('storage.status', 'ready');
+        $case = Expedient::query()->sole();
+        $destination = $fixture->root.'/'.$case->samba_relative_path.'/revoked.pdf';
+        $verifier = new class($fixture, $destination, $actor) implements MountVerifier
+        {
+            private bool $revoked = false;
+
+            public function __construct(private readonly SambaFixture $fixture, private readonly string $destination, private readonly User $actor) {}
+
+            public function mountId(StorageConfiguration $configuration): int
+            {
+                clearstatcache(true, $this->destination);
+                if (! $this->revoked && is_file($this->destination)) {
+                    $this->revoked = true;
+                    $this->actor->tokens()->delete();
+                }
+
+                return $this->fixture->id;
+            }
+        };
+        $this->app->instance(MountVerifier::class, $verifier);
+        $pdf = sambaSyntheticPdf();
+        $file = UploadedFile::fake()->createWithContent('revoked.pdf', $pdf);
+        $this->sambaMultipart($case->id, ['file' => $file], $headers)->assertConflict()->assertJsonPath('code', 'storage_admission_changed');
+        expect(file_get_contents($destination))->toBe($pdf)
+            ->and(Incident::query()->sole()->type)->toBe('storage_admission_changed');
+        $this->sambaMultipart($case->id, ['file' => $file], $headers)->assertUnauthorized();
+    } finally {
+        $fixture->clean();
+    }
+});

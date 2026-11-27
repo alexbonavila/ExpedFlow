@@ -4,12 +4,14 @@ use App\Models\Expedient;
 use App\Models\ExpedientSequence;
 use App\Models\ExpedientType;
 use App\Models\Incident;
+use App\Models\Task;
 use App\Models\User;
 use App\Support\Samba\MountVerifier;
 use App\Support\Samba\StorageConfiguration;
 use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 use Tests\Support\CaseHttp;
@@ -218,4 +220,59 @@ test('refuses a simultaneous retry while an independent PHP process holds the ca
         $input->close();
         $process->stop();
     }
+});
+
+test('preserves copied task rows and storage across retry, trash, restore and force delete', function (): void {
+    $fixture = new SambaFixture;
+    try {
+        mkdir($fixture->root.'/EXPEDIENTES');
+        config(['samba' => $fixture->settings()]);
+        $this->app->instance(MountVerifier::class, $fixture);
+        Expedient::created(function (Expedient $case): void {
+            // Mirrors the sibling writer's transactional task copy at the shared case boundary.
+            expect(DB::transactionLevel())->toBeGreaterThan(0);
+            Task::factory()->for($case)->create();
+        });
+        $admin = $this->authorizationAdmin();
+        $headers = $this->authorizationBearer($admin);
+        $input = $this->caseInput(['expedient_type_id' => ExpedientType::factory()->create(['code' => '05'])->id]);
+        $this->api('POST', '/api/v1/expedients', $input, $headers)->assertCreated()->assertJsonPath('storage.status', 'failed');
+        $case = Expedient::query()->sole();
+        $task = $case->tasks()->sole();
+        mkdir($fixture->root.'/PLANTILLAS/05', 0700, true);
+        file_put_contents($fixture->root.'/PLANTILLAS/05/synthetic.txt', 'survives lifecycle');
+        $path = "/api/v1/expedients/{$case->id}";
+        $this->api('POST', "$path/storage/retry", [], $headers)->assertOk();
+        expect($case->tasks()->sole()->id)->toBe($task->id);
+        $destination = $fixture->root.'/'.$case->samba_relative_path.'/synthetic.txt';
+
+        $this->api('DELETE', $path, [], $headers)->assertOk();
+        expect(file_get_contents($destination))->toBe('survives lifecycle');
+        $this->api('POST', "$path/restore", [], $headers)->assertOk();
+        expect(file_get_contents($destination))->toBe('survives lifecycle');
+        $this->api('DELETE', $path, [], $headers)->assertOk();
+        $this->api('POST', "$path/force-delete", [], $headers)->assertOk();
+        expect(file_get_contents($destination))->toBe('survives lifecycle')
+            ->and(Incident::query()->sole()->expedient_id)->toBeNull()
+            ->and(Incident::query()->sole()->expedient_code)->toBe($case->code);
+    } finally {
+        $fixture->clean();
+    }
+});
+
+test('upgrades and rolls back only the provisioning state on an existing case', function (): void {
+    $migration = require database_path('migrations/2026_11_27_120000_add_case_samba_provisioning.php');
+    $case = Expedient::factory()->create([
+        'samba_relative_path' => 'EXPEDIENTES/legacy reference',
+        'samba_provisioning' => 'r:'.str_repeat('a', 64),
+    ]);
+    $migration->down();
+    try {
+        expect(Schema::hasColumn('expedients', 'samba_provisioning'))->toBeFalse();
+        expect($case->fresh()->samba_relative_path)->toBe('EXPEDIENTES/legacy reference');
+    } finally {
+        $migration->up();
+    }
+    expect($case->fresh()->samba_provisioning)->toBeNull()
+        ->and($case->fresh()->samba_relative_path)->toBe('EXPEDIENTES/legacy reference');
 });

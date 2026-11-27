@@ -29,9 +29,9 @@ final class SambaIncidentResource extends JsonResource
             'case_id' => $this->expedient_id,
             'case_code' => $this->expedient_code,
             'actor_id' => $this->user_id,
-            'operation' => $operation?->value ?? 'unknown',
-            'type' => $reason?->value ?? 'unknown',
-            'message' => __('samba.'.($reason?->value ?? 'incident_unknown')),
+            'operation' => $operation->value ?? 'unknown',
+            'type' => $reason->value ?? 'unknown',
+            'message' => __('samba.'.($reason->value ?? 'incident_unknown')),
             'created_at' => CarbonImmutable::createFromTimestampUTC($epoch)->toISOString(),
         ];
     }
