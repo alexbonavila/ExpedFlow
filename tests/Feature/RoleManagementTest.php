@@ -113,3 +113,36 @@ test('role deletion preserves disabled assignments and system roles', function (
     }
     expect($disabled->roles()->sole()->is($custom))->toBeTrue();
 });
+
+test('invalid role names and unavailable permissions leave the database unchanged', function (): void {
+    $headers = $this->authorizationBearer($this->authorizationAdmin());
+    foreach ([[], ['name' => []], ['name' => new stdClass], ['name' => 7], ['name' => '    '], ['name' => str_repeat('R', 126)]] as $input) {
+        $this->api('POST', '/api/v1/roles', $input + ['permissions' => []], $headers)
+            ->assertUnprocessable()->assertJsonValidationErrors('name');
+    }
+
+    $this->api('POST', '/api/v1/roles', ['name' => 'Restricted', 'permissions' => ['statuses.manage']], $headers)
+        ->assertUnprocessable()->assertJsonValidationErrors('permissions');
+    Permission::query()->where('name', 'clients.view')->delete();
+    $this->api('POST', '/api/v1/roles', ['name' => 'Unavailable', 'permissions' => ['clients.view']], $headers)
+        ->assertUnprocessable()->assertJsonPath('errors.permissions.0', 'One or more permissions are not available.');
+    $this->api('GET', '/api/v1/roles/999999999999999999999999', headers: $headers)->assertNotFound();
+    $this->api('GET', '/api/v1/roles/0', headers: $headers)->assertNotFound();
+    $this->assertDatabaseCount('roles', 2);
+});
+
+test('system role replacements allow bounded business customization', function (): void {
+    $administrator = $this->authorizationAdmin();
+    $headers = $this->authorizationBearer($administrator);
+    $admin = Role::findByName('admin', 'web');
+    $ordinary = Role::findByName('user', 'web');
+    $essential = ['expedients.force-delete', 'roles.assign', 'roles.manage', 'statuses.manage',
+        'task-comments.force-delete', 'tasks.force-delete', 'users.manage'];
+
+    $this->api('PUT', "/api/v1/roles/{$admin->id}/permissions", ['permissions' => array_reverse($essential)], $headers)
+        ->assertOk()->assertJsonPath('data.permissions', $essential);
+    $this->api('PUT', "/api/v1/roles/{$ordinary->id}/permissions", ['permissions' => ['tags.view']], $headers)
+        ->assertOk()->assertJsonPath('data.permissions', ['tags.view']);
+    $this->api('GET', '/api/v1/me', headers: $headers)->assertOk()->assertJsonPath('data.permissions', $essential);
+    expect($ordinary->permissions()->pluck('name')->all())->toBe(['tags.view']);
+});

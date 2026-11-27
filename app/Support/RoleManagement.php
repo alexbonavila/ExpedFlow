@@ -20,7 +20,7 @@ final class RoleManagement
         return AuthorizationCatalog::roles()->with('permissions')->orderBy('id')->get();
     }
 
-    public function find(string $id): Role
+    public function find(int $id): Role
     {
         return AuthorizationCatalog::roles()->with('permissions')->findOrFail($id);
     }
@@ -37,7 +37,7 @@ final class RoleManagement
         });
     }
 
-    public function rename(User $actor, string $id, string $name): Role
+    public function rename(User $actor, int $id, string $name): Role
     {
         return $this->write->run($actor, PermissionKey::ManageRoles, function () use ($id, $name): Role {
             $role = $this->lock($id);
@@ -51,7 +51,7 @@ final class RoleManagement
     }
 
     /** @param list<string> $keys */
-    public function replacePermissions(User $actor, string $id, array $keys): Role
+    public function replacePermissions(User $actor, int $id, array $keys): Role
     {
         return $this->write->run($actor, PermissionKey::ManageRoles, function () use ($id, $keys): Role {
             $role = $this->lock($id);
@@ -61,7 +61,7 @@ final class RoleManagement
         });
     }
 
-    public function delete(User $actor, string $id): void
+    public function delete(User $actor, int $id): void
     {
         $this->write->run($actor, PermissionKey::ManageRoles, function () use ($id): void {
             $role = $this->lock($id);
@@ -104,7 +104,7 @@ final class RoleManagement
         }
     }
 
-    private function lock(string $id): Role
+    private function lock(int $id): Role
     {
         return AuthorizationCatalog::roles()->lockForUpdate()->findOrFail($id);
     }

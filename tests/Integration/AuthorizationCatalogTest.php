@@ -78,3 +78,25 @@ test('a preseeded role cannot take over an existing account and the owner may re
     $this->artisan('expedflow:admin:init')->assertSuccessful();
     expect(DB::table('seeded_catalogs')->where('catalog', 'authorization_admin_pending')->exists())->toBeFalse();
 });
+
+test('seeding preserves a preexisting exact ordinary role and its restricted business baseline', function (): void {
+    $role = Role::query()->create(['name' => 'user', 'guard_name' => 'web']);
+    $read = Permission::query()->create(['name' => 'clients.view', 'guard_name' => 'web']);
+    $role->givePermissionTo($read);
+    $account = User::factory()->create();
+
+    $this->seed(AuthorizationSeeder::class);
+
+    expect($account->roles()->sole()->is($role))->toBeTrue()
+        ->and($role->permissions()->sole()->is($read))->toBeTrue();
+});
+
+test('a legacy case variant of a reserved role aborts the catalog transaction', function (): void {
+    $legacy = Role::query()->create(['name' => 'Usér', 'guard_name' => 'web']);
+    expect(fn () => $this->seed(AuthorizationSeeder::class))
+        ->toThrow(LogicException::class, 'Reserved ordinary role name requires owner review.');
+
+    expect(Role::query()->sole()->is($legacy))->toBeTrue();
+    $this->assertDatabaseCount('permissions', 0);
+    $this->assertDatabaseCount('seeded_catalogs', 0);
+});

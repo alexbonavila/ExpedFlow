@@ -42,7 +42,7 @@ final class RoleManagementController extends Controller
 
     public function show(string $role): RoleResource
     {
-        return new RoleResource($this->roles->find($role));
+        return new RoleResource($this->roles->find(AuthorizationInput::identifier($role)));
     }
 
     public function store(Request $request): JsonResponse
@@ -60,7 +60,7 @@ final class RoleManagementController extends Controller
         /** @var User $actor */
         $actor = $request->user();
 
-        return new RoleResource($this->roles->rename($actor, $role, $this->name($request)));
+        return new RoleResource($this->roles->rename($actor, AuthorizationInput::identifier($role), $this->name($request)));
     }
 
     public function replacePermissions(Request $request, string $role): RoleResource
@@ -68,14 +68,14 @@ final class RoleManagementController extends Controller
         /** @var User $actor */
         $actor = $request->user();
 
-        return new RoleResource($this->roles->replacePermissions($actor, $role, $this->permissionKeys($request)));
+        return new RoleResource($this->roles->replacePermissions($actor, AuthorizationInput::identifier($role), $this->permissionKeys($request)));
     }
 
     public function destroy(Request $request, string $role): JsonResponse
     {
         /** @var User $actor */
         $actor = $request->user();
-        $this->roles->delete($actor, $role);
+        $this->roles->delete($actor, AuthorizationInput::identifier($role));
 
         return response()->json(['message' => __('identity.role_deleted'), 'code' => 'role_deleted']);
     }

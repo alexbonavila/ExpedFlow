@@ -26,7 +26,7 @@ final class AuthorizationCatalog
                 DB::table('seeded_catalogs')->insert(['catalog' => self::BOOTSTRAP_PENDING]);
             }
 
-            $ordinary = $this->ensureRole(self::ORDINARY_ROLE);
+            [$ordinary, $ordinaryCreated] = $this->ensureRole(self::ORDINARY_ROLE);
             $first = DB::table('seeded_catalogs')->insertOrIgnore(['catalog' => 'authorization_v1']) === 1;
             $timestamp = now();
             Permission::query()->insertOrIgnore(array_map(
@@ -53,7 +53,10 @@ final class AuthorizationCatalog
             $admin->permissions()->syncWithoutDetaching($adminGrants);
 
             if ($first) {
-                $ordinary->permissions()->syncWithoutDetaching($ordinaryGrants);
+                if ($ordinaryCreated) {
+                    $ordinary->permissions()->syncWithoutDetaching($ordinaryGrants);
+                }
+
                 User::query()->whereDoesntHave('roles', fn (Builder $roles): Builder => $roles->whereKey($admin->id))
                     ->eachById(fn (User $user): array => $user->roles()->syncWithoutDetaching([$ordinary->id]));
             }
@@ -101,15 +104,16 @@ final class AuthorizationCatalog
         });
     }
 
-    private function ensureRole(string $name): Role
+    /** @return array{Role, bool} */
+    private function ensureRole(string $name): array
     {
-        $this->insertRole($name);
+        $created = $this->insertRole($name);
         $role = self::roles()->where('name', $name)->lockForUpdate()->firstOrFail();
         if ($role->name !== $name) {
             throw new LogicException('Reserved ordinary role name requires owner review.');
         }
 
-        return $role;
+        return [$role, $created];
     }
 
     private function insertRole(string $name): bool

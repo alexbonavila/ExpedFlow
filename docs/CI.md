@@ -163,3 +163,9 @@ Use one regular pull request from `feat/authentication-users-d` to `main`. The e
 The initial candidate `4654bc4` failed `backend-quality` because the injected password broker interface does not declare the token deletion method. The follow-up uses Laravel's documented facade. Review only the run for the final head when deciding acceptance. [Initial Phase D core run](https://github.com/alexbonavila/ExpedFlow/actions/runs/45972628346)
 
 The owner accepted Phase D and authorized Phase E from `6d8eef9c00f683f2e48e17ff80a18e6019702c11`. The [post-merge push 45997572529](https://github.com/alexbonavila/ExpedFlow/actions/runs/45997572529) passed on that exact commit.
+
+## Phase E review evidence
+
+Use the one implementation branch, `feat/authorization-roles-e`, and one regular PR to protected `main`. Capture the candidate SHA and results of the PR core run and manual extended run on that exact head in the PR. The core gate requires 13 jobs and expects the three extended jobs to be skipped. The extended gate requires all 16 jobs. Match the SHA before accepting the result and keep the existing thresholds and protection rules. The PR will record local environment limitations that the hosted jobs verify.
+
+The real scheduled event is verified above. A published-release event and independent CodeQL alert inventory review remain operational follow-up. A passing CodeQL workflow is evidence of scanner execution.

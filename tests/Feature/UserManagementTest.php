@@ -34,6 +34,8 @@ test('every management route denies unauthenticated and ordinary clients', funct
     ]);
     $target = User::factory()->create();
     $bearer = ['Authorization' => 'Bearer '.$ordinary->createToken('Ordinary client', ['*'])->plainTextToken];
+    $this->api('GET', '/api/v1/users/999999')->assertUnauthorized();
+    $this->api('GET', '/api/v1/users/999999', headers: $bearer)->assertForbidden();
     foreach ([
         ['GET', '/users'], ['POST', '/users'], ['GET', "/users/{$target->id}"],
         ['PATCH', "/users/{$target->id}"], ['PATCH', "/users/{$target->id}/password"],

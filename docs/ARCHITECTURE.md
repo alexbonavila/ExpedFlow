@@ -64,7 +64,7 @@ Use `public/` as the Apache document root, HTTPS, private `.env` configuration, 
 
 ## Phase D identity implementation
 
-Laravel's native guards, session middleware, Sanctum, password broker and notification facilities supply the required flows without an additional package. The API passes credential mutations through the locked account row and uses an inline Laravel Gate that checks the reserved role directly for the reserved role. Recovery jobs use the existing encrypted database queue and send mail through configured SMTP with a trusted origin. Fortify adds no required mechanism for the selected endpoints. The existing welcome and test pages remain the available UI.
+Laravel's native guards, session middleware, Sanctum, password broker and notification facilities supply the required flows without an additional package. The API passes credential mutations through the locked account row and uses an inline Laravel Gate for the administration boundary. Phase E adds the required explicit permission to that boundary. Recovery jobs use the existing encrypted database queue and send mail through configured SMTP with a trusted origin. Fortify adds no required mechanism for the selected endpoints. The existing welcome and test pages remain the available UI.
 
 ## Phase E policy boundaries
 
