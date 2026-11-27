@@ -102,3 +102,11 @@ Phase F implements client and case routes, read-only lookups, annual numbering, 
 ## Phase G tasks, assignments, comments and checklists
 
 Phase G starts from accepted Phase F integration `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b` via PR #13. G01–G08 land on `feat/tasks-g` with task CRUD, shared status order, task assignments, comment trash, checklists, independent task lifecycle and the actor's task calendar. The Phase G API fixture supports the isolated review. Phase H owns shared catalog and template copy, Phase I owns storage and incidents, Phase J owns auditing and K consolidates the API. Owner acceptance follows hosted validation and cross-phase reconciliation of shared routes and documentation. Run combined parent-lock, status, template, lifecycle and storage regressions with the required gates before integration.
+
+## Phase H catalogs and personal Kanban
+
+The owner accepted Phase F through PR #13 at `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b`. H is developed on `feat/catalogs-h` from that commit. The candidate implements H01–H08 and requires hosted validation and owner acceptance before protected integration.
+
+G09 integrates H from protected main at `fdc75e2e251f736e5054382f4eddb9b8cc6298ab` into `feat/tasks-g` for PR #14. It combines the G and H route includes and uses H's explicit translation-group contract for task and catalog errors. H extends `ExpedientRequest` and `ExpedientWriter` for opt-in copying, updates F's status POST test and case creation fixture, and reuses the F contention helper from `CaseHttp`. I can retain the HTTP creation boundary for post-commit provisioning.
+
+G09 verifies G task writes against status deletion, case lifecycle, copied task positions and checklists. When integrating I, verify storage failures and retries preserve the same case, number and already committed database copy. J defines audit and retention rules for actual catalog, template, tag, association, copy and global move changes. K consolidates API contracts and case tag filtering. O consumes the full private board order.

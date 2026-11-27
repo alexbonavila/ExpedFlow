@@ -96,7 +96,7 @@ final class TaskChecklistController extends Controller
             $membership = $ids;
             sort($membership);
             if ($membership !== array_values($items->modelKeys())) {
-                throw new IdentityError(409, 'task_checklist_membership_changed');
+                throw new IdentityError(409, 'task_checklist_membership_changed', 'tasks');
             }
 
             $ordered = [];

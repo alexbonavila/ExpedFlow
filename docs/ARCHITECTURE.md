@@ -109,6 +109,14 @@ Comment writes run in `TaskCommentController` inside `BusinessWrite`. Phase J ca
 
 ## Phase G integration with H and I
 
-H can use `TaskOrdering::append` in the Phase F case and annual-number transaction after locking the active case and relevant status IDs with `CaseOrdering::lockStatuses`. The caller authorizes the case/template operation and supplies validated task fields and an explicit shared initial status. Each copied task and checklist item is an independent row without a source-template FK. Template copies have no assignees or schedule, and checklist rows start incomplete in template order. H owns the template mapping and coordination of any proposed alternative initial status. Status deletion must continue to respect FK references from active and trashed tasks and cases.
+Phase H's opt-in template copy supplies an explicit initial task status and creates ordered tasks in the newly inserted case. Those rows immediately use the same Phase G resources, policies and active-position constraint as manually created tasks. Task and checklist copies have independent IDs and remain available after changes to their source templates.
 
-I owns storage provisioning and incident behavior. Task transactions contain only database changes and return responses after commit. Storage handling has no task-data side effects. The owner coordinates reconciliation of authenticated route includes and shared documentation across G, H and I, followed by combined lifecycle, catalog, template and storage regressions.
+I owns storage provisioning and incident behavior. Task transactions contain only database changes and return responses after commit. The authenticated API group includes both the G task and H catalog routes. Phase I still requires its own storage and lifecycle integration verification.
+
+## Phase H catalogs and personal Kanban
+
+Phase H starts from the owner-accepted Phase F integration at `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b`. Its routes are included in the existing authenticated and active-identity group through `routes/catalogs.php`. Phase F retains the existing type and status list routes and their resource projections. H owns catalog mutations, type-scoped template blueprints, tags and case associations, and personal case Kanban preferences. G owns ordinary tasks and their shared order. I owns storage provisioning after the case transaction returns.
+
+Every H HTTP mutation runs inside `BusinessWrite` and uses its freshly authorized actor. Parent scopes and composite grants are checked before dependent reads and rechecked in the transaction. H routes use strict JSON field validation and the existing localized error response. New behavior is registered only when implemented.
+
+`ExpedientWriter::create` locks both explicit statuses in one ascending acquisition and calls `TemplateCopier` within the existing creation transaction. Ordered templates and checklist items become independent, newly numbered tasks and incomplete checklist items. The new tasks have no schedule or assignees. The case, annual number and all copies commit together. G uses the existing task schema and active-position constraint. I can provision storage after the HTTP write returns and reuse the same case identity on retries.

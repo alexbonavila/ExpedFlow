@@ -87,5 +87,5 @@ test('lookup lists preserve leading zeros and localize statuses with fallback an
     $this->api('GET', '/api/v1/statuses', headers: $headers)->assertOk()
         ->assertJsonPath('data.0.name', $translated)->assertJsonPath('data.1.name', $fallback)
         ->assertJsonPath('data.2.name', 'Literal shared label')->assertJsonMissingPath('data.0.name_translations');
-    $this->api('POST', '/api/v1/statuses', ['name' => 'Unimplemented'], $headers)->assertMethodNotAllowed();
+    $this->api('POST', '/api/v1/statuses', ['name' => 'Unauthorized status'], $headers)->assertForbidden();
 })->with([['ca', 'Primera CA', 'Fallback EN'], ['en', 'First', 'Fallback EN'], ['es', 'Primera', 'Fallback EN']]);

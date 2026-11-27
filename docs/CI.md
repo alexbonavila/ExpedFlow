@@ -220,3 +220,13 @@ The initial extended run produced 2,078 outcomes and rejected five claimed detec
 The controllers now call `TaskScope::readTask`, which uses the existing authorized task-and-case lookup. The tooling unit suite generates and lints array-item removals in the four affected controllers. This regression failed for all five original sites and passes with the typed lookup. The adapter still requires a fresh PHPUnit report and rejects unexpected process outcomes. The planner regenerates the full inventory under the same operators and measured scope. Use a fresh eight-worker dispatch to gather consistent evidence for the corrected candidate.
 
 The correction passed the guarded MySQL regression with 239 tests, 2,874 assertions and 98.7% line coverage, including all 79 integration and 10 contract tests. Composer strict validation, Pint, Larastan level 8, 100% measurable type coverage and all 15 mutation-tooling tests passed. The regenerated plan contained 2,075 unique mutations across 87 files. Three targeted mutations of the corrected lookup and assignment response each produced a fresh PHPUnit assertion failure accepted by the existing adapter.
+
+## Phase H candidate validation
+
+Phase H retains `.github/workflows/phase-b.yml`, its triggers, the protected `quality-gate` and existing mutation scope and thresholds. Feature-branch checkpoints precede the PR. The final PR triggers core CI. Dispatch the extended validation from the final branch head with `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/catalogs-h -f mutation_shards=8`. Candidate acceptance requires the exact-SHA core and extended results, including the eight-runner aggregate. Combined integration requires fresh regression and hosted evidence. The published-release trigger and independent CodeQL alert inventory remain operational follow-up.
+
+### G09 combined candidate
+
+Protected main at `fdc75e2e251f736e5054382f4eddb9b8cc6298ab` already includes Phase H. The corrected standalone G run on `7b55e64a4edfc23412deee95c8292132556bc009` passed with 1,728 detections of 2,075 mutations (83.28%), 306 survivors and 41 uncovered. [Main post-merge CI](https://github.com/alexbonavila/ExpedFlow/actions/runs/46058055338) · [Standalone G extended CI](https://github.com/alexbonavila/ExpedFlow/actions/runs/46077567565)
+
+Use the new core PR run and a fresh eight-worker extended run on the exact combined candidate for G09 acceptance.

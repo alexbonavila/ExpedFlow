@@ -12,7 +12,7 @@ use Throwable;
 
 final class IdentityError extends HttpException
 {
-    public function __construct(int $status, public readonly string $errorCode)
+    public function __construct(int $status, public readonly string $errorCode, private readonly string $translationGroup = 'identity')
     {
         parent::__construct($status);
     }
@@ -44,8 +44,8 @@ final class IdentityError extends HttpException
         };
 
         $locale = $request->attributes->get('identity.locale');
-        $translations = str_starts_with($code, 'task_') ? 'tasks' : 'identity';
-        $body = ['message' => __($translations.'.'.$code, locale: is_string($locale) ? $locale : null), 'code' => $code];
+        $group = $exception instanceof self ? $exception->translationGroup : 'identity';
+        $body = ['message' => __($group.'.'.$code, locale: is_string($locale) ? $locale : null), 'code' => $code];
         if ($exception instanceof ValidationException) {
             $body['errors'] = $exception->errors();
         }

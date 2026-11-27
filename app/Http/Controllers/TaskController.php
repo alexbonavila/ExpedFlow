@@ -84,7 +84,7 @@ final class TaskController extends Controller
             $record = $columns->find($id) ?? throw new IdentityError(404, 'not_found');
             $gate->authorize('update', [$record, $case]);
             if ($record->status_id !== $observed) {
-                throw new IdentityError(409, 'task_status_changed');
+                throw new IdentityError(409, 'task_status_changed', 'tasks');
             }
 
             $fields = $this->schedule(Arr::except($input, 'status_id'), $record);
@@ -116,7 +116,7 @@ final class TaskController extends Controller
             $record = $columns->find($id) ?? throw new IdentityError(404, 'not_found');
             Gate::forUser($actor)->authorize('reorder', [$record, $case]);
             if ($record->status_id !== $observed) {
-                throw new IdentityError(409, 'task_status_changed');
+                throw new IdentityError(409, 'task_status_changed', 'tasks');
             }
 
             $this->ordering->move($record, $columns, $destination, $position);

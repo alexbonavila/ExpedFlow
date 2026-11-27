@@ -35,7 +35,7 @@ final class TaskOrdering
     {
         $number = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
         if ($number === false || $number === PHP_INT_MAX) {
-            throw new IdentityError(409, 'task_order_exhausted');
+            throw new IdentityError(409, 'task_order_exhausted', 'tasks');
         }
 
         return $number + 1;
@@ -91,7 +91,7 @@ final class TaskOrdering
         $highest = $destination->max('position') ?? 0;
         $temporary = max(count($ordered), $this->increment($highest) - 1);
         if (count($ordered) > PHP_INT_MAX - $temporary) {
-            throw new IdentityError(409, 'task_order_exhausted');
+            throw new IdentityError(409, 'task_order_exhausted', 'tasks');
         }
         foreach ($ordered as $offset => $item) {
             $this->savePosition($item, $statusId, $temporary + $offset + 1);

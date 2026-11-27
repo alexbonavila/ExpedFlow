@@ -245,3 +245,22 @@ Use the guarded MySQL connection before destructive tests. Full mutation verific
 Guard the dedicated MySQL schema before Pest. The full local coverage run executes Feature, Integration, Contract, Architecture and Unit in one pass. The browser, accessibility, Samba, mutation, security and load gates run in hosted CI.
 
 The Phase G local regression passed 239 tests and 2,874 assertions with 98.7% line coverage and 100% measurable type coverage. The guarded run used `APP_ENV=testing php tests/Support/check-database.php`, then `XDEBUG_MODE=coverage php -d memory_limit=512M vendor/bin/pest --coverage --min=90 --coverage-clover=coverage/clover.xml --log-junit=test-results/phpunit.xml`. Composer strict validation, Pint, Larastan level 8, `composer test:types` and all 14 mutation-tooling unit tests passed. The full run included the database and contract suites.
+
+## Phase H requirement-to-test matrix
+
+| Requirements | Evidence |
+|---|---|
+| R02 authorization and R12 HTTP | `PhaseHContractTest` validates authenticated JSON against `tests/Fixtures/phase-h-openapi.json` and checks bearer/session parity, CSRF, localized errors, roleless and disabled access. `CatalogContentionTest` checks current grants and credentials after waiting on authorization. |
+| R04 type and atomic copy | `ExpedientTypeCatalogTest`, `TaskTemplateCatalogTest` and `TemplateCopyTest` check immutable types, exact nested scopes, independent ordered copies, explicit status, grant checks and rollback of the annual counter. |
+| R06 statuses | `StatusCatalogTest` covers initial localization, rename/reseed, complete ordering, active and trashed references, rollback, and reserved-admin enforcement. |
+| R07 and R09 private board and lifecycle | `PersonalKanbanTest` covers private ranks and visibility, same and cross-column movement, bounds, generic F transitions, and cleanup after physical deletion. |
+| R08 tags | `TagCatalogTest` covers collation uniqueness, exact RGB input, private response fields, replacement rollback and link lifecycle. |
+| R04, R06–R09 MySQL contention | `CatalogContentionTest` uses independent processes, query barriers and guarded MySQL to exercise type uniqueness and references, status references and removal, template snapshots, tag replacement and same/cross-column ordering. |
+
+Run the dedicated database guard before destructive tests. Phase H uses the existing isolated test schema and the accepted lifecycle and task schema. G09 adds joint G/H regression for actual task endpoints. Post-commit storage recovery remains a Phase I integration check.
+
+The final isolated MySQL pass ran `APP_ENV=testing php tests/Support/check-database.php` followed by `XDEBUG_MODE=coverage php -d memory_limit=512M vendor/bin/pest --coverage --min=90 --coverage-clover=coverage/clover.xml --log-junit=test-results/phpunit.xml --compact`. All 237 tests passed with 2,720 assertions and 99.0% line coverage. `composer test:types` passed at 100% measurable declaration coverage. `composer validate --strict --no-check-publish`, `vendor/bin/pint --dirty --format agent`, `composer analyse --no-ansi` at Larastan level 8, and the 14 tests from `python3 -B -m unittest discover -s scripts/testing -p test_mutation.py` also passed.
+
+## G09 combined G/H regression
+
+`TaskCatalogIntegrationTest` creates cases from H templates and uses G endpoints to mutate and expose their independent copies. It covers rollback after an earlier copy was written, shared status order and deletion restrictions, calendar visibility, case deletion and restoration, and physical cleanup while retaining blueprints. It exercises the task, catalog and default error groups through the HTTP API in Spanish, Catalan and English. `CatalogContentionTest` verifies both commit orders for a G task move and H status deletion, plus a concurrent G task move and H global case move through independent guarded MySQL processes. The standalone F, G and H contract suites remain in the full regression.
