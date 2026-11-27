@@ -1,30 +1,48 @@
 <?php
 
+use App\Models\ExpedientSequence;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Tests\Support\TestingDatabase;
+
+afterEach(function () {
+    RefreshDatabaseState::$migrated = false;
+});
 
 beforeEach(function () {
     TestingDatabase::assertSafe($this->app);
     $this->artisan('migrate:fresh', ['--force' => true])->assertSuccessful();
 });
 
-test('MySQL 8.4 migrates the scaffold, rolls it back and migrates it again', function () {
+test('MySQL 8.4 migrates the complete schema from empty and after rollback', function () {
     expect(DB::scalar('SELECT VERSION()'))->toStartWith('8.4.');
-    expect(Schema::getTableListing(schemaQualified: false))->toContain('users', 'sessions', 'cache', 'jobs');
+    $tables = [
+        'activity_log', 'cache', 'cache_locks', 'clients', 'expedient_sequences',
+        'expedient_tag', 'expedient_types', 'expedient_user_preferences', 'expedients',
+        'failed_jobs', 'incidents', 'job_batches', 'jobs', 'model_has_permissions',
+        'model_has_roles', 'password_reset_tokens', 'permissions', 'personal_access_tokens',
+        'role_has_permissions', 'roles', 'seeded_catalogs', 'sessions', 'statuses',
+        'tags', 'task_checklist_items', 'task_comments', 'task_template_checklist_items',
+        'task_templates', 'task_user', 'tasks', 'users',
+    ];
 
-    $this->artisan('migrate:rollback', ['--force' => true])->assertSuccessful();
-    foreach (['users', 'sessions', 'cache', 'jobs'] as $table) {
-        expect(Schema::hasTable($table))->toBeFalse();
+    expect(Schema::getTableListing(schemaQualified: false))->toEqualCanonicalizing([...$tables, 'migrations']);
+    foreach (Schema::getTables() as $table) {
+        expect($table['engine'])->toBe('InnoDB');
+        expect($table['collation'])->toStartWith('utf8mb4');
     }
 
+    $this->artisan('migrate:rollback', ['--force' => true])->assertSuccessful();
+    expect(Schema::getTableListing(schemaQualified: false))->toBe(['migrations']);
+
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
-    expect(Schema::getTableListing(schemaQualified: false))->toContain('users', 'sessions', 'cache', 'jobs');
+    expect(Schema::getTableListing(schemaQualified: false))->toEqualCanonicalizing([...$tables, 'migrations']);
 });
 
 test('the user factory produces usable users and initialization creates no accounts', function () {
@@ -76,5 +94,54 @@ test('independent connections respect transaction isolation and observe an InnoD
         expect($committed->table('users')->where('id', $user->id)->value('name'))->toBe('Committed');
     } finally {
         DB::purge('phase_b_observer');
+    }
+});
+
+test('an annual sequence row supports locking and atomic first-row creation', function () {
+    $sequence = ExpedientSequence::factory()->create(['year' => 2026, 'last_number' => 17]);
+    config(['database.connections.sequence_observer' => config('database.connections.mysql')]);
+    $writer = DB::connection('mysql');
+    $observer = DB::connection('sequence_observer');
+    $observer->statement('SET SESSION innodb_lock_wait_timeout = 1');
+
+    $writer->beginTransaction();
+
+    try {
+        $locked = ExpedientSequence::query()->lockForUpdate()->findOrFail($sequence->year);
+        expect($locked->last_number)->toBe(17);
+
+        try {
+            $observer->table('expedient_sequences')->where('year', 2026)->increment('last_number');
+            test()->fail('The second connection unexpectedly updated the locked annual row.');
+        } catch (QueryException $exception) {
+            expect((int) $exception->errorInfo[1])->toBe(1205);
+        }
+
+        $locked->increment('last_number');
+        expect($observer->table('expedient_sequences')->where('year', 2026)->value('last_number'))->toBe(17);
+        $writer->commit();
+
+        expect($observer->table('expedient_sequences')->where('year', 2026)->value('last_number'))->toBe(18);
+        expect($observer->table('expedient_sequences')->insertOrIgnore(['year' => 2026]))->toBe(0);
+        $writer->beginTransaction();
+        expect($writer->table('expedient_sequences')->insertOrIgnore(['year' => 2027]))->toBe(1);
+        expect($observer->table('expedient_sequences')->where('year', 2027)->exists())->toBeFalse();
+
+        try {
+            $observer->table('expedient_sequences')->insertOrIgnore(['year' => 2027]);
+            test()->fail('The second connection unexpectedly inserted the uncommitted annual row.');
+        } catch (QueryException $exception) {
+            expect((int) $exception->errorInfo[1])->toBe(1205);
+        }
+
+        $writer->commit();
+        expect($observer->table('expedient_sequences')->insertOrIgnore(['year' => 2027]))->toBe(0);
+        expect($observer->table('expedient_sequences')->where('year', 2027)->value('last_number'))->toBe(0);
+    } finally {
+        if ($writer->transactionLevel() > 0) {
+            $writer->rollBack();
+        }
+
+        DB::purge('sequence_observer');
     }
 });

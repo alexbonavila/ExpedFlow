@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Database\Factories\ExpedientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -18,7 +20,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Hidden(['samba_relative_path'])]
 class Expedient extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<ExpedientFactory> */
+    use HasFactory, SoftDeletes;
 
     /** @return BelongsTo<ExpedientType, $this> */
     public function type(): BelongsTo

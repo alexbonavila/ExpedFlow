@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
+use Database\Factories\TaskTemplateChecklistItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['task_template_id', 'name', 'position'])]
 class TaskTemplateChecklistItem extends Model
 {
+    /** @use HasFactory<TaskTemplateChecklistItemFactory> */
+    use HasFactory;
+
     /** @return BelongsTo<TaskTemplate, $this> */
     public function template(): BelongsTo
     {
