@@ -82,3 +82,9 @@ The administration routes use an inline Laravel Gate backed by the fixed web per
 | Uploads and tags | Check `upload` or `associateTags` on an accessible active case. Enforce storage and relationship invariants in the corresponding future service. |
 
 Query current models in the specified parent scope and recheck contextual decisions at the service's locked write boundary. The preloaded model arguments identify the record, parent and owner. Phase E adds policies and tests without exposing unfinished routes.
+
+### Trash, restoration and physical removal
+
+Cases, tasks and task comments bind separate `delete`, `restore`, `forceDelete`, `viewAnyTrash` and `viewTrash` actions. Trash access requires a restore grant or the explicit administrator force-delete grant. Force deletion accepts a trashed record only. Task and comment actions use the declared active parent hierarchy and its access checks. To restore a case, F must select only trashed tasks carrying its `deleted_by_expedient` marker and authorize them with `restoreCascadeTask` on `[$expedient, $task]`. An independently deleted task stays in trash. G must reject independent restoration of a task bearing the cascade marker and hide children of inactive parents from ordinary queries. Restore order, cascades, locking and the physical writes belong to F/G. No operation deletes Samba data.
+
+The catalog policy occupies the physical `delete` boundary for clients, types, statuses and tags. References to a client in either case role, to a type through a case or template, or to a status through a case or task block removal, including references from trash. H must retain the database's foreign-key enforcement and handle conflicts if references change after a policy decision. Tags and templates use their declared dependent-row cascades. Catalogs, templates and checklist items have no trash operations. Accounts retain disable/enable lifecycle only.

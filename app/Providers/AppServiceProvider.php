@@ -2,7 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Client;
+use App\Models\ExpedientType;
+use App\Models\Status;
+use App\Models\Tag;
 use App\Models\User;
+use App\Policies\CatalogPolicy;
 use App\Support\EffectivePermissions;
 use App\Support\IdentityInput;
 use App\Support\PermissionKey;
@@ -35,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
             PermissionKey::ViewIncidents,
         ] as $permission) {
             Gate::define($permission->value, static fn (User $actor): bool => $permissions->allows($actor, $permission));
+        }
+
+        foreach ([Client::class, ExpedientType::class, Status::class, Tag::class] as $catalog) {
+            Gate::policy($catalog, CatalogPolicy::class);
         }
 
         foreach (['identity.credentials', 'identity.recovery'] as $name) {

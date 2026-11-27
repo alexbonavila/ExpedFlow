@@ -72,7 +72,7 @@ Phases D–K define the exact routes and schemas for this planned API. CRUD mean
 
 | Resource | Operations |
 |---|---|
-| `/clients` | List, create, edit, delete and restore according to integrity rules |
+| `/clients` | List, create, edit and remove subject to references from cases |
 | `/expedient-types` | CRUD for types with immutable codes |
 | `/expedient-types/{id}/task-templates` | Manage the template and checklist |
 | `/statuses` | List statuses, with administration and ordering reserved for administrators |
@@ -98,7 +98,7 @@ Represent case code `202600105` and type code `05` as strings. A task has one fu
 
 ## Moves and deletion
 
-The server calculates and validates status and position within a transaction. A client cannot edit another user's preferences by supplying an arbitrary user_id. The ordinary API excludes soft-deleted records and provides an explicit trash view with authorized restoration. Force-delete is reserved for administrators and leaves Samba untouched. Validate child resources against the specified parent and block access to tasks belonging to deleted cases.
+The server calculates and validates status and position within a transaction. A client cannot edit another user's preferences by supplying an arbitrary user_id. The ordinary API excludes soft-deleted records and provides an explicit trash view with authorized restoration. Force-delete requires the reserved role and an explicit grant on a trashed record and leaves Samba untouched. Validate child resources against the specified parent and block access to tasks belonging to deleted cases.
 
 ## Uploads and Samba errors
 

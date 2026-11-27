@@ -35,6 +35,11 @@ final class TaskTemplatePolicy
         return $template->expedient_type_id === $type->id && $this->create($actor, $type);
     }
 
+    public function delete(User $actor, TaskTemplate $template, ExpedientType $type): bool
+    {
+        return $this->update($actor, $template, $type);
+    }
+
     public function manageChecklist(User $actor, TaskTemplate $template, ExpedientType $type, ?TaskTemplateChecklistItem $item = null): bool
     {
         return ($item === null || $item->task_template_id === $template->id) && $this->update($actor, $template, $type);
