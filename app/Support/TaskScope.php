@@ -20,6 +20,11 @@ final class TaskScope
         });
     }
 
+    public function readTask(int $id): Task
+    {
+        return $this->read($id)[0];
+    }
+
     /** @return array{Task, Expedient} */
     public function read(int $id): array
     {

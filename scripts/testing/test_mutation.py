@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-from mutation import aggregate, combine, context, decode, identity_index, partition, write_json
+from mutation import ROOT, aggregate, combine, context, decode, identity_index, partition, write_json
 
 
 class MutationAggregationTest(unittest.TestCase):
@@ -156,6 +156,43 @@ class MutationAggregationTest(unittest.TestCase):
         for content in ('{"result":"none","result":"tested"}', '{"seconds":NaN}'):
             with self.subTest(content=content), self.assertRaises(ValueError):
                 decode(content)
+
+
+class MutationSourceTest(unittest.TestCase):
+    def test_task_read_controllers_produce_compilable_array_item_removals(self):
+        controllers = [
+            "app/Http/Controllers/TaskAssigneeController.php",
+            "app/Http/Controllers/TaskChecklistController.php",
+            "app/Http/Controllers/TaskCommentController.php",
+            "app/Http/Controllers/TaskController.php",
+        ]
+        generated = subprocess.check_output(
+            ["php", "-r", r"""
+                require 'vendor/autoload.php';
+                Pest\Support\Container::getInstance()->add(
+                    Psr\SimpleCache\CacheInterface::class, new Pest\Mutate\Cache\NullStore
+                );
+                $generator = new Pest\Mutate\Support\MutationGenerator;
+                foreach (Pest\Mutate\Support\FileFinder::files(array_slice($argv, 1), []) as $file) {
+                    foreach ($generator->generate($file, [Pest\Mutate\Mutators\Removal\RemoveArrayItem::class]) as $mutation) {
+                        echo json_encode([
+                            'file' => $file->getFilename(),
+                            'line' => $mutation->startLine,
+                            'source' => $mutation->modifiedSource(),
+                        ], JSON_THROW_ON_ERROR), PHP_EOL;
+                    }
+                }
+            """, *controllers],
+            cwd=ROOT, text=True, timeout=30,
+        )
+        mutations = [json.loads(line) for line in generated.splitlines()]
+        self.assertEqual({item["file"] for item in mutations}, {Path(path).name for path in controllers})
+        for mutation in mutations:
+            with self.subTest(file=mutation["file"], line=mutation["line"]):
+                result = subprocess.run(
+                    ["php", "-l"], input=mutation["source"], text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 class WorkflowGateTest(unittest.TestCase):

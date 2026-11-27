@@ -33,14 +33,14 @@ final class TaskChecklistController extends Controller
 
     public function index(string $task): AnonymousResourceCollection
     {
-        [$record] = $this->scope->read(AuthorizationInput::identifier($task));
+        $record = $this->scope->readTask(AuthorizationInput::identifier($task));
 
         return TaskChecklistItemResource::collection($record->checklistItems()->orderBy('position')->orderBy('id')->get());
     }
 
     public function show(string $task, string $item): TaskChecklistItemResource
     {
-        [$record] = $this->scope->read(AuthorizationInput::identifier($task));
+        $record = $this->scope->readTask(AuthorizationInput::identifier($task));
 
         return new TaskChecklistItemResource($record->checklistItems()->findOrFail(AuthorizationInput::identifier($item)));
     }

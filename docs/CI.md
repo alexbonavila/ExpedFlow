@@ -204,3 +204,19 @@ The owner accepted E and E.1 after [PR #12](https://github.com/alexbonavila/Expe
 Phase G uses protected Phase F integration `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b` (PR #13). [Accepted post-merge run](https://github.com/alexbonavila/ExpedFlow/actions/runs/46041291123)
 
 Push each verified Phase G checkpoint to `feat/tasks-g`. The final PR to main triggers core CI. For the exact published branch head, dispatch `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/tasks-g -f mutation_shards=8` once. Record the run IDs and candidates. The coordinated workflow filename maintenance remains pending. Preserve `phase-b.yml`, the eight-runner default and the existing gate thresholds during G/H/I integration. Hosted acceptance and owner review are required before integration.
+
+### Phase G mutation evidence correction
+
+The initial extended run produced 2,078 outcomes and rejected five claimed detections. Pest's `RemoveArrayItem` operator changed the five task-only assignments from `[$record] = $this->scope->read(AuthorizationInput::identifier($task));` to `[] = $this->scope->read(AuthorizationInput::identifier($task));`. PHP lint rejected each generated source with `Cannot use empty list`. The shard reports classified each as `tested`. Local Pest reproductions exited 1 with empty stdout and stderr and a zero-byte JUnit file. The hosted reports did not retain per-mutant subprocess streams or JUnit files. [Initial extended run](https://github.com/alexbonavila/ExpedFlow/actions/runs/46045351194)
+
+| Worker | Original source | Mutation ID | Tests selected in the local reproduction |
+| --- | --- | --- | --- |
+| 2 | `TaskAssigneeController.php:25` | `6420f4db69f5a46f4621237f5bbf099aaad527667e0750f0e32516676a97844b` | Assignment replacement and reader permissions, combined lifecycle, bearer contract |
+| 2 | `TaskController.php:48` | `2910c9061dd53dc56d19dc065f940fa272665ab6662410c25e1b30d77a415e79` | Task read permissions and scope, combined lifecycle, bearer contract |
+| 6 | `TaskChecklistController.php:36` | `c71c426e5ea399f52c84990c4452f98e30ce6dc4275ff8da9a06dab25111ee47` | Checklist CRUD and ordering, checklist grants and rollback, combined lifecycle, bearer contract |
+| 7 | `TaskChecklistController.php:43` | `e12f46f02e6c94ac577ce2a1ee65e377a80af836184741dd8874eb943380a6ee` | Checklist CRUD and ordering, combined lifecycle, bearer contract |
+| 8 | `TaskCommentController.php:27` | `9283835f973099cc966ce24345791630bf6968815d86e69ffbf152c63ea65f51` | Peer editing and comment trash, comment grants and rollback, combined lifecycle, bearer contract |
+
+The controllers now call `TaskScope::readTask`, which uses the existing authorized task-and-case lookup. The tooling unit suite generates and lints array-item removals in the four affected controllers. This regression failed for all five original sites and passes with the typed lookup. The adapter still requires a fresh PHPUnit report and rejects unexpected process outcomes. The planner regenerates the full inventory under the same operators and measured scope. Use a fresh eight-worker dispatch to gather consistent evidence for the corrected candidate.
+
+The correction passed the guarded MySQL regression with 239 tests, 2,874 assertions and 98.7% line coverage, including all 79 integration and 10 contract tests. Composer strict validation, Pint, Larastan level 8, 100% measurable type coverage and all 15 mutation-tooling tests passed. The regenerated plan contained 2,075 unique mutations across 87 files. Three targeted mutations of the corrected lookup and assignment response each produced a fresh PHPUnit assertion failure accepted by the existing adapter.

@@ -22,7 +22,7 @@ final class TaskAssigneeController extends Controller
 
     public function index(string $task): JsonResponse
     {
-        [$record] = $this->scope->read(AuthorizationInput::identifier($task));
+        $record = $this->scope->readTask(AuthorizationInput::identifier($task));
 
         return response()->json(['data' => $this->summaries($record)]);
     }

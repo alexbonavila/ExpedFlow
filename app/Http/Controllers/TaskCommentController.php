@@ -24,7 +24,7 @@ final class TaskCommentController extends Controller
 
     public function index(string $task): AnonymousResourceCollection
     {
-        [$record] = $this->scope->read(AuthorizationInput::identifier($task));
+        $record = $this->scope->readTask(AuthorizationInput::identifier($task));
 
         return TaskCommentResource::collection($record->comments()->with(TaskCommentResource::AUTHOR)
             ->orderBy('created_at')->orderBy('id')->get());

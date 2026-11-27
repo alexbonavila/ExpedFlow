@@ -45,7 +45,7 @@ final class TaskController extends Controller
 
     public function show(string $task): TaskResource
     {
-        [$record] = $this->scope->read(AuthorizationInput::identifier($task));
+        $record = $this->scope->readTask(AuthorizationInput::identifier($task));
 
         return new TaskResource($record->load(TaskResource::RELATIONS));
     }
