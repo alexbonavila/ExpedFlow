@@ -21,7 +21,7 @@ final class CatalogInput
             $fields['name'] = Str::trim($fields['name']);
         }
 
-        $unknown = array_diff_key($fields, $rules);
+        $unknown = array_diff_key($fields, array_filter($rules, static fn (string $key): bool => ! str_contains($key, '.'), ARRAY_FILTER_USE_KEY));
         if ($unknown !== []) {
             throw ValidationException::withMessages(array_fill_keys(array_keys($unknown), __('catalogs.unsupported_field')));
         }
@@ -33,5 +33,14 @@ final class CatalogInput
     public static function name(bool $optional = false): array
     {
         return $optional ? ['bail', 'sometimes', 'required', 'string', 'max:255'] : ['bail', 'required', 'string', 'max:255'];
+    }
+
+    /** @return array<string, list<string>> */
+    public static function identifiers(string $field): array
+    {
+        return [
+            $field => ['present', 'array', 'list'],
+            $field.'.*' => ['required', 'integer:strict', 'min:1', 'distinct:strict'],
+        ];
     }
 }

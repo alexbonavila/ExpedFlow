@@ -167,3 +167,5 @@ Install the shared status catalog through the existing seeder. Before H, creatin
 ## Phase H catalogs and personal Kanban
 
 `GET /expedient-types/{type}` uses the existing type projection and view grant. The manage grant permits creation with a boundary-trimmed `name` and a two-digit ASCII string `code`. PATCH accepts only `name`. A duplicate code returns `type_code_conflict`. Deleting a type referenced by a case (including trash) or template returns `type_referenced`. Successful deletion returns `type_deleted`.
+
+`GET /statuses/{status}` uses the existing localized status projection. Only a reserved administrator with `statuses.manage` may create, rename, reorder or delete statuses. Creation appends to the catalog; renaming clears the seeded translations. `PUT /statuses/order` takes the full current `status_ids` list and returns the reordered catalog. A stale list returns `order_membership_conflict`. Deletion returns `status_referenced` if any case or task, including trash, references the status.
