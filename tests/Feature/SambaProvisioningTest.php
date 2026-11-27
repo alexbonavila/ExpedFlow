@@ -10,6 +10,8 @@ use App\Support\Samba\StorageConfiguration;
 use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\Process\InputStream;
+use Symfony\Component\Process\Process;
 use Tests\Support\CaseHttp;
 use Tests\Support\SambaFixture;
 use Tests\Support\TestingDatabase;
@@ -97,4 +99,123 @@ test('does not probe storage or retain a number when the database creation rolls
     $this->assertDatabaseEmpty('expedients');
     $this->assertDatabaseEmpty('expedient_sequences');
     $this->assertDatabaseEmpty('incidents');
+});
+
+test('retries the original target and type after reclassification and leaves ready documents untouched', function (): void {
+    $fixture = new SambaFixture;
+    try {
+        mkdir($fixture->root.'/EXPEDIENTES');
+        config(['samba' => $fixture->settings()]);
+        $this->app->instance(MountVerifier::class, $fixture);
+        $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+        $input = $this->caseInput(['expedient_type_id' => ExpedientType::factory()->create(['code' => '05'])->id]);
+        $created = $this->api('POST', '/api/v1/expedients', ['name' => 'Original'] + $input, $headers)
+            ->assertCreated()->assertJsonPath('storage.code', 'storage_template_missing');
+        $id = $created->json('data.id');
+        $code = $created->json('data.code');
+        $path = $fixture->root.'/EXPEDIENTES/'.$code.' Original';
+        $nextType = ExpedientType::factory()->create(['code' => '07']);
+        $this->api('PATCH', "/api/v1/expedients/$id", ['name' => 'Renamed', 'expedient_type_id' => $nextType->id], $headers)->assertOk();
+
+        mkdir($fixture->root.'/PLANTILLAS/05/nested', 0700, true);
+        file_put_contents($fixture->root.'/PLANTILLAS/05/nested/template.txt', 'original template');
+        $retry = "/api/v1/expedients/$id/storage/retry";
+        $this->api('POST', $retry, [], $headers)->assertOk()->assertJsonPath('code', 'storage_ready');
+        file_put_contents($path.'/nested/template.txt', 'operator updated');
+        $this->api('POST', $retry, [], $headers)->assertOk()->assertJsonPath('status', 'ready');
+        expect(file_get_contents($path.'/nested/template.txt'))->toBe('operator updated')
+            ->and(scandir($fixture->root.'/EXPEDIENTES'))->toBe(['.', '..', $code.' Original'])
+            ->and(ExpedientSequence::query()->sole()->last_number)->toBe(1)
+            ->and(Incident::query()->count())->toBe(1);
+
+        rename($path, $path.'-offline');
+        $this->api('POST', $retry, [], $headers)->assertConflict()->assertJsonPath('code', 'storage_not_ready');
+        expect(is_dir($path))->toBeFalse();
+    } finally {
+        $fixture->clean();
+    }
+});
+
+test('resumes a matching owned partial tree and rejects a changed revision or malformed marker', function (): void {
+    $fixture = new SambaFixture;
+    try {
+        mkdir($fixture->root.'/EXPEDIENTES');
+        mkdir($fixture->root.'/PLANTILLAS/05', 0700, true);
+        $source = $fixture->root.'/PLANTILLAS/05';
+        file_put_contents($source.'/a.txt', 'complete');
+        file_put_contents($source.'/b.txt', 'missing');
+        config(['samba' => $fixture->settings()]);
+        $this->app->instance(MountVerifier::class, $fixture);
+        $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+        $input = $this->caseInput(['expedient_type_id' => ExpedientType::factory()->create(['code' => '05'])->id]);
+        $this->api('POST', '/api/v1/expedients', $input, $headers)->assertCreated()->assertJsonPath('storage.status', 'ready');
+        $case = Expedient::query()->sole();
+        $target = $fixture->root.'/'.$case->samba_relative_path;
+        $retry = "/api/v1/expedients/{$case->id}/storage/retry";
+
+        unlink($target.'/.expedflow-ready-v1');
+        unlink($target.'/b.txt');
+        $case->forceFill(['samba_provisioning' => 'p:'.substr($case->samba_provisioning, 2)])->save();
+        file_put_contents($source.'/b.txt', 'new revision');
+        $this->api('POST', $retry, [], $headers)->assertConflict()->assertJsonPath('code', 'storage_conflict');
+        expect(is_file($target.'/b.txt'))->toBeFalse();
+        file_put_contents($source.'/b.txt', 'missing');
+        file_put_contents($target.'/b.txt', 'partial');
+        $this->api('POST', $retry, [], $headers)->assertConflict();
+        expect(file_get_contents($target.'/b.txt'))->toBe('partial');
+        unlink($target.'/b.txt');
+        $this->api('POST', $retry, [], $headers)->assertOk();
+        expect(file_get_contents($target.'/b.txt'))->toBe('missing');
+
+        file_put_contents($target.'/.expedflow-ready-v1', str_repeat('a', 64));
+        $this->api('POST', $retry, [], $headers)->assertConflict();
+        expect(file_get_contents($target.'/.expedflow-ready-v1'))->toBe(str_repeat('a', 64));
+    } finally {
+        $fixture->clean();
+    }
+});
+
+test('admits legacy retry explicitly and rejects unowned folders and inactive or unauthorized cases', function (): void {
+    $fixture = new SambaFixture;
+    try {
+        mkdir($fixture->root.'/EXPEDIENTES');
+        config(['samba' => $fixture->settings()]);
+        $this->app->instance(MountVerifier::class, $fixture);
+        $case = Expedient::factory()->create(['name' => 'Legacy case']);
+        $actor = User::factory()->create()->assignRole('user');
+        $allowed = $this->authorizationBearer($actor);
+        $denied = $this->authorizationBearer(User::factory()->create());
+        $retry = "/api/v1/expedients/{$case->id}/storage/retry";
+        $this->api('POST', $retry, [], $denied)->assertForbidden();
+        $this->api('POST', '/api/v1/expedients/999999/storage/retry', [], $denied)->assertForbidden();
+        $this->api('POST', $retry, ['path' => 'private'], $allowed)->assertUnprocessable()->assertJsonValidationErrors('request');
+        expect($case->fresh()->samba_relative_path)->toBeNull();
+        $target = $fixture->root.'/EXPEDIENTES/'.$case->code.' Legacy case';
+        mkdir($target);
+        $this->api('POST', $retry, [], $allowed)->assertConflict()->assertJsonPath('code', 'storage_conflict');
+        expect(scandir($target))->toBe(['.', '..'])
+            ->and($case->fresh()->samba_relative_path)->toBe('EXPEDIENTES/'.$case->code.' Legacy case');
+        $case->delete();
+        $this->api('POST', $retry, [], $allowed)->assertNotFound();
+        expect(Incident::query()->count())->toBe(1);
+    } finally {
+        $fixture->clean();
+    }
+});
+
+test('refuses a simultaneous retry while an independent PHP process holds the case lock', function (): void {
+    $case = Expedient::factory()->create();
+    $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $input = new InputStream;
+    $process = new Process(['php', 'tests/Fixtures/SambaLockHolder.php', (string) $case->id], base_path(), ['APP_ENV' => 'testing']);
+    $process->setInput($input)->setTimeout(10)->start();
+    try {
+        expect($process->waitUntil(fn (string $type, string $output): bool => $type === 'out' && str_contains($output, "locked\n")))->toBeTrue();
+        $this->api('POST', "/api/v1/expedients/{$case->id}/storage/retry", [], $headers)
+            ->assertConflict()->assertJsonPath('code', 'storage_busy')->assertJsonPath('incident_id', null);
+        $this->assertDatabaseEmpty('incidents');
+    } finally {
+        $input->close();
+        $process->stop();
+    }
 });

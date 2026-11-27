@@ -13,4 +13,5 @@ return [
     'storage_not_ready' => 'La carpeta del expediente aún no está lista.',
     'upload_name_conflict' => 'Ya existe un archivo con ese nombre.',
     'storage_admission_changed' => 'No se ha podido confirmar la operación de almacenamiento con el acceso actual.',
+    'unexpected_fields' => 'Este punto de acceso no acepta campos en la solicitud.',
 ];

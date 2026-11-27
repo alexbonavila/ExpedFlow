@@ -8,6 +8,7 @@ use App\Support\BusinessWrite;
 use App\Support\ExpedientLifecycle;
 use App\Support\IdentityError;
 use App\Support\PermissionKey;
+use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -42,29 +43,51 @@ final class CaseStorage
 
     public function created(Request $request, Expedient $case): StorageOutcome
     {
+        return $this->perform($request, $case, Operation::Provision,
+            fn (Expedient $active) => $this->provision($request, $active, Operation::Provision));
+    }
+
+    public function retry(Request $request, int $id): StorageOutcome
+    {
+        $case = $this->admit($request, $id, Operation::Retry);
+
+        return $this->perform($request, $case, Operation::Retry,
+            fn (Expedient $active) => $this->provision($request, $this->reserveLegacy($request, $active), Operation::Retry));
+    }
+
+    /** @param Closure(Expedient): void $work */
+    private function perform(Request $request, Expedient $case, Operation $operation, Closure $work): StorageOutcome
+    {
         if (DB::transactionLevel() !== 0) {
             return new StorageOutcome(Failure::AdmissionChanged);
         }
 
         try {
-            $this->lock->run($case->id, function () use ($request, $case): void {
-                $active = $this->admit($request, $case->id, Operation::Provision);
-                $this->provision($request, $active, Operation::Provision);
+            $this->lock->run($case->id, function () use ($request, $case, $operation, $work): void {
+                $work($this->admit($request, $case->id, $operation));
+                $this->admit($request, $case->id, $operation);
             });
 
             return new StorageOutcome;
         } catch (AuthorizationException|IdentityError|ModelNotFoundException) {
             return new StorageOutcome(Failure::AdmissionChanged);
         } catch (StorageFailure|QueryException $failure) {
-            return $this->failed($request, $case, Operation::Provision, $failure);
+            return $this->failed($request, $case, $operation, $failure);
         }
     }
 
-    private function admit(Request $request, int $id, Operation $operation, ?string $state = null): Expedient
+    private function reserveLegacy(Request $request, Expedient $case): Expedient
+    {
+        return $case->samba_relative_path === null
+            ? $this->admit($request, $case->id, Operation::Retry, reserve: true)
+            : $case;
+    }
+
+    private function admit(Request $request, int $id, Operation $operation, ?string $state = null, bool $reserve = false): Expedient
     {
         $permission = $operation === Operation::Provision ? PermissionKey::CreateExpedients : PermissionKey::UploadCaseFiles;
 
-        return $this->write->run($request, $permission, function (User $actor) use ($id, $operation, $state): Expedient {
+        return $this->write->run($request, $permission, function (User $actor) use ($id, $operation, $state, $reserve): Expedient {
             $gate = Gate::forUser($actor);
             $initial = $operation === Operation::Provision;
             $gate->authorize($initial ? 'create' : 'viewAny', Expedient::class);
@@ -78,7 +101,7 @@ final class CaseStorage
                 }
             }
 
-            return $case;
+            return $reserve ? $this->reserve($case) : $case;
         });
     }
 
@@ -88,13 +111,14 @@ final class CaseStorage
         $this->adapter->provision($intent, $case->samba_provisioning, function (string $state) use ($request, $case, $operation): void {
             $this->admit($request, $case->id, $operation, $state);
         });
-        $this->admit($request, $case->id, $operation);
     }
 
     private function failed(Request $request, Expedient $case, Operation $operation, StorageFailure|QueryException $failure): StorageOutcome
     {
         $reason = $failure instanceof StorageFailure ? $failure->reason : Failure::Transfer;
 
-        return new StorageOutcome($reason, $this->incidents->record($operation, $reason, $case, $request->user()?->id));
+        return new StorageOutcome($reason, $reason === Failure::Busy
+            ? null
+            : $this->incidents->record($operation, $reason, $case, $request->user()?->id));
     }
 }

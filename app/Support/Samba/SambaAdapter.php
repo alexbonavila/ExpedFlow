@@ -44,6 +44,8 @@ final class SambaAdapter
                     throw new StorageFailure(Failure::Conflict);
                 }
 
+                $share->check();
+
                 return;
             }
         } elseif ($phase === 'r') {
@@ -62,6 +64,13 @@ final class SambaAdapter
         if ($destination === null) {
             $destination = $share->createDirectory($cases, basename($intent->target));
             $this->writeMarker($share, $destination, self::CLAIM, $claim);
+        } else {
+            $existing = TemplateSnapshot::capture($share, $intent->target, self::CLAIM);
+            foreach ($existing->entries as $path => $item) {
+                if (! array_key_exists($path, $snapshot->entries) || $item !== $snapshot->entries[$path]) {
+                    throw new StorageFailure(Failure::Conflict);
+                }
+            }
         }
 
         $this->copy($share, $template, $intent->target, $snapshot);

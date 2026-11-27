@@ -13,4 +13,5 @@ return [
     'storage_not_ready' => 'La carpeta de l’expedient encara no està preparada.',
     'upload_name_conflict' => 'Ja existeix un fitxer amb aquest nom.',
     'storage_admission_changed' => 'No s’ha pogut confirmar l’operació d’emmagatzematge amb l’accés actual.',
+    'unexpected_fields' => 'Aquest punt d’accés no accepta camps a la sol·licitud.',
 ];

@@ -1,0 +1,11 @@
+<?php
+
+use App\Support\Samba\CaseStorageLock;
+
+require __DIR__.'/../../vendor/autoload.php';
+$app = require __DIR__.'/../../bootstrap/app.php';
+$app->make(CaseStorageLock::class)->run((int) ($argv[1] ?? 0), static function (): void {
+    fwrite(STDOUT, "locked\n");
+    fflush(STDOUT);
+    fgets(STDIN);
+});

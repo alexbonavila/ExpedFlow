@@ -13,4 +13,5 @@ return [
     'storage_not_ready' => 'The case folder is not ready.',
     'upload_name_conflict' => 'A file with that name already exists.',
     'storage_admission_changed' => 'The case storage operation could not be confirmed with the current access.',
+    'unexpected_fields' => 'This endpoint accepts no request fields.',
 ];
