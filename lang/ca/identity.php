@@ -59,4 +59,6 @@ return [
     'task_assignee_invalid' => 'Tria usuaris existents i assigna només usuaris actius.',
     'task_comment_deleted' => 'El comentari s’ha mogut a la paperera.',
     'task_comment_force_deleted' => 'El comentari s’ha eliminat definitivament.',
+    'task_checklist_deleted' => 'S’ha eliminat l’element de la llista de verificació.',
+    'task_checklist_membership_changed' => 'La llista de verificació ha canviat. Envia tots els identificadors actuals.',
 ];

@@ -59,4 +59,6 @@ return [
     'task_assignee_invalid' => 'Choose existing users and assign only active users.',
     'task_comment_deleted' => 'Comment moved to trash.',
     'task_comment_force_deleted' => 'Comment permanently deleted.',
+    'task_checklist_deleted' => 'Checklist item deleted.',
+    'task_checklist_membership_changed' => 'The checklist has changed. Send all current item IDs.',
 ];

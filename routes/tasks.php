@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\TaskAssigneeController;
+use App\Http\Controllers\TaskChecklistController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Middleware\RequirePermission;
@@ -37,6 +38,17 @@ Route::middleware(RequirePermission::class.':'.PermissionKey::ViewExpedients->va
                     ->middleware(RequirePermission::class.':'.PermissionKey::RestoreTaskComments->value);
                 Route::post('{comment}/force-delete', 'forceDelete')->whereNumber('comment')
                     ->middleware(RequirePermission::class.':'.PermissionKey::ForceDeleteTaskComments->value);
+            });
+        Route::prefix('tasks/{task}/checklist')->whereNumber('task')->controller(TaskChecklistController::class)
+            ->group(function (): void {
+                Route::get('/', 'index');
+                Route::get('{item}', 'show')->whereNumber('item');
+                Route::middleware(RequirePermission::class.':'.PermissionKey::ManageTaskChecklist->value)->group(function (): void {
+                    Route::post('/', 'store');
+                    Route::put('order', 'reorder');
+                    Route::patch('{item}', 'update')->whereNumber('item');
+                    Route::delete('{item}', 'destroy')->whereNumber('item');
+                });
             });
         Route::get('tasks/{task}', [TaskController::class, 'show'])->whereNumber('task');
     });

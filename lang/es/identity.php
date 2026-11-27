@@ -59,4 +59,6 @@ return [
     'task_assignee_invalid' => 'Elige usuarios existentes y asigna solo usuarios activos.',
     'task_comment_deleted' => 'El comentario se ha movido a la papelera.',
     'task_comment_force_deleted' => 'El comentario se ha eliminado definitivamente.',
+    'task_checklist_deleted' => 'Se ha eliminado el elemento de la lista de verificación.',
+    'task_checklist_membership_changed' => 'La lista de verificación ha cambiado. Envía todos los identificadores actuales.',
 ];

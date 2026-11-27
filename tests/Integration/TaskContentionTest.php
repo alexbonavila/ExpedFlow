@@ -110,3 +110,19 @@ test('assignment grant revoked while a writer waits is rechecked inside the tran
     expect($result['status'])->toBe(403);
     $this->assertDatabaseEmpty('task_user');
 });
+
+test('a queued checklist reorder rejects membership changed by concurrent creation', function (): void {
+    $headers = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $task = Task::factory()->create();
+    $root = "/api/v1/tasks/{$task->id}/checklist";
+    $initial = $this->api('POST', $root, ['name' => 'Initial'], $headers)->assertCreated()->json('data.id');
+    DB::beginTransaction();
+    AuthorizationCatalog::lockAdministratorRole();
+
+    $result = commitAgainstTaskContender([
+        'method' => 'PUT', 'path' => "$root/order", 'authorization' => $headers['Authorization'],
+        'body' => ['item_ids' => [$initial]],
+    ], fn () => $this->api('POST', $root, ['name' => 'Concurrent addition'], $headers)->assertCreated());
+    expect($result['status'])->toBe(409)->and($result['code'])->toBe('task_checklist_membership_changed');
+    expect($task->checklistItems()->orderBy('position')->pluck('position')->all())->toBe([1, 2]);
+});
