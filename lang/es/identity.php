@@ -42,4 +42,12 @@ return [
     'client_name_conflict' => 'Este nombre de cliente ya está en uso.',
     'client_referenced' => 'Un expediente hace referencia a este cliente.',
     'client_deleted' => 'El cliente se ha eliminado.',
+    'annual_sequence_exhausted' => 'La secuencia anual de expedientes se ha agotado.',
+    'annual_sequence_inconsistent' => 'La secuencia anual de expedientes requiere una revisión.',
+    'case_order_exhausted' => 'La columna del expediente no admite otra posición o versión.',
+    'case_reference_invalid' => 'La referencia seleccionada no existe.',
+    'case_clients_distinct' => 'El solicitante y el cliente representado deben ser distintos.',
+    'case_description_too_long' => 'La descripción admite como máximo 65 535 bytes UTF-8.',
+    'case_deleted' => 'El expediente se ha movido a la papelera.',
+    'case_force_deleted' => 'El expediente se ha eliminado definitivamente.',
 ];

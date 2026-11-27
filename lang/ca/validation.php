@@ -10,6 +10,7 @@ return [
     'list' => 'El camp :attribute ha de ser una llista.',
     'distinct' => 'El camp :attribute conté un valor duplicat.',
     'enum' => 'El camp :attribute conté un valor no vàlid.',
+    'missing' => 'El camp :attribute no està disponible en desar expedients.',
     'present' => 'El camp :attribute ha de ser present.',
     'integer' => 'El camp :attribute ha de ser un nombre enter.',
     'min' => [
@@ -21,6 +22,11 @@ return [
         'string' => 'El camp :attribute no pot superar els :max caràcters.',
     ],
     'attributes' => [
+        'expedient_type_id' => 'tipus d’expedient',
+        'status_id' => 'estat',
+        'requester_client_id' => 'client sol·licitant',
+        'represented_client_id' => 'client representat',
+        'description' => 'descripció',
         'permissions' => 'permisos',
         'role_ids' => 'identificadors de rols',
         'name' => 'nom',

@@ -42,4 +42,12 @@ return [
     'client_name_conflict' => 'Aquest nom de client ja es fa servir.',
     'client_referenced' => 'Un expedient fa referència a aquest client.',
     'client_deleted' => 'El client s’ha suprimit.',
+    'annual_sequence_exhausted' => 'La seqüència anual d’expedients s’ha esgotat.',
+    'annual_sequence_inconsistent' => 'La seqüència anual d’expedients requereix una revisió.',
+    'case_order_exhausted' => 'La columna de l’expedient no admet una altra posició o versió.',
+    'case_reference_invalid' => 'La referència seleccionada no existeix.',
+    'case_clients_distinct' => 'El sol·licitant i el client representat han de ser diferents.',
+    'case_description_too_long' => 'La descripció admet com a màxim 65.535 bytes UTF-8.',
+    'case_deleted' => 'L’expedient s’ha mogut a la paperera.',
+    'case_force_deleted' => 'L’expedient s’ha suprimit definitivament.',
 ];

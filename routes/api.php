@@ -43,6 +43,8 @@ Route::prefix('v1')->group(function (): void {
                 Route::delete('{client}', 'destroy')->whereNumber('client');
             });
         });
+        require __DIR__.'/expedients.php';
+
         Route::get('expedient-types', [CaseLookupController::class, 'types'])
             ->middleware(RequirePermission::class.':'.PermissionKey::ViewExpedientTypes->value);
         Route::get('statuses', [CaseLookupController::class, 'statuses'])

@@ -42,4 +42,12 @@ return [
     'client_name_conflict' => 'This client name is already in use.',
     'client_referenced' => 'This client is referenced by a case.',
     'client_deleted' => 'The client was deleted.',
+    'annual_sequence_exhausted' => 'This annual case sequence is exhausted.',
+    'annual_sequence_inconsistent' => 'The annual case sequence requires review.',
+    'case_order_exhausted' => 'The case column cannot accept another position or version.',
+    'case_reference_invalid' => 'The selected reference does not exist.',
+    'case_clients_distinct' => 'The requester and represented client must differ.',
+    'case_description_too_long' => 'The description may contain at most 65,535 UTF-8 bytes.',
+    'case_deleted' => 'The case was moved to trash.',
+    'case_force_deleted' => 'The case was permanently deleted.',
 ];

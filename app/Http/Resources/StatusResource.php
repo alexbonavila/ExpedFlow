@@ -13,7 +13,7 @@ final class StatusResource extends JsonResource
     /** @return array{id: int, name: string, position: int} */
     public function toArray(Request $request): array
     {
-        $translations = $this->name_translations;
+        $translations = $this->getAttributeValue('name_translations');
         $name = is_array($translations)
             ? (Arr::get($translations, app()->getLocale()) ?? Arr::get($translations, config()->string('app.fallback_locale')))
             : null;

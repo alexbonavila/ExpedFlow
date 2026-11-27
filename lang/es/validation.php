@@ -10,6 +10,7 @@ return [
     'list' => 'El campo :attribute debe ser una lista.',
     'distinct' => 'El campo :attribute contiene un valor duplicado.',
     'enum' => 'El campo :attribute contiene un valor no válido.',
+    'missing' => 'El campo :attribute no está disponible al guardar expedientes.',
     'present' => 'El campo :attribute debe estar presente.',
     'integer' => 'El campo :attribute debe ser un número entero.',
     'min' => [
@@ -21,6 +22,11 @@ return [
         'string' => 'El campo :attribute no debe superar los :max caracteres.',
     ],
     'attributes' => [
+        'expedient_type_id' => 'tipo de expediente',
+        'status_id' => 'estado',
+        'requester_client_id' => 'cliente solicitante',
+        'represented_client_id' => 'cliente representado',
+        'description' => 'descripción',
         'permissions' => 'permisos',
         'role_ids' => 'identificadores de roles',
         'name' => 'nombre',
