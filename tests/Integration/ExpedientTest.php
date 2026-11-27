@@ -5,6 +5,7 @@ use App\Models\Expedient;
 use App\Models\ExpedientSequence;
 use App\Models\ExpedientType;
 use App\Models\Status;
+use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -86,7 +87,7 @@ test('MySQL enforces mandatory requester and status, a distinct represented clie
         expect(fn () => DB::table('expedients')->where('id', $case->id)->update([$field => null]))
             ->toThrow(QueryException::class, $field);
     }
-    expect(fn () => $case->update(['represented_client_id' => $case->requester_client_id]))
+    expect(fn () => $case->forceFill(['represented_client_id' => $case->requester_client_id])->save())
         ->toThrow(QueryException::class, 'expedients_distinct_clients_check');
 
     expect(fn () => DB::table('expedients')->where('id', $case->id)->update(['year' => 1000, 'code' => '100000100']))
@@ -140,4 +141,9 @@ test('clients trim surrounding whitespace and ignore case and accents only for u
     expect(Client::factory()->create(['name' => 'Cafe Services'])->exists)->toBeTrue();
     expect(fn () => DB::table('clients')->insert(['name' => ' trailing ']))->toThrow(QueryException::class, 'clients_name_check');
     expect(fn () => Client::factory()->create(['name' => ' ']))->toThrow(QueryException::class, 'clients_name_check');
+});
+
+test('case write fields require explicit assignment by trusted code', function () {
+    expect(fn () => new Expedient(['code' => '202600105', 'status_id' => 1]))
+        ->toThrow(MassAssignmentException::class);
 });

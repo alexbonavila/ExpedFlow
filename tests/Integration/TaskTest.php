@@ -21,23 +21,23 @@ test('a task persists its single civil date and distinguishes all day from midni
     expect($task->scheduled_time)->toBeNull();
     expect($task->description)->toBeNull();
 
-    $task->update(['scheduled_date' => '2026-10-25']);
+    $task->forceFill(['scheduled_date' => '2026-10-25'])->save();
 
     expect($task->refresh()->scheduled_date)->toBeInstanceOf(CarbonImmutable::class);
     expect($task->toArray()['scheduled_date'])->toBe('2026-10-25');
     expect($task->scheduled_time)->toBeNull();
 
-    $task->update(['scheduled_time' => '00:00:00']);
+    $task->forceFill(['scheduled_time' => '00:00:00'])->save();
     expect($task->refresh()->scheduled_time)->toBe('00:00:00');
 
-    $task->update(['scheduled_time' => '23:59:59']);
+    $task->forceFill(['scheduled_time' => '23:59:59'])->save();
     expect($task->refresh()->scheduled_time)->toBe('23:59:59');
 });
 
 test('MySQL rejects a task time without a date or outside one calendar day', function (?string $date, string $time) {
     $task = Task::factory()->create();
 
-    expect(fn () => $task->update(['scheduled_date' => $date, 'scheduled_time' => $time]))
+    expect(fn () => $task->forceFill(['scheduled_date' => $date, 'scheduled_time' => $time])->save())
         ->toThrow(QueryException::class, 'tasks_schedule_check');
 })->with([
     'no date' => [null, '00:00:00'],

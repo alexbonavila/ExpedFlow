@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Database\Factories\ExpedientFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,11 +11,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable([
-    'code', 'year', 'sequence_number', 'expedient_type_id', 'requester_client_id',
-    'represented_client_id', 'status_id', 'name', 'description', 'column_position', 'column_version',
-    'samba_relative_path',
-])]
 #[Hidden(['samba_relative_path'])]
 class Expedient extends Model
 {

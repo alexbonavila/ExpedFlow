@@ -64,6 +64,6 @@ test('standalone incidents allow an unknown case and reject malformed historical
     expect($incident->expedient_code)->toBeNull();
     expect($incident->user_id)->toBeNull();
     expect($incident->context)->toBeNull();
-    expect(fn () => $incident->update(['expedient_code' => 'not-code']))
+    expect(fn () => $incident->forceFill(['expedient_code' => 'not-code'])->save())
         ->toThrow(QueryException::class, 'incidents_expedient_code_check');
 });

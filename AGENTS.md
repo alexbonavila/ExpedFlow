@@ -43,7 +43,7 @@ Code and documentation agree, relevant tests are reproducible, mandatory gates p
 - Create auxiliary branches only when strictly necessary. Prefer local branches and verify that a remote auxiliary branch can be removed before publishing it.
 - Integrate required, validated auxiliary changes into the implementation branch. Keep failed experiments and deliberate defects out of it.
 - Preserve relevant validation evidence, then remove auxiliary branches once their purpose is fulfilled. Leave no redundant or validation-only branches at phase closeout. Respect branches belonging to other contributors or ongoing work.
-- Keep shared history intact and follow main branch protection. Merge the final pull request only with explicit owner authorization.
+- Never force-push shared branches or bypass main branch protection. Merge the final pull request only with explicit owner authorization.
 - If remote branch deletion or pull request creation is unavailable, avoid unnecessary remote branches and document the exact manual operation.
 - At Phase C delivery, the phase-related remote branches should be `main` and `feat/database-schema-c` pending owner integration.
 

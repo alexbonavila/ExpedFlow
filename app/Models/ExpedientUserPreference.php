@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Database\Factories\ExpedientUserPreferenceFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'expedient_id', 'position', 'column_version', 'hidden'])]
 class ExpedientUserPreference extends Model
 {
     /** @use HasFactory<ExpedientUserPreferenceFactory> */

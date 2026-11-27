@@ -147,3 +147,25 @@ The first two hosted attempts used a container-side mount. The managed cloud rej
 ### Merged baseline verification
 
 The test, coverage and declaration gates passed on `main` at `f33b90f` in [run 45832019557](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832019557). The actual manual workflow at the same commit passed mutation, k6 and ZAP alongside the core tests. The authored local mutation baseline above measured 85.71% against the configured 80% minimum. [Manual extended run 45832795169](https://github.com/alexbonavila/ExpedFlow/actions/runs/45832795169)
+
+## Phase C database verification
+
+Run the existing guarded `composer test:database` suite on a dedicated MySQL 8.4 instance with named time zone data. The suite exercises the entire InnoDB schema from empty, rollback and rerun, and a Phase B upgrade and rollback with existing synthetic users and sessions. Schema-only tests use the same database guard before Laravel refreshes the schema or begins a test transaction. The migration lifecycle and row-lock tests use independent transactions or connections where needed.
+
+- Direct database tests cover mandatory and optional references, restrictive catalogs, dependent deletion, unique names and pivots, code format and range, civil dates and times, task order, boolean values and preference consistency.
+- Eloquent tests cover relationships, casts, guarded writes, translations, status seeding after catalog edits or deletions, synthetic factories and retained audit and incident references. The tests exercise persistence and leave business authorization, workflow coordination and audit recording to their assigned phases.
+- Two connections verify that an existing annual row can be locked for update. A competing write and a competing first insert each return MySQL lock-wait error 1205. The observer sees only committed data and a duplicate insert after the commit cannot reset the counter. Production allocation and retry behavior remain in Phase F.
+
+| Local Phase C check | Result |
+|---|---|
+| Full Pest suite on MySQL 8.4.13 | 68 tests and 457 assertions passed, including 37 database tests. |
+| Line and type coverage | 99.0% lines and 100% measurable types passed the existing gates. |
+| Mutation | 42 of 51 detected, 82.35%. Nine declarative mutations were uncovered. The existing 80% gate and scope were used. |
+| Composer validation, platform requirements, Pint and Larastan | Passed. |
+| Frontend lint, formatting, type checking, Vitest and Vite build | Passed. |
+| Playwright Chromium E2E and axe | One test passed in each run. The Firefox distribution returned HTTP 403 locally. Firefox and WebKit are pending hosted coverage. |
+| Existing k6 and passive ZAP checks | k6 p95 was 295.92 ms with 54 requests, 108 passing checks and zero HTTP failures. ZAP passed its report and risk gates. |
+| Dependency and secret checks | npm audit passed the High threshold and reported five moderate findings. Gitleaks detected no leaks. The Packagist advisory endpoint returned HTTP 403 for the Composer audit and the result requires hosted verification. |
+| Samba harness | The missing-mount guard passed. The full smoke needs the isolated Linux runner with sudo and CIFS helpers. |
+
+The existing **Phase B** workflow validates this candidate through a pull request to `main`. For extended candidate CI, open **Actions → Phase B → Run workflow**, choose `feat/database-schema-c` in the branch menu and select **Run workflow**. Verify that the selected head SHA matches the candidate and confirm both the extended jobs and the aggregate gate.

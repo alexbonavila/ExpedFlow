@@ -3,16 +3,14 @@
 namespace App\Models;
 
 use Database\Factories\IncidentFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'expedient_id', 'expedient_code', 'type', 'operation', 'message', 'context'])]
 #[Hidden(['context'])]
-#[Table(timestamps: false)]
+#[WithoutTimestamps]
 class Incident extends Model
 {
     /** @use HasFactory<IncidentFactory> */

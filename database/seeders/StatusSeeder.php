@@ -27,7 +27,7 @@ class StatusSeeder extends Seeder
                     'en' => Lang::get("statuses.$label", locale: 'en'),
                 ];
 
-                Status::query()->create([
+                Status::query()->forceCreate([
                     'name' => $translations['es'],
                     'name_translations' => $translations,
                     'position' => $offset + 1,

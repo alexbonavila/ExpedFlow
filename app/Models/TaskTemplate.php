@@ -3,13 +3,11 @@
 namespace App\Models;
 
 use Database\Factories\TaskTemplateFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['expedient_type_id', 'name', 'description', 'position'])]
 class TaskTemplate extends Model
 {
     /** @use HasFactory<TaskTemplateFactory> */

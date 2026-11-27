@@ -33,7 +33,7 @@ test('initialization seeds one localized ordered catalog and preserves later cus
 
     $edited = $statuses->first();
     $removed = $statuses->last();
-    $edited->update(['name' => 'Customized', 'name_translations' => null, 'position' => 50]);
+    $edited->forceFill(['name' => 'Customized', 'name_translations' => null, 'position' => 50])->save();
     $removed->delete();
 
     $this->seed(DatabaseSeeder::class);
@@ -113,14 +113,14 @@ test('case tags and personal preferences remain distinct and sparse per user', f
     expect(fn () => $case->tags()->attach($tag))->toThrow(UniqueConstraintViolationException::class);
     expect(fn () => ExpedientUserPreference::factory()->for($case)->for($user)->create())
         ->toThrow(UniqueConstraintViolationException::class);
-    expect(fn () => $hidden->update(['position' => 7]))
+    expect(fn () => $hidden->forceFill(['position' => 7])->save())
         ->toThrow(QueryException::class, 'expedient_user_preferences_state_check');
     expect(fn () => DB::table('expedient_user_preferences')->where('id', $hidden->id)->update(['hidden' => 2]))
         ->toThrow(QueryException::class, 'expedient_user_preferences_state_check');
 
     $tag->delete();
     $this->assertDatabaseMissing('expedient_tag', ['tag_id' => $tag->id]);
-    $case->update(['status_id' => Status::factory()->create()->id, 'column_version' => 2, 'column_position' => 100]);
+    $case->forceFill(['status_id' => Status::factory()->create()->id, 'column_version' => 2, 'column_position' => 100])->save();
     expect($ordered->refresh()->column_version)->toBe(1);
     expect($hidden->refresh()->hidden)->toBeTrue();
 

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Database\Factories\TaskFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['expedient_id', 'status_id', 'name', 'description', 'scheduled_date', 'scheduled_time', 'position'])]
 #[Hidden(['active_position', 'deleted_by_expedient'])]
 class Task extends Model
 {
@@ -24,7 +22,6 @@ class Task extends Model
     {
         return [
             'scheduled_date' => 'immutable_date:Y-m-d',
-            'scheduled_time' => 'string',
             'deleted_by_expedient' => 'boolean',
         ];
     }
