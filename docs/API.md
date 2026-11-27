@@ -136,3 +136,30 @@ Assigned roles are objects with `id` and `name` in ascending ID order. `permissi
 New accounts receive `user` atomically. Profile updates ignore role and permission input. Role replacement accepts an empty list for other accounts, including a disabled target, subject to the administrator membership invariant. Self-demotion and loss of the last active administrator are conflicts (`self_demotion`, `last_active_admin`). Changes apply on subsequent requests using existing SPA sessions and bearer tokens.
 
 The [Phase E OpenAPI fixture](../tests/Fixtures/phase-e-openapi.json) covers the authorization additions. The [Phase D fixture](../tests/Fixtures/phase-d-openapi.json) continues to define the existing identity operations. Phase E uses positive canonical integer path IDs within the server's integer range. Invalid IDs return 404.
+
+## Phase F clients, catalogs and cases
+
+All routes are under `/api/v1`. They use the existing Sanctum and active-identity requirements, the actor's locale, JSON and `Cache-Control: no-store`. Collections are complete arrays under `data`. There are no pagination parameters, links or totals.
+
+| Method and path | Permission and response |
+|---|---|
+| GET `/clients`, `/clients/{client}` | `clients.view`. List ordered by name, then ID, or a single client. |
+| POST `/clients`, PATCH `/clients/{client}` | `clients.manage`. Supply `name`, the only business field. The returned client has `id`, `name`, `created_at` and `updated_at`. POST returns 201. |
+| DELETE `/clients/{client}` | `clients.manage` and the catalog policy. Returns 200 with `message` and `code: client_deleted`. Any referenced client, including references from trash, returns 409. |
+| GET `/expedient-types` | `expedient-types.view`. Ordered by two-digit `code`, then ID. Each item has `id`, `name` and string `code`. |
+| GET `/statuses` | `statuses.view`. Ordered by `position`, then ID. Each item has `id`, localized `name` and `position`. Labels fall back to the configured locale, then the literal stored name. |
+| GET `/expedients`, `/expedients/{expedient}` | `expedients.view` via the case policy. Active cases only. All authorized users have global scope. |
+| POST `/expedients` | `expedients.create`. Returns a 201 case with its server-assigned code. |
+| PATCH `/expedients/{expedient}` | `expedients.update`. Returns the updated active case. Type changes retain its assigned code. Status changes append to the destination and increment the column version. |
+| DELETE `/expedients/{expedient}` | `expedients.delete`. Moves an active case and its active tasks to trash. Returns `message` and `code: case_deleted`. |
+| GET `/expedients/trash`, `/expedients/trash/{expedient}` | `expedients.restore` or an eligible `expedients.force-delete` grant. Trashed cases only. |
+| POST `/expedients/{expedient}/restore` | `expedients.restore`. Returns the active case after restoring the parent and its cascade-marked tasks. |
+| POST `/expedients/{expedient}/force-delete` | Reserved administrator with `expedients.force-delete`. Permanently removes a trashed case. Returns `message` and `code: case_force_deleted`. |
+
+Numeric path IDs use the canonical positive server integer range. Authorization precedes resource lookup. Wrong lifecycle scope, repeated actions and missing IDs return 404. Unauthorized callers receive 401 or 403 without confirmation of record existence. Valid session writes require CSRF. The error envelope also retains 419, 422, 429 where limited and safe 500 handling. Conflicts use `client_name_conflict`, `client_referenced`, `annual_sequence_exhausted`, `annual_sequence_inconsistent` or `case_order_exhausted` with localized messages. Invalid references, malformed input and an identical requester and represented client are field validation errors.
+
+Trim Unicode boundary whitespace from names and accept 1–255 characters. Internal spacing, case, accents and authored text are preserved. Client names are unique under the database's case- and accent-insensitive collation. Create requires `name`, `expedient_type_id`, `requester_client_id` and an explicit `status_id`. `description` and `represented_client_id` are optional and nullable. PATCH changes only supplied fields. The resulting client pair must differ, including on a partial update. Write IDs are positive JSON integers. Description is plain text, with a 65,535 UTF-8 byte limit from MySQL TEXT. Technical fields supplied by clients are ignored. Phase F rejects explicit `template_id`, `copy_template`, `tags`, `tag_ids`, `move`, `preferences` and `uploads` fields. Future template, tags, board and upload operations will receive their own contracts.
+
+Case responses contain numeric ID and foreign keys, string `code`, name, description, selected type, requester, represented client and localized status summaries, `column_position`, `column_version` and UTC ISO 8601 timestamps. Only trash includes `deleted_at`. The resource omits the storage path and hidden task markers. Active and trash lists accept ID equality filters for `status_id`, `expedient_type_id`, `requester_client_id` and `represented_client_id`. `q` matches a literal substring of name or code up to 255 characters. Sort by `code` (default), `name`, `created_at` or `column_position`. Use `direction=asc` (default) or `desc`. Ascending ID breaks ties. Personal board visibility has no effect on these lists.
+
+Install the shared status catalog through the existing seeder. Before H, creating cases requires a type already provisioned in the deployment database under owner control. Phase F exposes read-only lookups and ships no example types or clients. [Verified OpenAPI fixture](../tests/Fixtures/phase-f-openapi.json)

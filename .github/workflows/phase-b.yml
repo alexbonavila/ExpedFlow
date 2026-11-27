@@ -14,7 +14,7 @@ on:
         description: Number of isolated mutation runners
         type: choice
         options: ['4', '8']
-        default: '4'
+        default: '8'
 
 permissions:
   contents: read
@@ -331,7 +331,7 @@ jobs:
           memory-limit: 512M
       - id: plan
         env:
-          SHARD_COUNT: ${{ inputs.mutation_shards || '4' }}
+          SHARD_COUNT: ${{ inputs.mutation_shards || '8' }}
         run: |
           mkdir -p test-results/mutation
           python3 scripts/testing/mutation.py plan test-results/mutation/plan.json "$SHARD_COUNT"

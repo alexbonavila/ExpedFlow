@@ -216,3 +216,17 @@ XDEBUG_MODE=coverage php -d memory_limit=512M vendor/bin/pest --mutate --path=ap
 Use `python3 -B -m unittest discover -s scripts/testing -p test_mutation.py` to verify the planner, global score and gate failures. The tests cover invalid and incomplete inventories, missing shards, duplicates, stale configuration, failed processes, infrastructure failures, timeouts and below-threshold scores. Hosted jobs use the unchanged 90% line, 100% measurable type and 80% mutation minima and the complete existing test suites. The sequential Composer command remains available for an explicitly needed reference investigation.
 
 Initiate the candidate's hosted checks and record exact URLs and SHA. Let long-running jobs finish independently and use specific failure evidence or owner follow-up to resume investigation. See CI.md for artifact interpretation and the workflow filename transition.
+
+## Phase F requirement-to-test matrix
+
+| Requirements | Evidence |
+|---|---|
+| R02 and F04 authorization | `ExpedientApiTest` exercises global scope, separate permissions, disabled and revoked credentials, JSON denial before ID disclosure and genuine SPA CSRF. `ExpedientContentionTest` checks an admitted writer after concurrent grant, token and database-session revocation. |
+| R03 and F02 clients | `ClientCatalogTest` covers Unicode boundaries, length, duplicates, self-update, both reference roles and deleted case references. `ExpedientContentionTest` covers concurrent duplicate inserts and the MySQL reference backstop. |
+| R04 and F03 annual numbering | `ExpedientApiTest` covers leading zeros, two types, Madrid midnight rollover, immutable fields, reclassification, invalid references and rollback. `ExpedientContentionTest` blocks a second connection on the same first-year and final-slot annual row. `ExpedientLifecycleTest` verifies non-reuse after physical deletion. |
+| R06, R07 and F05 order | `ClientCatalogTest` covers localized status fallback and type ordering. `ExpedientApiTest` verifies destination append, no-op edits, version changes and preserved hidden flags and task state. `ExpedientContentionTest` verifies concurrent moves allocate distinct positions. H owns personal placement and reorder interactions. |
+| R09 and F06 lifecycle | `ExpedientLifecycleTest` covers active/trash scope, repeated cycles, independent deletions, restored positions and collisions, rollback, retained relations, and admin-only FK cascades with preserved history. `ExpedientContentionTest` covers an independent child writer blocked on the parent. G must apply that contract to real task routes. |
+| R10 and R11 boundaries | `ExpedientLifecycleTest` verifies retained storage contents, incident snapshots and audit rows in the case lifecycle. I owns real provisioning and failure recovery. J owns audit event recording and cleanup. |
+| R12 and F08 contracts and CI | `PhaseFContractTest` validates live responses against the new OpenAPI fixture and retains earlier suites. `ExpedientApiTest` checks complete lists and bounded relation queries. Existing mutation planner and aggregate tests verify both worker options and the required gate. |
+
+Use the guarded MySQL connection before destructive tests. Full mutation verification runs in the hosted matrix. Phase F tests use synthetic data and independent database processes with query barriers for contention.

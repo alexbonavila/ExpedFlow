@@ -10,6 +10,7 @@ return [
     'list' => 'The :attribute must be a list.',
     'distinct' => 'The :attribute has a duplicate value.',
     'enum' => 'The :attribute has an invalid value.',
+    'missing' => 'The :attribute field is unavailable for case writes.',
     'present' => 'The :attribute must be present.',
     'integer' => 'The :attribute must be an integer.',
     'min' => [
@@ -21,6 +22,11 @@ return [
         'string' => 'The :attribute must not exceed :max characters.',
     ],
     'attributes' => [
+        'expedient_type_id' => 'case type',
+        'status_id' => 'status',
+        'requester_client_id' => 'requesting client',
+        'represented_client_id' => 'represented client',
+        'description' => 'description',
         'permissions' => 'permissions',
         'role_ids' => 'role IDs',
         'name' => 'name',
