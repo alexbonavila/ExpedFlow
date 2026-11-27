@@ -19,4 +19,12 @@ return [
     'logged_out' => 'You have been signed out.',
     'password_bytes' => 'The password must not exceed 72 bytes with bcrypt.',
     'password_unsupported' => 'The password contains an unsupported character.',
+    'recovery_requested' => 'If the account is eligible, a password recovery email will be sent.',
+    'invalid_reset_token' => 'The password recovery link is invalid or expired.',
+    'password_reset' => 'Your password has been changed. Sign in again.',
+    'recovery_subject' => 'Reset your ExpedFlow password',
+    'recovery_intro' => 'We received a request to reset your ExpedFlow password.',
+    'recovery_action' => 'Reset password',
+    'recovery_expiry' => 'This link expires after :minutes minutes.',
+    'recovery_ignore' => 'If you did not request a password reset, you can ignore this email.',
 ];
