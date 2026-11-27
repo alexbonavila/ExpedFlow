@@ -98,3 +98,7 @@ Phase E.1 continued on `feat/authorization-roles-e` and PR #12. It introduces is
 ## Phase F clients and cases
 
 Phase F implements client and case routes, read-only lookups, annual numbering, transactional parent lifecycle and a shared status-order foundation on `feat/clients-expedients-f`. The API and architecture documents specify the contracts for later parallel G/H/I development. Owner acceptance and protected integration follow hosted validation on the exact candidate. A separate authorized maintenance change can then rename the workflow file while retaining `quality-gate`.
+
+## Phase G tasks, assignments, comments and checklists
+
+Phase G starts from accepted Phase F integration `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b` via PR #13. G01–G08 land on `feat/tasks-g` with task CRUD, shared status order, task assignments, comment trash, checklists, independent task lifecycle and the actor's task calendar. The Phase G API fixture supports the isolated review. Phase H owns shared catalog and template copy, Phase I owns storage and incidents, Phase J owns auditing and K consolidates the API. Owner acceptance follows hosted validation and cross-phase reconciliation of shared routes and documentation. Run combined parent-lock, status, template, lifecycle and storage regressions with the required gates before integration.

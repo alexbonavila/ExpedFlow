@@ -2,7 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "ExpedFlow Phase G task API",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "description": "Unpaginated task and calendar operations for authenticated active users. Session mutations require the first-party CSRF token."
   },
   "paths": {
     "/api/v1/expedients/{expedient}/tasks": {
@@ -2548,6 +2549,25 @@
           }
         }
       }
+    },
+    "securitySchemes": {
+      "spaSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "expedflow-session"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
     }
-  }
+  },
+  "security": [
+    {
+      "spaSession": []
+    },
+    {
+      "bearerAuth": []
+    }
+  ]
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Support\AuthorizationInput;
 use App\Support\TaskInput;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -12,7 +11,7 @@ final class TaskRequest extends FormRequest
     /** @return array<string, mixed> */
     public function validationData(): array
     {
-        $input = AuthorizationInput::fields($this);
+        $input = TaskInput::fields($this);
         if (is_string($input['name'] ?? null)) {
             $input['name'] = Str::trim($input['name']);
         }

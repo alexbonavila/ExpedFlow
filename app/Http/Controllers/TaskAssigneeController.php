@@ -54,7 +54,7 @@ final class TaskAssigneeController extends Controller
             foreach ($desired as $userId) {
                 $user = $users->get($userId);
                 if ($user === null || ($user->disabled_at !== null && ! in_array($userId, $existing, true))) {
-                    throw ValidationException::withMessages(['user_ids' => __('identity.task_assignee_invalid')]);
+                    throw ValidationException::withMessages(['user_ids' => __('tasks.task_assignee_invalid')]);
                 }
             }
 

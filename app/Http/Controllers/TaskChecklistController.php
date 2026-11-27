@@ -84,7 +84,7 @@ final class TaskChecklistController extends Controller
             }
         });
 
-        return response()->json(['message' => __('identity.task_checklist_deleted'), 'code' => 'task_checklist_deleted']);
+        return response()->json(['message' => __('tasks.task_checklist_deleted'), 'code' => 'task_checklist_deleted']);
     }
 
     public function reorder(TaskChecklistOrderRequest $request, string $task): AnonymousResourceCollection

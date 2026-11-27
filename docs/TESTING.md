@@ -230,3 +230,18 @@ Initiate the candidate's hosted checks and record exact URLs and SHA. Let long-r
 | R12 and F08 contracts and CI | `PhaseFContractTest` validates live responses against the new OpenAPI fixture and retains earlier suites. `ExpedientApiTest` checks complete lists and bounded relation queries. Existing mutation planner and aggregate tests verify both worker options and the required gate. |
 
 Use the guarded MySQL connection before destructive tests. Full mutation verification runs in the hosted matrix. Phase F tests use synthetic data and independent database processes with query barriers for contention.
+
+## Phase G requirement-to-test matrix
+
+| Requirement | Evidence |
+| --- | --- |
+| R02 identity and permissions | `TaskApiTest`, `TaskAssigneeTest`, `TaskCommentTest`, `TaskChecklistTest`, `TaskLifecycleTest` and `PhaseGContractTest` cover policy scope, custom grants, disabled and roleless users, bearer authentication, real session CSRF and localized errors. `TaskContentionTest` covers grant and credential revocation after request admission. |
+| R05, R06 and R07 tasks and shared order | `TaskApiTest` covers allowlisted writes, explicit status, strict civil values, date/time combination, shared ordering, rank overflow and rollback. `TaskContentionTest` covers competing moves and appends. |
+| R05 assignments, comments and checklist | The corresponding feature suites cover assignment replacement, disabled users and rollback, peer comment edits with original author, comment trash, and checklist ordering and completion. `TaskContentionTest` checks replacement, disable and stale checklist membership in separate MySQL processes. |
+| R08 scope and calendar | `TaskCalendarTest` covers private calendar scope, shared assignments, date filters, missing dates, null time versus midnight, personal board preferences, and deleted cases or tasks. |
+| R09 lifecycle | `TaskLifecycleTest` covers repeated case cycles with actual task API writes, position reuse, preserved descendants, independent trash and FK cascades. `TaskContentionTest` covers active parent checks for all task-writing paths and a task creation that commits before deletion. |
+| R11 audit handoff and R12 API | `TaskCommentTest` verifies actor and author behavior. `PhaseGContractTest` validates live request and response shapes against the OpenAPI fixture. Centralized event recording and retention stay with J. |
+
+Guard the dedicated MySQL schema before Pest. The full local coverage run executes Feature, Integration, Contract, Architecture and Unit in one pass. The browser, accessibility, Samba, mutation, security and load gates run in hosted CI.
+
+The Phase G local regression passed 239 tests and 2,874 assertions with 98.7% line coverage and 100% measurable type coverage. The guarded run used `APP_ENV=testing php tests/Support/check-database.php`, then `XDEBUG_MODE=coverage php -d memory_limit=512M vendor/bin/pest --coverage --min=90 --coverage-clover=coverage/clover.xml --log-junit=test-results/phpunit.xml`. Composer strict validation, Pint, Larastan level 8, `composer test:types` and all 14 mutation-tooling unit tests passed. The full run included the database and contract suites.

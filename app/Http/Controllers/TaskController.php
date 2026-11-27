@@ -136,7 +136,7 @@ final class TaskController extends Controller
         $date = array_key_exists('scheduled_date', $fields) ? $fields['scheduled_date'] : $task?->scheduled_date;
         $time = array_key_exists('scheduled_time', $fields) ? $fields['scheduled_time'] : $task?->scheduled_time;
         if ($date === null && $time !== null) {
-            throw ValidationException::withMessages(['scheduled_time' => __('identity.task_time_requires_date')]);
+            throw ValidationException::withMessages(['scheduled_time' => __('tasks.task_time_requires_date')]);
         }
 
         return $fields;

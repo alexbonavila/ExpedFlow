@@ -42,7 +42,7 @@ test('task creation and partial updates preserve authored text and strict civil 
     $case = Expedient::factory()->create();
     $list = "/api/v1/expedients/{$case->id}/tasks";
     $input = ['name' => " \u{2003}Task  A\u{00A0}", 'status_id' => $case->status_id];
-    $this->api('POST', $list, [], $headers)->assertUnprocessable()->assertJsonValidationErrors(['name', 'status_id']);
+    $this->api('POST', $list, ['id' => 999999], $headers)->assertUnprocessable()->assertJsonValidationErrors(['name', 'status_id']);
     foreach ([
         ['name' => "\u{00A0}"],
         ['description' => str_repeat('é', 32768)],
@@ -143,4 +143,20 @@ test('order exhaustion and a failed second pass leave the entire MySQL column un
     });
     $this->api('POST', $move, $input, $headers)->assertInternalServerError()->assertJsonPath('code', 'server_error');
     expect($a->fresh()->position)->toBe(4)->and($b->fresh()->position)->toBe(1);
+});
+
+test('failed task insertion and an exhausted destination leave existing tasks unchanged', function (): void {
+    $headers = $this->authorizationBearer(User::factory()->create(['locale' => 'es'])->assignRole('user'));
+    $case = Expedient::factory()->create();
+    $task = Task::factory()->for($case)->create(['status_id' => $case->status_id, 'position' => PHP_INT_MAX]);
+    $root = "/api/v1/expedients/{$case->id}/tasks";
+    $input = ['name' => 'Blocked task', 'status_id' => $case->status_id];
+    $this->api('POST', $root, $input, $headers)->assertConflict()
+        ->assertJsonPath('message', 'No hay ninguna posición disponible para la tarea.')
+        ->assertJsonPath('code', 'task_order_exhausted');
+    $alternate = Status::factory()->create();
+    Task::creating(fn (): bool => false);
+    $this->api('POST', $root, ['status_id' => $alternate->id] + $input, $headers)->assertInternalServerError()
+        ->assertJsonPath('code', 'server_error');
+    expect($case->tasks()->sole()->id)->toBe($task->id);
 });

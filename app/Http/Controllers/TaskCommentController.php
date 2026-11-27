@@ -92,7 +92,7 @@ final class TaskCommentController extends Controller
         $this->change($request, $task, $comment, PermissionKey::DeleteTaskComments, 'delete',
             fn (TaskComment $entry): ?bool => $entry->delete());
 
-        return response()->json(['message' => __('identity.task_comment_deleted'), 'code' => 'task_comment_deleted']);
+        return response()->json(['message' => __('tasks.task_comment_deleted'), 'code' => 'task_comment_deleted']);
     }
 
     public function restore(Request $request, string $task, string $comment): TaskCommentResource
@@ -108,7 +108,7 @@ final class TaskCommentController extends Controller
         $this->change($request, $task, $comment, PermissionKey::ForceDeleteTaskComments, 'forceDelete',
             fn (TaskComment $entry): ?bool => $entry->forceDelete(), trashed: true);
 
-        return response()->json(['message' => __('identity.task_comment_force_deleted'), 'code' => 'task_comment_force_deleted']);
+        return response()->json(['message' => __('tasks.task_comment_force_deleted'), 'code' => 'task_comment_force_deleted']);
     }
 
     /** @param Closure(TaskComment): (bool|null) $operation */

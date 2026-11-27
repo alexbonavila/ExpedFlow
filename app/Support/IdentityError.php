@@ -44,7 +44,8 @@ final class IdentityError extends HttpException
         };
 
         $locale = $request->attributes->get('identity.locale');
-        $body = ['message' => __('identity.'.$code, locale: is_string($locale) ? $locale : null), 'code' => $code];
+        $translations = str_starts_with($code, 'task_') ? 'tasks' : 'identity';
+        $body = ['message' => __($translations.'.'.$code, locale: is_string($locale) ? $locale : null), 'code' => $code];
         if ($exception instanceof ValidationException) {
             $body['errors'] = $exception->errors();
         }

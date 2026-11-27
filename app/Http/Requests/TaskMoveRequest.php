@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Support\AuthorizationInput;
+use App\Support\TaskInput;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class TaskMoveRequest extends FormRequest
@@ -10,7 +10,7 @@ final class TaskMoveRequest extends FormRequest
     /** @return array<string, mixed> */
     public function validationData(): array
     {
-        return AuthorizationInput::fields($this);
+        return TaskInput::fields($this);
     }
 
     /** @return array<string, list<string>> */

@@ -56,7 +56,7 @@ final class TaskLifecycleController extends Controller
             }
         });
 
-        return response()->json(['message' => __('identity.task_deleted'), 'code' => 'task_deleted']);
+        return response()->json(['message' => __('tasks.task_deleted'), 'code' => 'task_deleted']);
     }
 
     public function restore(Request $request, string $task): TaskResource
@@ -105,7 +105,7 @@ final class TaskLifecycleController extends Controller
             }
         });
 
-        return response()->json(['message' => __('identity.task_force_deleted'), 'code' => 'task_force_deleted']);
+        return response()->json(['message' => __('tasks.task_force_deleted'), 'code' => 'task_force_deleted']);
     }
 
     private function trashCase(string $expedient): Expedient

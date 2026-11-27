@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Expedient;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
@@ -25,7 +26,7 @@ final class TaskOrdering
     }
 
     /** @param Collection<int, Task> $column */
-    public function appendPosition(Collection $column): int
+    private function appendPosition(Collection $column): int
     {
         return $this->increment($column->max('position') ?? 0);
     }
@@ -50,7 +51,13 @@ final class TaskOrdering
     {
         $position = $this->appendPosition($this->lockColumns($case, $statusId));
 
-        return $case->tasks()->forceCreate(['status_id' => $statusId, 'position' => $position] + $fields);
+        $task = $case->tasks()->forceCreate(['status_id' => $statusId, 'position' => $position]
+            + Arr::only($fields, ['name', 'description', 'scheduled_date', 'scheduled_time']));
+        if (! $task->exists) {
+            throw new RuntimeException('Task creation did not complete.');
+        }
+
+        return $task;
     }
 
     /**
@@ -73,7 +80,7 @@ final class TaskOrdering
         }
 
         if ($index > $ordered->count() + 1) {
-            throw ValidationException::withMessages(['position' => __('identity.task_position_invalid')]);
+            throw ValidationException::withMessages(['position' => __('tasks.task_position_invalid')]);
         }
         $ordered->splice($index - 1, 0, [$task]);
         if ($destination->modelKeys() === $ordered->modelKeys()) {
