@@ -7,6 +7,10 @@ use App\Http\Requests\ExpedientRequest;
 use App\Http\Resources\ExpedientResource;
 use App\Models\Expedient;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
+use App\Support\Audit\AuditSubject;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\ExpedientLifecycle;
@@ -29,6 +33,7 @@ final class ExpedientController extends Controller
         private readonly BusinessWrite $write,
         private readonly ExpedientWriter $writer,
         private readonly ExpedientLifecycle $lifecycle,
+        private readonly AuditRecorder $audit,
     ) {}
 
     public function index(ExpedientIndexRequest $request): AnonymousResourceCollection
@@ -62,7 +67,14 @@ final class ExpedientController extends Controller
         $input = $request->validated();
         try {
             $case = $this->write->run($request, PermissionKey::CreateExpedients,
-                fn (User $actor): Expedient => $storage->reserve($this->writer->create($actor, $input))->load(ExpedientResource::RELATIONS));
+                function (User $actor, AuditContext $context) use ($storage, $input): Expedient {
+                    $case = $storage->reserve($this->writer->create($actor, $input, $context));
+                    $this->audit->record($context, AuditEvent::CaseCreated, $case,
+                        after: AuditSubject::CaseRecord->snapshot($case) + ['state' => 'active'],
+                        metadata: ['storage_reserved' => true]);
+
+                    return $case->load(ExpedientResource::RELATIONS);
+                });
         } catch (QueryException $exception) {
             if (! str_contains($exception->getSql(), 'samba_relative_path')) {
                 throw $exception;
@@ -81,7 +93,7 @@ final class ExpedientController extends Controller
         $id = AuthorizationInput::identifier($expedient);
         $input = $request->validated();
         $case = $this->write->run($request, PermissionKey::UpdateExpedients,
-            fn (User $actor): Expedient => $this->writer->update($actor, $id, $input)->load(ExpedientResource::RELATIONS));
+            fn (User $actor, AuditContext $context): Expedient => $this->writer->update($actor, $id, $input, $context)->load(ExpedientResource::RELATIONS));
 
         return new ExpedientResource($case);
     }
@@ -89,7 +101,7 @@ final class ExpedientController extends Controller
     public function destroy(Request $request, string $expedient): JsonResponse
     {
         $id = AuthorizationInput::identifier($expedient);
-        $this->write->run($request, PermissionKey::DeleteExpedients, fn (User $actor) => $this->lifecycle->delete($actor, $id));
+        $this->write->run($request, PermissionKey::DeleteExpedients, fn (User $actor, AuditContext $context) => $this->lifecycle->delete($actor, $id, $context));
 
         return response()->json(['message' => __('identity.case_deleted'), 'code' => 'case_deleted']);
     }
@@ -98,7 +110,7 @@ final class ExpedientController extends Controller
     {
         $id = AuthorizationInput::identifier($expedient);
         $case = $this->write->run($request, PermissionKey::RestoreExpedients,
-            fn (User $actor): Expedient => $this->lifecycle->restore($actor, $id)->load(ExpedientResource::RELATIONS));
+            fn (User $actor, AuditContext $context): Expedient => $this->lifecycle->restore($actor, $id, $context)->load(ExpedientResource::RELATIONS));
 
         return new ExpedientResource($case);
     }
@@ -106,7 +118,7 @@ final class ExpedientController extends Controller
     public function forceDelete(Request $request, string $expedient): JsonResponse
     {
         $id = AuthorizationInput::identifier($expedient);
-        $this->write->run($request, PermissionKey::ForceDeleteExpedients, fn (User $actor) => $this->lifecycle->forceDelete($actor, $id));
+        $this->write->run($request, PermissionKey::ForceDeleteExpedients, fn (User $actor, AuditContext $context) => $this->lifecycle->forceDelete($actor, $id, $context));
 
         return response()->json(['message' => __('identity.case_force_deleted'), 'code' => 'case_force_deleted']);
     }

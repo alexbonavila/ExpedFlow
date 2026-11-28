@@ -9,12 +9,16 @@ use App\Models\TaskChecklistItem;
 use App\Models\TaskTemplate;
 use App\Models\TaskTemplateChecklistItem;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
+use App\Support\Audit\AuditSubject;
 use Illuminate\Support\Facades\Gate;
 use RuntimeException;
 
 final class TemplateCopier
 {
-    public function __construct(private readonly EffectivePermissions $permissions) {}
+    public function __construct(private readonly EffectivePermissions $permissions, private readonly AuditRecorder $audit) {}
 
     public function authorize(User $actor): void
     {
@@ -29,7 +33,7 @@ final class TemplateCopier
     }
 
     /** The caller holds the selected status and type locks in the case creation transaction. */
-    public function copy(User $actor, Expedient $case, ExpedientType $type, int $status): void
+    public function copy(User $actor, Expedient $case, ExpedientType $type, int $status, AuditContext $context): void
     {
         $gate = Gate::forUser($actor);
         $gate->authorize('viewAny', [TaskTemplate::class, $type]);
@@ -40,6 +44,7 @@ final class TemplateCopier
             ->orderBy('id')->sharedLock()->get()
             ->sortBy([['position', 'asc'], ['id', 'asc']])->groupBy('task_template_id');
 
+        $checklistCount = 0;
         foreach ($templates->sortBy([['position', 'asc'], ['id', 'asc']])->values() as $index => $template) {
             $task = $case->tasks()->forceCreate([
                 'name' => $template->name,
@@ -50,6 +55,10 @@ final class TemplateCopier
             if (! $task->exists) {
                 throw new RuntimeException('Copied task persistence did not complete.');
             }
+
+            $this->audit->record($context, AuditEvent::TaskCopied, $task,
+                after: AuditSubject::Task->snapshot($task) + ['state' => 'active'], case: $case,
+                metadata: ['template_id' => $template->id]);
 
             $checklist = $items->get($template->id);
             if ($checklist === null) {
@@ -66,7 +75,17 @@ final class TemplateCopier
                 if (! $copy->exists) {
                     throw new RuntimeException('Copied checklist item persistence did not complete.');
                 }
+                $checklistCount++;
+                $this->audit->record($context, AuditEvent::ChecklistCopied, $copy,
+                    after: AuditSubject::Checklist->snapshot($copy), case: $case,
+                    metadata: ['task_id' => $task->id, 'source_item_id' => $item->id]);
             }
+        }
+        if ($templates->isNotEmpty()) {
+            $this->audit->record($context, AuditEvent::CaseTemplatesCopied, $case, metadata: [
+                'status_id' => $status, 'case_type_id' => $type->id,
+                'task_count' => $templates->count(), 'checklist_count' => $checklistCount,
+            ]);
         }
     }
 }

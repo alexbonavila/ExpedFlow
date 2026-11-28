@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\StatusResource;
 use App\Models\Expedient;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\CatalogInput;
@@ -59,7 +60,7 @@ final class PersonalKanbanController extends Controller
         $status = Arr::integer($fields, 'status_id');
         $position = isset($fields['position']) ? Arr::integer($fields, 'position') : null;
         $data = $this->write->run($request, PermissionKey::ManagePersonalKanban,
-            fn (User $actor): array => $this->kanban->move($actor, $id, $status, $position));
+            fn (User $actor, AuditContext $context): array => $this->kanban->move($actor, $id, $status, $position, $context));
 
         return response()->json(['data' => $data]);
     }

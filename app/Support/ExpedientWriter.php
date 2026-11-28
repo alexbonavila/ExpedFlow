@@ -7,6 +7,10 @@ use App\Models\Expedient;
 use App\Models\ExpedientType;
 use App\Models\Status;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
+use App\Support\Audit\AuditSubject;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -19,10 +23,11 @@ final class ExpedientWriter
         private readonly CaseOrdering $ordering,
         private readonly ExpedientLifecycle $lifecycle,
         private readonly TemplateCopier $templates,
+        private readonly AuditRecorder $audit,
     ) {}
 
     /** @param array<string, mixed> $input Validated case fields from the protected write transaction. */
-    public function create(User $actor, array $input): Expedient
+    public function create(User $actor, array $input, ?AuditContext $context = null): Expedient
     {
         Gate::forUser($actor)->authorize('create', Expedient::class);
         $templateStatus = null;
@@ -45,14 +50,14 @@ final class ExpedientWriter
         ]);
         $this->save($case);
         if ($templateStatus !== null) {
-            $this->templates->copy($actor, $case, $type, $templateStatus);
+            $this->templates->copy($actor, $case, $type, $templateStatus, $context ?? AuditContext::authenticated($actor));
         }
 
         return $case;
     }
 
     /** @param array<string, mixed> $input Validated partial case fields from the protected write transaction. */
-    public function update(User $actor, int $id, array $input): Expedient
+    public function update(User $actor, int $id, array $input, AuditContext $context): Expedient
     {
         $case = $this->lifecycle->lockParent($id);
         Gate::forUser($actor)->authorize('update', $case);
@@ -61,6 +66,7 @@ final class ExpedientWriter
         $data = Arr::only($input, ['name', 'description', 'expedient_type_id', 'requester_client_id', 'represented_client_id', 'status_id']);
         $this->lockReferences($data + $case->only(['expedient_type_id', 'requester_client_id', 'represented_client_id']));
 
+        $before = AuditSubject::CaseRecord->snapshot($case);
         $case->forceFill($data);
         if ($case->isDirty('status_id')) {
             $case->forceFill([
@@ -69,6 +75,7 @@ final class ExpedientWriter
             ]);
         }
         $this->save($case);
+        $this->audit->record($context, AuditEvent::CaseUpdated, $case, $before, AuditSubject::CaseRecord->snapshot($case));
 
         return $case;
     }

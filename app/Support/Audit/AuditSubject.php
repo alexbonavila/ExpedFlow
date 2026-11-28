@@ -60,7 +60,7 @@ enum AuditSubject: string
             self::CaseRecord => [
                 'name' => 'text', 'code' => 'case_code', 'description' => 'redact', 'expedient_type_id' => 'id',
                 'requester_client_id' => 'id', 'represented_client_id' => 'id', 'status_id' => 'id',
-                'position' => 'id', 'state' => 'state', 'tags' => 'ids',
+                'column_position' => 'id', 'state' => 'state', 'tags' => 'ids',
             ],
             self::Task => [
                 'name' => 'text', 'description' => 'redact', 'expedient_id' => 'id', 'status_id' => 'id',

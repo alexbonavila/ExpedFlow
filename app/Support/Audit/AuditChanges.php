@@ -62,6 +62,7 @@ final class AuditChanges
             },
             'ids' => self::items($value, self::id(...)),
             'permissions' => self::items($value, self::permission(...)),
+            'assignment_pairs' => self::items($value, fn (mixed $pair): string => self::matching($pair, '/\A[1-9][0-9]{0,19}:[1-9][0-9]{0,19}\z/')),
             'labels' => self::labels($value),
             'state' => in_array($value, ['active', 'trashed', 'deleted'], true) ? $value : throw new LogicException('Invalid audit state.'),
             default => throw new LogicException('Unknown audit field type.'),

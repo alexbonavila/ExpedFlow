@@ -6,6 +6,7 @@ use App\Models\Expedient;
 use App\Models\ExpedientUserPreference;
 use App\Models\Status;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -72,7 +73,7 @@ final class PersonalKanban
     }
 
     /** @return array{expedient_id: int, position: int, hidden: bool, status_id: int} */
-    public function move(User $actor, int $id, int $destination, ?int $position): array
+    public function move(User $actor, int $id, int $destination, ?int $position, AuditContext $context): array
     {
         $gate = Gate::forUser($actor);
         $gate->authorize('viewAny', Expedient::class);
@@ -106,7 +107,7 @@ final class PersonalKanban
         }
 
         // Retain the locked pre-move models for ordering and let F acquire reference locks before preferences.
-        $moved = $changed ? $this->writer->update($actor, $id, ['status_id' => $destination]) : $case;
+        $moved = $changed ? $this->writer->update($actor, $id, ['status_id' => $destination], $context) : $case;
         $preferences = ExpedientUserPreference::query()->where('user_id', $actor->id)->whereIn('expedient_id', $ids)
             ->orderBy('id')->lockForUpdate()->get()->keyBy('expedient_id');
 

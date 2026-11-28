@@ -120,7 +120,8 @@ final class AuditRecorder
             'author_id' => 'id', 'task_id' => 'id', 'template_id' => 'id', 'status_id' => 'id',
             'case_type_id' => 'id', 'task_count' => 'id', 'checklist_count' => 'id', 'part' => 'id', 'parts' => 'id',
             'credentials_revoked' => 'flag', 'storage_reserved' => 'flag',
-            'confirmed' => 'flag', 'added_ids' => 'ids', 'removed_ids' => 'ids',
+            'confirmed' => 'flag', 'task_ids' => 'ids', 'comment_ids' => 'ids',
+            'checklist_ids' => 'ids', 'assignment_pairs' => 'assignment_pairs', 'source_item_id' => 'id', 'added_ids' => 'ids', 'removed_ids' => 'ids',
             'added_permissions' => 'permissions', 'removed_permissions' => 'permissions',
         ];
 

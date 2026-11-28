@@ -27,6 +27,9 @@ enum AuditEvent: string
     case CaseRestored = 'case.restored';
     case CaseForceDeleted = 'case.force_deleted';
     case CaseTemplatesCopied = 'case.templates_copied';
+    case CaseTasksDeleted = 'case.tasks_deleted';
+    case CaseDescendantsRemoved = 'case.descendants_removed';
+    case TaskDescendantsRemoved = 'task.descendants_removed';
     case CaseTagsChanged = 'case.tags_changed';
     case TaskCreated = 'task.created';
     case TaskUpdated = 'task.updated';
