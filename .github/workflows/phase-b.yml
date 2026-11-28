@@ -345,7 +345,7 @@ jobs:
 
   mutation-shards:
     runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    timeout-minutes: 90
     needs: mutation-plan
     if: github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     strategy:

@@ -193,7 +193,7 @@ Composer caches only locked distribution archives. npm caches only registry down
 
 The display name and concurrency prefix are now `ExpedFlow CI` and `expedflow-ci`. The required check retains the exact name `quality-gate`. Phase E.1 retains `.github/workflows/phase-b.yml` in PR #12 so GitHub can dispatch an existing default-branch workflow on the candidate ref. The obsolete Phase B feature-branch push trigger is removed.
 
-For the Phase F candidate, dispatch `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/clients-expedients-f -f mutation_shards=8`. The default for manual, scheduled and release events is eight. Manual dispatch also accepts four. The PR triggers core CI. Record both run URLs and the exact SHA, then leave the runs to finish independently. After a failed partial rerun, start a fresh dispatch so all mutation artifacts share one attempt.
+For the Phase F candidate, dispatch `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/clients-expedients-f -f mutation_shards=8`. The default for manual, scheduled and release events is eight. Manual dispatch also accepts four. The PR triggers core CI. Record both run URLs and the exact SHA, then leave the runs to finish independently. When extended mutation validation fails or is cancelled, start a fresh workflow dispatch on the intended candidate. The planner and every worker must share the same run ID and attempt. GitHub's failed-job rerun can reuse an earlier attempt's planner artifact, which the worker rejects before executing mutations.
 
 After owner-approved Phase F integration, complete the filename transition in an authorized follow-up by running `git mv .github/workflows/phase-b.yml .github/workflows/ci.yml` and updating the current dispatch instructions. Keep the workflow definition and job name `quality-gate` during that move. Check the renamed workflow's PR gate, then after its authorized integration dispatch `gh workflow run ci.yml --repo alexbonavila/ExpedFlow --ref main` and verify the new workflow's extended job results. Preserve historical workflow and run references.
 
@@ -230,3 +230,10 @@ Phase H retains `.github/workflows/phase-b.yml`, its triggers, the protected `qu
 Protected main at `fdc75e2e251f736e5054382f4eddb9b8cc6298ab` already includes Phase H. The corrected standalone G run on `7b55e64a4edfc23412deee95c8292132556bc009` passed with 1,728 detections of 2,075 mutations (83.28%), 306 survivors and 41 uncovered. [Main post-merge CI](https://github.com/alexbonavila/ExpedFlow/actions/runs/46058055338) · [Standalone G extended CI](https://github.com/alexbonavila/ExpedFlow/actions/runs/46077567565)
 
 Use the new core PR run and a fresh eight-worker extended run on the exact combined candidate for G09 acceptance.
+
+
+### G10 hosted mutation worker budget
+
+Each `mutation-shards` job has a 90-minute execution budget, including setup, the initial test suite, assigned mutations and artifact upload. Pest retains its existing per-mutant subprocess timeout. Worker selection remains eight by default, with four available on manual dispatch. The global gate requires at least 80% over the complete reconciled inventory.
+
+On the G09 extended run, five mutation workers completed and workers 1, 2 and 8 were cancelled about 50 minutes after starting, consistent with the previous 50-minute job budget. Their partial rerun reused the attempt 1 plan and failed the attempt check before running mutations. Dispatch a fresh run with `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/tasks-g -f mutation_shards=8` so the planner and every worker execute together. [Original attempt](https://github.com/alexbonavila/ExpedFlow/actions/runs/46084721566/attempts/1) · [Partial rerun](https://github.com/alexbonavila/ExpedFlow/actions/runs/46084721566/attempts/2)
