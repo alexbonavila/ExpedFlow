@@ -5,6 +5,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Role;
 use Tests\Support\RefreshGuardedMySql;
 
@@ -31,6 +32,11 @@ test('only the explicit initializer creates the first administrator and a rerun 
     config(['identity.bootstrap.email' => 'different@example.test']);
     $this->artisan('expedflow:admin:init')->expectsOutputToContain('refused')->assertFailed();
     expect(User::query()->count())->toBe(1);
+    $event = Activity::query()->sole();
+    expect($event->event)->toBe('user.initialized');
+    expect($event->causer_id)->toBeNull();
+    expect($event->subject_id)->toBe($user->id);
+    expect($event->getProperty('origin'))->toBe('bootstrap');
 });
 
 test('initializer refuses unsafe values or an ambiguous reserved role', function (array $values, bool $withRole) {

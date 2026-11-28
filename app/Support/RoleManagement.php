@@ -3,6 +3,9 @@
 namespace App\Support;
 
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +15,7 @@ use Spatie\Permission\Models\Role;
 
 final class RoleManagement
 {
-    public function __construct(private readonly AdministrativeWrite $write) {}
+    public function __construct(private readonly AdministrativeWrite $write, private readonly AuditRecorder $audit) {}
 
     /** @return Collection<int, Role> */
     public function all(): Collection
@@ -28,10 +31,11 @@ final class RoleManagement
     /** @param list<string> $keys */
     public function create(User $actor, string $name, array $keys): Role
     {
-        return $this->write->run($actor, PermissionKey::ManageRoles, function () use ($name, $keys): Role {
+        return $this->write->run($actor, PermissionKey::ManageRoles, function (User $actor, Role $administrator, AuditContext $context) use ($name, $keys): Role {
             $role = new Role(['name' => $name, 'guard_name' => AuthorizationCatalog::GUARD]);
             $this->save($role);
             $this->synchronize($role, $keys);
+            $this->audit->record($context, AuditEvent::RoleCreated, $role, after: ['name' => $role->name, 'permissions' => $role->permissions->pluck('name')->all()]);
 
             return $role;
         });
@@ -39,11 +43,13 @@ final class RoleManagement
 
     public function rename(User $actor, int $id, string $name): Role
     {
-        return $this->write->run($actor, PermissionKey::ManageRoles, function () use ($id, $name): Role {
+        return $this->write->run($actor, PermissionKey::ManageRoles, function (User $actor, Role $administrator, AuditContext $context) use ($id, $name): Role {
             $role = $this->lock($id);
             $this->assertCustom($role);
+            $before = $role->name;
             $role->name = $name;
             $this->save($role);
+            $this->audit->record($context, AuditEvent::RoleUpdated, $role, ['name' => $before], ['name' => $role->name]);
             AuthorizationCatalog::flushAfterCommit();
 
             return $role->load('permissions');
@@ -53,9 +59,11 @@ final class RoleManagement
     /** @param list<string> $keys */
     public function replacePermissions(User $actor, int $id, array $keys): Role
     {
-        return $this->write->run($actor, PermissionKey::ManageRoles, function () use ($id, $keys): Role {
+        return $this->write->run($actor, PermissionKey::ManageRoles, function (User $actor, Role $administrator, AuditContext $context) use ($id, $keys): Role {
             $role = $this->lock($id);
+            $before = $this->recordedPermissions($role);
             $this->synchronize($role, $keys);
+            $this->audit->recordSet($context, AuditEvent::RolePermissionsChanged, $role, 'permissions', $before, $this->recordedPermissions($role));
 
             return $role;
         });
@@ -63,16 +71,26 @@ final class RoleManagement
 
     public function delete(User $actor, int $id): void
     {
-        $this->write->run($actor, PermissionKey::ManageRoles, function () use ($id): void {
+        $this->write->run($actor, PermissionKey::ManageRoles, function (User $actor, Role $administrator, AuditContext $context) use ($id): void {
             $role = $this->lock($id);
             $this->assertCustom($role);
             if (DB::table('model_has_roles')->where('role_id', $role->id)->exists()) {
                 throw new IdentityError(409, 'role_assigned');
             }
 
-            $role->deleteQuietly();
+            $before = ['name' => $role->name, 'permissions' => $this->recordedPermissions($role)];
+            if ($role->deleteQuietly()) {
+                $this->audit->record($context, AuditEvent::RoleDeleted, $role, $before);
+            }
             AuthorizationCatalog::flushAfterCommit();
         });
+    }
+
+    /** @return list<string> */
+    private function recordedPermissions(Role $role): array
+    {
+        return array_values($role->loadMissing('permissions')->permissions->map(fn (Permission $permission): string => $permission->name)
+            ->filter(fn (string $key): bool => PermissionKey::tryFrom($key) !== null)->all());
     }
 
     /** @param list<string> $keys */

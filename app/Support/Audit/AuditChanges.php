@@ -50,6 +50,7 @@ final class AuditChanges
 
         return match ($type) {
             'text' => self::text($value),
+            'locale' => self::matching($value, '/\A(?:es|ca|en)\z/'),
             'case_code' => self::matching($value, '/\A[0-9]{9}\z/'),
             'date' => self::matching($value, '/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/'),
             'time' => self::matching($value, '/\A[0-9]{2}:[0-9]{2}:[0-9]{2}\z/'),

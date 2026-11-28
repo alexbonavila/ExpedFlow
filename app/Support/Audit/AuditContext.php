@@ -9,14 +9,14 @@ final readonly class AuditContext
 {
     private function __construct(public string $origin, public ?int $actorId, public string $operationId) {}
 
-    public static function authenticated(User $actor): self
+    public static function authenticated(User $actor, ?string $operationId = null): self
     {
-        return new self('authenticated', $actor->id, (string) Str::uuid());
+        return new self('authenticated', $actor->id, $operationId ?? (string) Str::uuid());
     }
 
-    public static function passwordRecovery(User $account): self
+    public static function passwordRecovery(User $account, ?string $operationId = null): self
     {
-        return new self('password_recovery', $account->id, (string) Str::uuid());
+        return new self('password_recovery', $account->id, $operationId ?? (string) Str::uuid());
     }
 
     public static function bootstrap(): self

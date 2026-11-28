@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendPasswordRecovery;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
 use App\Support\IdentityError;
 use App\Support\IdentityInput;
 use App\Support\RevokeCredentials;
@@ -13,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 final class PasswordRecoveryController extends Controller
 {
@@ -27,7 +31,7 @@ final class PasswordRecoveryController extends Controller
         return response()->json(['message' => __('identity.recovery_requested'), 'code' => 'recovery_requested']);
     }
 
-    public function reset(Request $request, RevokeCredentials $credentials): JsonResponse
+    public function reset(Request $request, RevokeCredentials $credentials, AuditRecorder $audit): JsonResponse
     {
         $input = IdentityInput::validate($request->all(), [
             'email' => IdentityInput::emailRules(),
@@ -35,11 +39,13 @@ final class PasswordRecoveryController extends Controller
             'password' => [...IdentityInput::newPassword(), 'confirmed'],
         ]);
 
-        DB::transaction(function () use ($input, $credentials): void {
+        $operationId = (string) Str::uuid();
+        DB::transaction(function () use ($input, $credentials, $audit, $operationId): void {
             $email = Arr::string($input, 'email');
             User::query()->where('email', $email)->lockForUpdate()->first();
-            $status = Password::broker()->reset($input + ['disabled_at' => null], function (User $user, #[\SensitiveParameter] string $password) use ($credentials): void {
+            $status = Password::broker()->reset($input + ['disabled_at' => null], function (User $user, #[\SensitiveParameter] string $password) use ($credentials, $audit, $operationId): void {
                 $credentials->replacePassword($user, $password);
+                $audit->record(AuditContext::passwordRecovery($user, $operationId), AuditEvent::UserPasswordRecovered, $user, after: ['password' => true], metadata: ['credentials_revoked' => true]);
                 event(new PasswordReset($user));
             });
 

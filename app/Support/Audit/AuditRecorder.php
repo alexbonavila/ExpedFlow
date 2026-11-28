@@ -70,6 +70,47 @@ final class AuditRecorder
     }
 
     /**
+     * @param  array<int, int|string>  $before
+     * @param  array<int, int|string>  $after
+     */
+    public function recordSet(
+        AuditContext $context,
+        AuditEvent $event,
+        Model $subject,
+        string $field,
+        array $before,
+        array $after,
+        ?Expedient $case = null,
+    ): void {
+        sort($before);
+        sort($after);
+        $removed = array_values(array_diff($before, $after));
+        $added = array_values(array_diff($after, $before));
+        if ($removed === [] && $added === []) {
+            return;
+        }
+
+        $suffix = $field === 'permissions' ? 'permissions' : 'ids';
+        if (max(count($before), count($after)) <= 500) {
+            $this->record($context, $event, $subject, [$field => $before], [$field => $after], $case, [
+                'added_'.$suffix => $added, 'removed_'.$suffix => $removed,
+            ]);
+
+            return;
+        }
+
+        $removedChunks = array_chunk($removed, 500);
+        $addedChunks = array_chunk($added, 500);
+        $parts = max(count($removedChunks), count($addedChunks));
+        for ($index = 0; $index < $parts; $index++) {
+            $this->record($context, $event, $subject, case: $case, metadata: [
+                'part' => $index + 1, 'parts' => $parts,
+                'added_'.$suffix => $addedChunks[$index] ?? [], 'removed_'.$suffix => $removedChunks[$index] ?? [],
+            ]);
+        }
+    }
+
+    /**
      * @param  array<string, mixed>  $metadata
      * @return array<string, mixed>
      */
@@ -77,7 +118,7 @@ final class AuditRecorder
     {
         $fields = [
             'author_id' => 'id', 'task_id' => 'id', 'template_id' => 'id', 'status_id' => 'id',
-            'case_type_id' => 'id', 'task_count' => 'id', 'checklist_count' => 'id',
+            'case_type_id' => 'id', 'task_count' => 'id', 'checklist_count' => 'id', 'part' => 'id', 'parts' => 'id',
             'credentials_revoked' => 'flag', 'storage_reserved' => 'flag',
             'confirmed' => 'flag', 'added_ids' => 'ids', 'removed_ids' => 'ids',
             'added_permissions' => 'permissions', 'removed_permissions' => 'permissions',

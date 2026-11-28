@@ -50,10 +50,11 @@ enum AuditSubject: string
         };
     }
 
+    /** @return array<string, string> */
     public function fields(): array
     {
         return match ($this) {
-            self::User => ['name' => 'text', 'email' => 'redact', 'password' => 'redact', 'enabled' => 'flag', 'roles' => 'ids'],
+            self::User => ['name' => 'text', 'email' => 'redact', 'password' => 'redact', 'locale' => 'locale', 'enabled' => 'flag', 'roles' => 'ids'],
             self::Role => ['name' => 'text', 'permissions' => 'permissions'],
             self::Client => ['name' => 'text'],
             self::CaseRecord => [

@@ -6,6 +6,10 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\AccountLifecycle;
 use App\Support\AdministrativeWrite;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
+use App\Support\Audit\AuditSubject;
 use App\Support\IdentityError;
 use App\Support\IdentityInput;
 use App\Support\PermissionKey;
@@ -18,10 +22,11 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Spatie\Permission\Models\Role;
 
 final class UserManagementController extends Controller
 {
-    public function __construct(private readonly AdministrativeWrite $write) {}
+    public function __construct(private readonly AdministrativeWrite $write, private readonly AuditRecorder $audit) {}
 
     public function index(): AnonymousResourceCollection
     {
@@ -44,9 +49,12 @@ final class UserManagementController extends Controller
         $input['password'] = Hash::make(Arr::string($input, 'password'));
         /** @var User $actor */
         $actor = $request->user();
-        $user = $this->write->run($actor, PermissionKey::ManageUsers, function () use ($input, $assignments): User {
+        $user = $this->write->run($actor, PermissionKey::ManageUsers, function (User $target, Role $role, AuditContext $context) use ($input, $assignments): User {
             $account = $this->save(new User, $input + ['locale' => 'es']);
             $assignments->assignDefault($account);
+            $this->audit->record($context, AuditEvent::UserCreated, $account, after: AuditSubject::User->snapshot($account) + [
+                'enabled' => true, 'roles' => $account->roles()->pluck('roles.id')->all(),
+            ]);
 
             return $account;
         });
@@ -64,13 +72,17 @@ final class UserManagementController extends Controller
 
         /** @var User $actor */
         $actor = $request->user();
-        $account = $this->write->run($actor, PermissionKey::ManageUsers, function (User $account) use ($input): User {
+        $account = $this->write->run($actor, PermissionKey::ManageUsers, function (User $account, Role $role, AuditContext $context) use ($input): User {
+            $before = AuditSubject::User->snapshot($account);
             if (isset($input['email']) && $input['email'] !== $account->email) {
                 Password::deleteToken($account);
                 $account->email_verified_at = null;
             }
 
-            return $this->save($account, $input);
+            $this->save($account, $input);
+            $this->audit->record($context, AuditEvent::UserUpdated, $account, $before, AuditSubject::User->snapshot($account));
+
+            return $account;
         }, $user);
 
         return new UserResource($account);
@@ -83,8 +95,9 @@ final class UserManagementController extends Controller
         ]);
         /** @var User $actor */
         $actor = $request->user();
-        $this->write->run($actor, PermissionKey::ManageUsers, function (User $account) use ($input, $credentials): void {
+        $this->write->run($actor, PermissionKey::ManageUsers, function (User $account, Role $role, AuditContext $context) use ($input, $credentials): void {
             $credentials->replacePassword($account, Arr::string($input, 'password'));
+            $this->audit->record($context, AuditEvent::UserPasswordChanged, $account, after: ['password' => true], metadata: ['credentials_revoked' => true]);
         }, $user);
 
         return response()->json(['message' => __('identity.password_replaced'), 'code' => 'password_replaced']);

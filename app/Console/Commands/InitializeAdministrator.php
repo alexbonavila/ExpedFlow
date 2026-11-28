@@ -3,6 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
+use App\Support\Audit\AuditSubject;
 use App\Support\AuthorizationCatalog;
 use App\Support\IdentityInput;
 use Illuminate\Console\Command;
@@ -19,7 +23,7 @@ final class InitializeAdministrator extends Command
 
     protected $description = 'Initialize the first administrator using protected application configuration';
 
-    public function handle(AuthorizationCatalog $catalog): int
+    public function handle(AuthorizationCatalog $catalog, AuditRecorder $audit): int
     {
         try {
             $input = IdentityInput::validate(config()->array('identity.bootstrap'), [
@@ -34,7 +38,7 @@ final class InitializeAdministrator extends Command
         }
 
         try {
-            $created = $this->createAdministrator($catalog, Arr::string($input, 'name'), Arr::string($input, 'email'), Arr::string($input, 'password'));
+            $created = $this->createAdministrator($catalog, $audit, Arr::string($input, 'name'), Arr::string($input, 'email'), Arr::string($input, 'password'));
         } catch (LogicException|UniqueConstraintViolationException) {
             $this->error('Administrator initialization refused. Ask the owner to review the reserved role and account records.');
 
@@ -48,9 +52,11 @@ final class InitializeAdministrator extends Command
         return self::SUCCESS;
     }
 
-    private function createAdministrator(AuthorizationCatalog $catalog, string $name, string $email, #[\SensitiveParameter] string $password): bool
+    private function createAdministrator(AuthorizationCatalog $catalog, AuditRecorder $audit, string $name, string $email, #[\SensitiveParameter] string $password): bool
     {
-        return DB::transaction(function () use ($catalog, $name, $email, $password): bool {
+        $context = AuditContext::bootstrap();
+
+        return DB::transaction(function () use ($catalog, $audit, $context, $name, $email, $password): bool {
             [$role, $created] = $catalog->ensureAdministratorRole();
             $administrators = User::role($role)->orderBy('users.id')->lockForUpdate()->limit(2)->get();
 
@@ -71,6 +77,9 @@ final class InitializeAdministrator extends Command
             $user->assignRole($role);
             $catalog->install();
             $pending->delete();
+            $audit->record($context, AuditEvent::UserInitialized, $user, after: AuditSubject::User->snapshot($user) + [
+                'roles' => [$role->id], 'enabled' => true,
+            ]);
 
             return true;
         }, 3);
