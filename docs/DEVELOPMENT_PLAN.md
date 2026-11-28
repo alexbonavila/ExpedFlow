@@ -115,3 +115,9 @@ G09 verifies G task writes against status deletion, case lifecycle, copied task 
 ### G11 incremental mutation acceptance
 
 The existing Phase G pull request introduces incremental mutation validation with verified historical evidence. The scheduled and release workflows continue to measure the complete inventory in full mode. Hosted acceptance includes observing the automatic incremental run on the published candidate and measuring representative PR latency against the 15-minute operational target.
+
+## Phase I integration handoff
+
+The Phase I route include and case controller hook are the shared application integration points. After the sibling work is integrated, the authenticated API group must include each phase's routes once. In the case create action, run H's validated database template copy inside the existing writer called by BusinessWrite, reserve the private I storage target before that transaction commits, then provision Samba after BusinessWrite returns. Storage retry addresses the same case and does not call the writer. Phase G task mutations continue to use the active-parent and authorization locks from F.
+
+Review route and documentation overlap during combined integration. Run the combined regression, including H's actual transactional copy followed by a failed Samba attempt and a retry. Phase J owns centralized auditing and decisions about incident retention. Phase K owns API consolidation and later phases own the functional frontend. A future mobile upload idempotency protocol, installation verification in R, the published-release event check and an independent CodeQL alert inventory remain separate acceptance work.

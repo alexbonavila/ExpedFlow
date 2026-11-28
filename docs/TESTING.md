@@ -282,3 +282,21 @@ The local fixture measured the following results. Preparation includes coverage 
 | Shared fixture dependency | 12 | 4 | 8 | 66.7% | 1 | 0.463 | 0.580 | 1.055 | 1.043 | 2.539 |
 
 On the dependency edit, a previously detected mutant in the unchanged caller survived. Both paths reported the same classifications and the incremental gate failed on the fresh slice, as intended.
+
+## Phase I storage verification
+
+Normal Pest runs exercise the adapter with a test-only mount verifier and a disposable local filesystem, plus the guarded MySQL API. The dedicated storage-integration job runs the same adapter and the Linux verifier against the isolated CIFS fixture. The fixture tests recursive copy, empty directories, Unicode upload integrity, filename conflicts, the reader ACL, a client read-only mount, wrong-source rejection and mount loss during a transfer. It remounts the same share to check that the previous upload survived and that a partial file cannot be replaced. The underlying directory is owned by root and unwritable by the invoking account. The local subset is bash scripts/testing/storage.sh --check-unmounted.
+
+### Phase I standalone CIFS authorization correction
+
+The original standalone writer fixture enabled production-mode HTTP security before migrating and seeding. Its forced migration succeeded. Laravel then declined the noninteractive authorization seed command because it detected the production environment. Laravel's testing seed helper did not assert the command's exit status. The ordinary web role was absent from MySQL when Spatie queried it.
+
+The CIFS fixture now checks the dedicated test connection and verifies migration and authorization seeding while the application is in its testing environment. It then enables production HTTP security. The guarded standalone regression checks the persisted web role, effective case creation and upload grants, and access after booting a new application against the same database. The real mount suite keeps the ordinary actor and also checks the annual sequence and retained files across retry, soft deletion and restoration.
+
+The guarded authorization reproduction runs without a mount. Local missing-mount smoke passed. The full writer, wrong-source, reader, read-only mount, missing-mount, live loss and reconnect stages require the hosted Linux job because the local environment lacks sudo and cifs-utils.
+
+The I11 guarded regression passed 265 tests and 2,607 assertions with 97.74% line coverage (3,116 of 3,188) and 100% measurable type coverage. Strict Composer validation, Pint, Larastan level 8, all 16 mutation tooling tests, actionlint, ShellCheck and the missing-mount smoke passed.
+
+### I13 combined regression
+
+The combined storage regression uses the actual task and checklist template copier against guarded MySQL. It verifies that the case, allocation, copy and storage intent are committed before the adapter probes storage. A failed storage attempt leaves tasks and personal board preferences usable. A retry provisions the original type and folder after rename and reclassification, with the original case, sequence, tasks and checklist intact. The test exercises upload grants and an occupied case lock, preserves files across deletion and restoration, and verifies the incident code after permanent case deletion. A separate failure before intent persistence rolls back the case, task copy and allocation together.

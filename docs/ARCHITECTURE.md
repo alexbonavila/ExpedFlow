@@ -120,3 +120,17 @@ Phase H starts from the owner-accepted Phase F integration at `6dae36bf2b374f4c1
 Every H HTTP mutation runs inside `BusinessWrite` and uses its freshly authorized actor. Parent scopes and composite grants are checked before dependent reads and rechecked in the transaction. H routes use strict JSON field validation and the existing localized error response. New behavior is registered only when implemented.
 
 `ExpedientWriter::create` locks both explicit statuses in one ascending acquisition and calls `TemplateCopier` within the existing creation transaction. Ordered templates and checklist items become independent, newly numbered tasks and incomplete checklist items. The new tasks have no schedule or assignees. The case, annual number and all copies commit together. G uses the existing task schema and active-position constraint. I can provision storage after the HTTP write returns and reuse the same case identity on retries.
+
+## Phase I storage identity
+
+The Phase I adapter has dedicated settings in `config/samba.php`. Installation config identifies the exact private Linux CIFS mountpoint and expected UNC source. The template and case roots are separate, relative, case-insensitively disjoint subtrees. The installation provisions both roots. The last two digits of the assigned case code select the template directory, including on retries after type changes.
+
+The case intent keeps the original relative path. Its folder name begins with the nine-digit code and a single space. The name portion uses NFC Unicode, replaces unsafe characters with underscores and trims trailing dots and spaces. It is truncated on a UTF-8 boundary to fit a 255-byte component, with an underscore for an empty result. A malformed case-root setting reserves the canonical default path in MySQL while storage operations fail configuration validation. Correcting that configuration must agree with the reserved path. Case names in MySQL retain their business value.
+
+The adapter will claim only a directory it creates. Private signed markers bind ownership, template revision and verified completion to the case identity and installation. A preexisting unclaimed directory, including one left by a crash after directory creation and before the claim is recorded, requires operator review.
+
+I serializes each case's provisioning, retry and upload with a nonblocking kernel lock. The private local lock directory must be shared by all PHP workers for an installation on the same Linux host. Use one storage-writing host per database and share. The bounded lock slots can occasionally make unrelated requests briefly contend. The lock has no expiring lease and closes on process exit.
+
+The storage operation performs a fresh authorization and active-case check under short database locks before I/O and before confirming success. Already admitted operations can write while a case or credential is being revoked. The final check withholds confirmation when access changes. Lifecycle operations leave share contents untouched.
+
+Legacy cases with no reference receive one during explicit retry, using their current name and immutable code suffix. A retry checks signed ownership, compares any partial files to the original template revision and fills missing items only. Completion is reserved in MySQL before writing its signed marker. Losing a previously ready directory, seeing a differing partial file or encountering unclaimed content requires operator review. A verified ready retry leaves documents alone even when the template has changed.

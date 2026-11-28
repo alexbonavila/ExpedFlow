@@ -3,14 +3,23 @@ set -Eeuo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 umask 077
 
-work=$(mktemp -d)
+work=$(mktemp -d /tmp/expedflow-cifs.XXXXXXXX)
 mount_point="$work/mounted"
 credentials="$work/credentials"
 mkdir -p "$mount_point" "$credentials"
 server=
+suite_pid=
 stage=setup
 
 cleanup() {
+  if [[ ! "$work" =~ ^/tmp/expedflow-cifs\.[[:alnum:]]{8}$ || "$mount_point" != "$work/mounted" || -L "$work" || -L "$mount_point" ]]; then
+    printf '%s\n' 'Refusing CIFS cleanup outside the fixture directory.' >&2
+    return 1
+  fi
+  if [[ -n "$suite_pid" ]]; then
+    kill "$suite_pid" 2>/dev/null || true
+    wait "$suite_pid" 2>/dev/null || true
+  fi
   if mountpoint -q "$mount_point"; then
     sudo -n umount "$mount_point" || printf '%s\n' 'CIFS cleanup could not unmount the share.' >&2
   fi
@@ -53,6 +62,15 @@ if ! command -v sudo >/dev/null || ! command -v mount.cifs >/dev/null; then
   exit 1
 fi
 sudo -n true
+sudo -n chown root:root "$mount_point"
+sudo -n chmod 0555 "$mount_point"
+test ! -w "$mount_point"
+
+run_adapter() {
+  APP_ENV=testing SAMBA_CIFS_MOUNT="$mount_point" SAMBA_CIFS_STAGE="$1" \
+    php vendor/bin/pest tests/Cifs/SambaCifsTest.php --compact
+}
+APP_ENV=testing php tests/Support/check-database.php
 
 image=expedflow-smb-testing
 docker build --secret "id=apt_ca,src=${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt}" --tag "$image" scripts/testing/smb
@@ -73,7 +91,7 @@ docker exec "$server" smbclient //127.0.0.1/fixtures -p 1445 -A /run/expedflow-c
 
 mount_share() {
   sudo -n timeout 12 mount -t cifs //127.0.0.1/fixtures "$mount_point" \
-    -o "port=1445,credentials=$credentials/$1,vers=3.1.1,uid=$(id -u),gid=$(id -g),nosuid,nodev,noexec"
+    -o "port=1445,credentials=$credentials/$1,vers=3.1.1,soft,cache=none,uid=$(id -u),gid=$(id -g),nosuid,nodev,noexec${2:+,$2}"
 }
 
 stage='writer-mount'
@@ -84,6 +102,10 @@ cmp "$mount_point/template/nested/fixture.txt" "$mount_point/copy/nested/fixture
 stage='writer-write'
 printf '%s\n' 'Client write' > "$mount_point/copy/write.txt"
 test "$(docker exec "$server" cat /srv/expedflow-fixtures/copy/write.txt)" = 'Client write'
+stage='adapter-writer'
+run_adapter writer
+stage='adapter-wrong-source'
+run_adapter wrong-source
 sudo -n umount "$mount_point"
 
 stage='reader-mount'
@@ -94,6 +116,38 @@ if touch "$mount_point/reader-write.txt" 2>/dev/null; then
   printf '%s\n' '::error title=SMB permissions::The read-only account unexpectedly wrote a file.' >&2
   exit 1
 fi
+stage='adapter-reader'
+run_adapter reader
+sudo -n umount "$mount_point"
+
+stage='adapter-readonly'
+mount_share reader ro
+run_adapter readonly
+sudo -n umount "$mount_point"
+
+stage='adapter-missing'
+run_adapter missing
+assert_unmounted
+
+stage='adapter-live-loss'
+mount_share writer
+run_adapter loss &
+suite_pid=$!
+for ((attempt=0; attempt<80; attempt++)); do
+  [[ ! -f "$work/transfer-started" ]] || break
+  kill -0 "$suite_pid" 2>/dev/null || break
+  sleep 0.25
+done
+test -f "$work/transfer-started"
+sudo -n umount --lazy "$mount_point"
+touch "$work/fixture-detached"
+wait "$suite_pid"
+suite_pid=
+assert_unmounted
+
+stage='adapter-reconnect'
+mount_share writer
+run_adapter reconnect
 sudo -n umount "$mount_point"
 docker stop "$server" >/dev/null
 server=
@@ -105,4 +159,4 @@ if mount_share writer 2>/dev/null; then
 fi
 assert_unmounted
 
-printf '%s\n' 'CIFS read, copy, write, read-only account and missing-mount checks passed.'
+printf '%s\n' 'CIFS smoke and production adapter checks passed.'

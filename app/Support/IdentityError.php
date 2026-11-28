@@ -36,6 +36,7 @@ final class IdentityError extends HttpException
             403 => 'forbidden',
             404 => 'not_found',
             405 => 'method_not_allowed',
+            413 => 'payload_too_large',
             419 => 'csrf_mismatch',
             422 => 'validation_failed',
             429 => 'rate_limited',

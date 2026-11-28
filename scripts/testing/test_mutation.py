@@ -2,6 +2,7 @@ import copy
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -9,10 +10,10 @@ import unittest
 from unittest.mock import patch
 
 from mutation import (
-    ROOT, aggregate, combine, context, decisions, decode, history_index, identity_index, mutation_index,
+    ROOT, SUPPORT, aggregate, combine, context, decisions, decode, history_index, identity_index, mutation_index,
     partition, write_json,
 )
-from mutation_history import eligible_run, verified_tree
+from mutation_history import accepted_pr_heads, eligible_run, verified_tree
 from mutation_impact import file_reasons, snapshot_environment
 
 
@@ -168,6 +169,15 @@ class MutationAggregationTest(unittest.TestCase):
             with self.subTest(content=content), self.assertRaises(ValueError):
                 decode(content)
 
+
+    def test_unexpected_generated_or_outcome_id_fails(self):
+        for field in ("generated", "outcomes"):
+            with self.subTest(field=field):
+                old_record = self.reports[2][field][0]
+                self.reports[2][field][0] = old_record | {"id": "f" * 64}
+                with self.assertRaisesRegex(ValueError, "complete assignment|unexpected outcomes"):
+                    self.reconcile()
+                self.reports[2][field][0] = old_record
 
 class IncrementalMutationTest(unittest.TestCase):
     def setUp(self):
@@ -360,6 +370,55 @@ class IncrementalMutationTest(unittest.TestCase):
         self.assertFalse(verified_tree(evidence, run, self.execution["commit"]))
 
 
+    def test_accepted_pr_history_is_pinned_to_the_exact_same_repository_head_and_main_ancestry(self):
+        repository = "owner/repo"
+        head, merge, main, candidate = ("a" * 40, "b" * 40, "c" * 40, "d" * 40)
+        pull = {
+            "merged_at": "2026-11-28T01:00:00Z", "merge_commit_sha": merge,
+            "head": {"ref": "feat/accepted", "sha": head, "repo": {"full_name": repository}},
+            "base": {"ref": "main", "repo": {"full_name": repository}},
+        }
+        ancestors = {(merge, main), (merge, candidate), (head, merge), (head, candidate)}
+        with patch("mutation_history.ancestor", side_effect=lambda first, second: (first, second) in ancestors):
+            accepted = accepted_pr_heads([pull], repository, candidate, main)
+            self.assertEqual(accepted, {("feat/accepted", head): merge})
+            for invalid in (
+                pull | {"merged_at": None},
+                pull | {"merge_commit_sha": "e" * 40},
+                pull | {"head": pull["head"] | {"repo": {"full_name": "fork/repo"}}},
+                pull | {"head": pull["head"] | {"sha": "f" * 40}},
+                pull | {"base": pull["base"] | {"ref": "other"}},
+            ):
+                self.assertEqual(accepted_pr_heads([invalid], repository, candidate, main), {})
+
+            run = {
+                "id": 41, "run_attempt": 1, "workflow_id": 10, "path": ".github/workflows/phase-b.yml",
+                "status": "completed", "conclusion": "success", "event": "pull_request",
+                "head_branch": "feat/accepted", "head_sha": head,
+                "repository": {"full_name": repository}, "head_repository": {"full_name": repository},
+            }
+            execution = self.execution | {"commit": candidate}
+            self.assertFalse(eligible_run(run, 10, repository, execution, {"main"}))
+            self.assertTrue(eligible_run(run, 10, repository, execution, {"main"}, accepted))
+            for invalid in ({"event": "workflow_dispatch"}, {"head_branch": "other"}, {"conclusion": "failure"},
+                            {"head_repository": {"full_name": "fork/repo"}}):
+                self.assertFalse(eligible_run(run | invalid, 10, repository, execution, {"main"}, accepted))
+
+    def test_merged_pr_history_requires_both_the_reconstructed_and_accepted_tree(self):
+        head, base, merge, tree = ("a" * 40, "b" * 40, "c" * 40, "d" * 40)
+        run = {"id": 41, "run_attempt": 2, "event": "pull_request", "head_sha": head}
+        history = {"context": {"run": "41", "attempt": "2", "commit": "e" * 40},
+                   "lineage": {"head": head, "base": base, "tree": tree}}
+        with patch("mutation_history.ancestor", return_value=True), patch("mutation_history.git", return_value=tree.encode()):
+            with patch("mutation_history.tree_id", return_value=tree):
+                self.assertTrue(verified_tree(history, run, merge, merge))
+                self.assertFalse(verified_tree(history, run | {"run_attempt": 1}, merge, merge))
+            with patch("mutation_history.tree_id", return_value="0" * 40):
+                self.assertFalse(verified_tree(history, run, merge, merge))
+        with patch("mutation_history.ancestor", return_value=True), patch("mutation_history.git", return_value=b"unrelated"):
+            self.assertFalse(verified_tree(history, run, merge, merge))
+
+
 class MutationSourceTest(unittest.TestCase):
     def test_task_read_controllers_produce_compilable_array_item_removals(self):
         controllers = [
@@ -395,6 +454,89 @@ class MutationSourceTest(unittest.TestCase):
                     ["php", "-l"], input=mutation["source"], text=True, capture_output=True, timeout=10,
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class NativeMutationIdentityTest(unittest.TestCase):
+    source = """<?php
+function sameLine(): array { return [null, null]; }
+function differentLines(): array {
+    return [
+        false,
+        false,
+    ];
+}
+"""
+
+    worker_probe = r"""
+    require 'scripts/testing/mutation/bootstrap.php';
+
+    $container = Pest\Support\Container::getInstance();
+    $container->add(Psr\SimpleCache\CacheInterface::class, new Pest\Mutate\Cache\NullStore);
+    $generator = $container->get(Pest\Mutate\Support\MutationGenerator::class);
+    $file = new Symfony\Component\Finder\SplFileInfo('app/Collision.php', 'app', 'app/Collision.php');
+    $operators = Pest\Mutate\Mutators\Sets\DefaultSet::mutators();
+    $native = (new Pest\Mutate\Support\MutationGenerator)->generate($file, $operators);
+    $resolved = $generator->generate($file, $operators);
+    $suite = new Pest\Mutate\MutationSuite;
+    foreach ($resolved as $mutation) {
+        $suite->repository->add($mutation);
+    }
+    Pest\Mutate\Event\Facade::instance()->emitter()->finishMutationGeneration($suite);
+    echo json_encode([
+        'native' => array_map(fn ($mutation) => mutationIdentity($mutation) + ['native' => $mutation->id], $native),
+        'resolved' => array_map(fn ($mutation) => mutationIdentity($mutation) + [
+            'native' => $mutation->id, 'offset' => $mutation instanceof LocatedMutation ? $mutation->sourceOffset : null,
+        ], $resolved),
+    ], JSON_THROW_ON_ERROR);
+    """
+
+    def run_php(self, checkout, *arguments, **environment):
+        process = subprocess.run(
+            ["php", "-d", "display_errors=stderr", *arguments], cwd=checkout,
+            env=dict(os.environ, **environment), capture_output=True,
+        )
+        self.assertEqual(process.returncode, 0, process.stderr.decode())
+        return decode(process.stdout)
+
+    def test_preserves_same_line_sites_and_the_worker_matches_portable_planning(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            inventories = []
+            for checkout_name in ("planner", "independent-worker-path"):
+                checkout = Path(temporary) / checkout_name
+                for directory in ("app", "routes", "bootstrap", "evidence"):
+                    (checkout / directory).mkdir(parents=True)
+                shutil.copytree(SUPPORT, checkout / "scripts/testing/mutation")
+                (checkout / "vendor").symlink_to(ROOT / "vendor", target_is_directory=True)
+                (checkout / "app/Collision.php").write_text(self.source, encoding="utf-8")
+                (checkout / "bootstrap/app.php").write_text("<?php\n", encoding="utf-8")
+
+                inventory = self.run_php(checkout, "scripts/testing/mutation/inventory.php")
+                self.assertEqual(inventory, self.run_php(checkout, "scripts/testing/mutation/inventory.php"))
+                inventories.append(identity_index(inventory))
+                evidence = checkout / "evidence"
+                selected = [row["id"] for row in inventory if row["mutator"].endswith("\\RemoveArrayItem")]
+                write_json(evidence / "selection.json", {"inventory": sorted(inventories[-1]), "assigned": selected})
+                result = self.run_php(checkout, "-r", self.worker_probe, EXPEDFLOW_MUTATION_EVIDENCE_DIR=str(evidence))
+                native, resolved = result["native"], result["resolved"]
+                self.assertEqual(len(native), len(inventory))
+                self.assertEqual(len({row["native"] for row in resolved}), len(native))
+                self.assertEqual(identity_index(resolved), inventories[-1])
+                self.assertEqual(set(identity_index(decode((evidence / "generated.json").read_bytes()))), set(selected))
+
+                removed = [row for row in native if row["mutator"].endswith("\\RemoveArrayItem")]
+                self.assertEqual([row["start"] for row in removed], [2, 2, 5, 6])
+                self.assertEqual(removed[0]["id"], removed[1]["id"])
+                self.assertEqual(removed[0]["native"], removed[1]["native"])
+                self.assertEqual(removed[2]["id"], removed[3]["id"])
+                self.assertEqual(removed[2]["native"], removed[3]["native"])
+                offsets = [row["offset"] for row in resolved if row["id"] in selected]
+                first = self.source.index("null")
+                self.assertEqual(offsets, [
+                    first, self.source.index("null", first + 1),
+                    self.source.index("false"), self.source.rindex("false"),
+                ])
+
+            self.assertEqual(*inventories)
 
 
 class WorkflowGateTest(unittest.TestCase):

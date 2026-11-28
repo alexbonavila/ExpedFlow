@@ -59,8 +59,24 @@ def trusted_branches():
     return {'main', branch} - {'', None}
 
 
-def eligible_run(run, workflow_id, repository, current, branches):
+def accepted_pr_heads(pulls, repository, candidate, main):
+    """Trust exact, same-repository PR heads present in a protected-main merge."""
+    accepted = {}
+    for pull in pulls:
+        head, base = pull.get('head', {}), pull.get('base', {})
+        branch, commit, merge = head.get('ref'), head.get('sha'), pull.get('merge_commit_sha')
+        if (timestamp(pull.get('merged_at')) and base.get('ref') == 'main'
+                and (base.get('repo') or {}).get('full_name') == repository
+                and (head.get('repo') or {}).get('full_name') == repository
+                and isinstance(branch, str) and branch and branch != 'main'
+                and ancestor(merge, main) and ancestor(merge, candidate) and ancestor(commit, merge)):
+            accepted[(branch, commit)] = merge
+    return accepted
+
+
+def eligible_run(run, workflow_id, repository, current, branches, accepted_merges=None):
     event, branch = run.get('event'), run.get('head_branch')
+    accepted = event == 'pull_request' and (branch, run.get('head_sha')) in (accepted_merges or {})
     return (
         run.get('workflow_id') == workflow_id and run.get('path', '').split('@', 1)[0] == WORKFLOW
         and run.get('status') == 'completed' and run.get('conclusion') == 'success'
@@ -68,14 +84,14 @@ def eligible_run(run, workflow_id, repository, current, branches):
         and run.get('repository', {}).get('full_name') == repository
         and str(run.get('id')) != current['run'] and valid(str(run.get('id')), NUMBER)
         and valid(str(run.get('run_attempt')), NUMBER)
-        and branch in branches and event in {'schedule', 'release', 'workflow_dispatch', 'pull_request'}
+        and (branch in branches or accepted) and event in {'schedule', 'release', 'workflow_dispatch', 'pull_request'}
         and (event not in {'schedule', 'release'} or branch == 'main')
         and (event != 'pull_request' or branch != 'main')
         and ancestor(run.get('head_sha'), current['commit'])
     )
 
 
-def verified_tree(history, run, candidate):
+def verified_tree(history, run, candidate, protected_merge=None):
     context, source = history['context'], history['lineage']
     if context['run'] != str(run['id']) or context['attempt'] != str(run['run_attempt']) or source['head'] != run['head_sha']:
         return False
@@ -87,19 +103,26 @@ def verified_tree(history, run, candidate):
         return False
     # GitHub PR runs have a synthetic merge commit. Recreate its tree from the recorded parents.
     reconstructed = git('merge-tree', '--write-tree', source['base'], source['head']).decode().splitlines()[0]
-    return reconstructed == source['tree']
+    return reconstructed == source['tree'] and (
+        protected_merge is None or tree_id(protected_merge) == source['tree']
+    )
 
 
 class Actions:
     def __init__(self, repository):
         self.repository = repository
 
-    def get(self, suffix, *parameters, binary=False):
-        command = ['gh', 'api', '--method', 'GET', f'repos/{self.repository}/actions/{suffix}']
+    def get(self, suffix, *parameters, binary=False, repository_path=False):
+        endpoint = suffix if repository_path else f'actions/{suffix}'
+        command = ['gh', 'api', '--method', 'GET', f'repos/{self.repository}/{endpoint}']
         for parameter in parameters:
             command += ['-f', parameter]
         content = subprocess.check_output(command, stderr=subprocess.DEVNULL, timeout=40)
         return content if binary else json.loads(content)
+
+    def merged_pull_requests(self):
+        return self.get('pulls', 'state=closed', 'base=main', 'sort=updated', 'direction=desc', 'per_page=16',
+                        repository_path=True)
 
     def artifact(self, run, name):
         artifacts = self.get(f'runs/{run}/artifacts', f'name={name}')['artifacts']
@@ -196,11 +219,25 @@ def discover(current, snapshot, inventory):
     except (subprocess.SubprocessError, ValueError, KeyError, OSError):
         print('Historical mutation discovery is unavailable. Fresh evidence is required.')
         return None, None
+    try:
+        main = git('rev-parse', '--verify', 'refs/remotes/origin/main').decode().strip()
+        accepted_merges = accepted_pr_heads(actions.merged_pull_requests(), repository, current['commit'], main)
+    except (subprocess.SubprocessError, ValueError, KeyError, OSError):
+        print('Protected-main merged PR history discovery is unavailable.')
+        accepted_merges = {}
+    for branch, head in accepted_merges:
+        if branch in trusted_branches():
+            continue
+        try:
+            runs += actions.get('workflows/phase-b.yml/runs', 'status=success', 'event=pull_request',
+                                f'head_sha={head}', 'per_page=16')['workflow_runs']
+        except (subprocess.SubprocessError, ValueError, KeyError, OSError):
+            print(f'Could not look up mutation history for merged head {head}.')
     compatible = []
     full_scores = []
-    for run in runs:
+    for run in {entry['id']: entry for entry in runs}.values():
         try:
-            if not eligible_run(run, workflow_id, repository, current, trusted_branches()):
+            if not eligible_run(run, workflow_id, repository, current, trusted_branches(), accepted_merges):
                 continue
             standard = actions.artifact(run['id'], HISTORY_ARTIFACT)
             legacy = standard is None
@@ -226,13 +263,15 @@ def discover(current, snapshot, inventory):
                 if not actions.legacy_runtime_matches(jobs, snapshot['runtime']):
                     continue
                 evidence = import_legacy(evidence, run, snapshot, inventory)
-            if not verified_tree(evidence, run, current['commit']):
+            protected_merge = accepted_merges.get((run['head_branch'], run['head_sha'])) if run['event'] == 'pull_request' else None
+            if not verified_tree(evidence, run, current['commit'], protected_merge):
                 continue
             past_files = tree_files(evidence['lineage']['tree'])
             if evidence['snapshot']['files'] != past_files:
                 continue
-            if not legacy and run['head_branch'] != 'main' and not same_branch_verifier(past_files, evidence['lineage']['tree'], snapshot['files']):
-                continue
+            if not legacy and protected_merge is None and run['head_branch'] != 'main':
+                if not same_branch_verifier(past_files, evidence['lineage']['tree'], snapshot['files']):
+                    continue
             history_index(evidence, current['commit'])
             if not legacy and evidence['mode'] == 'full':
                 full_scores.append((run['updated_at'], full_reference(evidence, run)))
@@ -243,7 +282,10 @@ def discover(current, snapshot, inventory):
                 evidence['snapshot'] = snapshot
             reasons = file_reasons(evidence['snapshot'], snapshot, {row['file'] for row in inventory.values()})
             if 'verified-equivalent' in reasons.values():
-                compatible.append((exact, run['head_branch'] == 'main', evidence, artifact))
+                compatible.append((exact, run['head_branch'] == 'main' or protected_merge is not None, evidence, artifact))
+            elif protected_merge is not None:
+                causes = ', '.join(sorted(set(reasons.values())))
+                print(f"Verified protected-main mutation artifact from run {run['id']} requires fresh execution ({causes}).")
             if exact and compatible:
                 break
         except (subprocess.SubprocessError, ValueError, KeyError, IndexError, TypeError, AttributeError, OSError, BadZipFile):

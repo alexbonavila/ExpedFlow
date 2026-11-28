@@ -1,0 +1,980 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "ExpedFlow Phase I",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/v1/expedients": {
+            "post": {
+                "summary": "Create and number a case",
+                "description": "Requires expedients.create.",
+                "responses": {
+                    "201": {
+                        "description": "Case committed with its storage outcome",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreatedCase"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Http401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Http403"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Http409"
+                    },
+                    "419": {
+                        "$ref": "#/components/responses/Http419"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Http422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Http500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExpedientCreate"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/expedients/{expedient}/storage/retry": {
+            "post": {
+                "parameters": [
+                    {
+                        "name": "expedient",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storage ready",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StorageOutcome"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Record not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF check failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Storage requires attention or is busy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StorageOutcome"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Storage unavailable or unconfirmed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StorageOutcome"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/expedients/{expedient}/uploads": {
+            "post": {
+                "parameters": [
+                    {
+                        "name": "expedient",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "File confirmed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UploadSaved"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Record not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "Request too large",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF check failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Storage requires attention or is busy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StorageOutcome"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Storage unavailable or unconfirmed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StorageOutcome"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents": {
+            "get": {
+                "parameters": [
+                    {
+                        "name": "case_code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[0-9]{9}$"
+                        }
+                    },
+                    {
+                        "name": "operation",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "samba_provision",
+                                "samba_retry",
+                                "samba_upload"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "storage_unavailable",
+                                "storage_configuration_invalid",
+                                "storage_unsafe",
+                                "storage_template_missing",
+                                "storage_conflict",
+                                "storage_directory_limit",
+                                "storage_copy_limit",
+                                "storage_transfer_failed",
+                                "storage_busy",
+                                "storage_not_ready",
+                                "upload_name_conflict",
+                                "storage_admission_changed"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Safe incident history",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IncidentList"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/{incident}": {
+            "get": {
+                "parameters": [
+                    {
+                        "name": "incident",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Safe incident reference",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IncidentDetail"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Record not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Expedient": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "description",
+                    "expedient_type_id",
+                    "requester_client_id",
+                    "represented_client_id",
+                    "status_id",
+                    "type",
+                    "requester",
+                    "represented_client",
+                    "status",
+                    "column_position",
+                    "column_version",
+                    "created_at",
+                    "updated_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "code": {
+                        "type": "string",
+                        "pattern": "^[0-9]{9}$"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "expedient_type_id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "requester_client_id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "represented_client_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "status_id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/ExpedientType"
+                    },
+                    "requester": {
+                        "$ref": "#/components/schemas/ClientSummary"
+                    },
+                    "represented_client": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "id",
+                            "name"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "minimum": 1
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "nullable": true
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/Status"
+                    },
+                    "column_position": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "column_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                }
+            },
+            "ExpedientType": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "id",
+                    "name",
+                    "code"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string",
+                        "pattern": "^[0-9]{2}$"
+                    }
+                }
+            },
+            "ClientSummary": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Status": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "id",
+                    "name",
+                    "position"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                }
+            },
+            "Error": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "additionalProperties": false
+            },
+            "StorageOutcome": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "status",
+                    "code",
+                    "message",
+                    "incident_id"
+                ],
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ready",
+                            "failed"
+                        ]
+                    },
+                    "code": {
+                        "type": "string",
+                        "enum": [
+                            "storage_ready",
+                            "storage_unavailable",
+                            "storage_configuration_invalid",
+                            "storage_unsafe",
+                            "storage_template_missing",
+                            "storage_conflict",
+                            "storage_directory_limit",
+                            "storage_copy_limit",
+                            "storage_transfer_failed",
+                            "storage_busy",
+                            "storage_not_ready",
+                            "upload_name_conflict",
+                            "storage_admission_changed"
+                        ]
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "incident_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "nullable": true
+                    }
+                }
+            },
+            "CreatedCase": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "data",
+                    "storage"
+                ],
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Expedient"
+                    },
+                    "storage": {
+                        "$ref": "#/components/schemas/StorageOutcome"
+                    }
+                }
+            },
+            "UploadSaved": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "code",
+                    "message",
+                    "case_id"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "enum": [
+                            "upload_saved"
+                        ]
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "case_id": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                }
+            },
+            "Incident": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "id",
+                    "case_id",
+                    "actor_id",
+                    "case_code",
+                    "message",
+                    "created_at",
+                    "operation",
+                    "type"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "case_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "actor_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "case_code": {
+                        "type": "string",
+                        "pattern": "^[0-9]{9}$",
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "operation": {
+                        "type": "string",
+                        "enum": [
+                            "samba_provision",
+                            "samba_retry",
+                            "samba_upload",
+                            "unknown"
+                        ]
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "storage_unavailable",
+                            "storage_configuration_invalid",
+                            "storage_unsafe",
+                            "storage_template_missing",
+                            "storage_conflict",
+                            "storage_directory_limit",
+                            "storage_copy_limit",
+                            "storage_transfer_failed",
+                            "storage_busy",
+                            "storage_not_ready",
+                            "upload_name_conflict",
+                            "storage_admission_changed",
+                            "unknown"
+                        ]
+                    }
+                }
+            },
+            "IncidentList": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "data"
+                ],
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Incident"
+                        }
+                    }
+                }
+            },
+            "IncidentDetail": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "data"
+                ],
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Incident"
+                    }
+                }
+            },
+            "ExpedientCreate": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                    "name",
+                    "expedient_type_id",
+                    "requester_client_id",
+                    "status_id"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Plain text, maximum 65,535 UTF-8 bytes."
+                    },
+                    "expedient_type_id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "requester_client_id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "represented_client_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "status_id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "copy_template": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "template_status_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "Required when copy_template is true and omitted otherwise."
+                    }
+                },
+                "oneOf": [
+                    {
+                        "properties": {
+                            "copy_template": {
+                                "type": "boolean",
+                                "enum": [
+                                    true
+                                ]
+                            }
+                        },
+                        "required": [
+                            "copy_template",
+                            "template_status_id"
+                        ]
+                    },
+                    {
+                        "properties": {
+                            "copy_template": {
+                                "type": "boolean",
+                                "enum": [
+                                    false
+                                ]
+                            }
+                        },
+                        "not": {
+                            "required": [
+                                "template_status_id"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "securitySchemes": {
+            "spaSession": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "expedflow-session"
+            },
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        },
+        "responses": {
+            "Http401": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http403": {
+                "description": "Forbidden",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http404": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http409": {
+                "description": "Conflict",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http419": {
+                "description": "Invalid CSRF",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http422": {
+                "description": "Unprocessable",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Http500": {
+                "description": "Unexpected error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "security": [
+        {
+            "spaSession": []
+        },
+        {
+            "bearerAuth": []
+        }
+    ]
+}

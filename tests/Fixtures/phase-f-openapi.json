@@ -519,6 +519,9 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/components/schemas/Expedient"
+                                        },
+                                        "storage": {
+                                            "$ref": "#/components/schemas/PhaseIStorageOutcome"
                                         }
                                     }
                                 }
@@ -1437,6 +1440,51 @@
                     "status_id": {
                         "type": "integer",
                         "minimum": 1
+                    }
+                }
+            },
+            "PhaseIStorageOutcome": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "status",
+                    "code",
+                    "message",
+                    "incident_id"
+                ],
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ready",
+                            "failed"
+                        ]
+                    },
+                    "code": {
+                        "type": "string",
+                        "enum": [
+                            "storage_ready",
+                            "storage_unavailable",
+                            "storage_configuration_invalid",
+                            "storage_unsafe",
+                            "storage_template_missing",
+                            "storage_conflict",
+                            "storage_directory_limit",
+                            "storage_copy_limit",
+                            "storage_transfer_failed",
+                            "storage_busy",
+                            "storage_not_ready",
+                            "upload_name_conflict",
+                            "storage_admission_changed"
+                        ]
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "incident_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "nullable": true
                     }
                 }
             }
