@@ -296,3 +296,7 @@ The CIFS fixture now checks the dedicated test connection and verifies migration
 The guarded authorization reproduction runs without a mount. Local missing-mount smoke passed. The full writer, wrong-source, reader, read-only mount, missing-mount, live loss and reconnect stages require the hosted Linux job because the local environment lacks sudo and cifs-utils.
 
 The I11 guarded regression passed 265 tests and 2,607 assertions with 97.74% line coverage (3,116 of 3,188) and 100% measurable type coverage. Strict Composer validation, Pint, Larastan level 8, all 16 mutation tooling tests, actionlint, ShellCheck and the missing-mount smoke passed.
+
+### I13 combined regression
+
+The combined storage regression uses the actual task and checklist template copier against guarded MySQL. It verifies that the case, allocation, copy and deduplication state are committed before the adapter probes storage. A failed storage attempt leaves tasks and personal board preferences usable. A retry provisions the original type and folder after rename and reclassification, with the original case, sequence, tasks and checklist intact. The test exercises upload grants and an occupied case lock, preserves files across deletion and restoration, and verifies the incident code after permanent case deletion. A separate failure before intent persistence rolls back the case, task copy and allocation together.

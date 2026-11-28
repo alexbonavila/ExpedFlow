@@ -30,27 +30,17 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/ExpedientType"
-                      }
+                      "items": { "$ref": "#/components/schemas/ExpedientType" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "post": {
@@ -67,43 +57,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/ExpedientType"
-                    }
+                    "data": { "$ref": "#/components/schemas/ExpedientType" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TypeInput"
-              }
+              "schema": { "$ref": "#/components/schemas/TypeInput" }
             }
           }
         }
@@ -135,29 +107,17 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/ExpedientType"
-                    }
+                    "data": { "$ref": "#/components/schemas/ExpedientType" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "patch": {
@@ -174,43 +134,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/ExpedientType"
-                    }
+                    "data": { "$ref": "#/components/schemas/ExpedientType" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NameInput"
-              }
+              "schema": { "$ref": "#/components/schemas/NameInput" }
             }
           }
         }
@@ -222,33 +164,17 @@
             "description": "Success",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
+                "schema": { "$ref": "#/components/schemas/Action" }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       }
     },
@@ -269,27 +195,17 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Status"
-                      }
+                      "items": { "$ref": "#/components/schemas/Status" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "post": {
@@ -306,43 +222,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Status"
-                    }
+                    "data": { "$ref": "#/components/schemas/Status" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NameInput"
-              }
+              "schema": { "$ref": "#/components/schemas/NameInput" }
             }
           }
         }
@@ -374,29 +272,17 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Status"
-                    }
+                    "data": { "$ref": "#/components/schemas/Status" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "patch": {
@@ -413,43 +299,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Status"
-                    }
+                    "data": { "$ref": "#/components/schemas/Status" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NameInput"
-              }
+              "schema": { "$ref": "#/components/schemas/NameInput" }
             }
           }
         }
@@ -461,33 +329,17 @@
             "description": "Success",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
+                "schema": { "$ref": "#/components/schemas/Action" }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       }
     },
@@ -508,27 +360,17 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Tag"
-                      }
+                      "items": { "$ref": "#/components/schemas/Tag" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "post": {
@@ -545,43 +387,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Tag"
-                    }
+                    "data": { "$ref": "#/components/schemas/Tag" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TagInput"
-              }
+              "schema": { "$ref": "#/components/schemas/TagInput" }
             }
           }
         }
@@ -613,29 +437,17 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Tag"
-                    }
+                    "data": { "$ref": "#/components/schemas/Tag" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "patch": {
@@ -652,46 +464,26 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Tag"
-                    }
+                    "data": { "$ref": "#/components/schemas/Tag" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TagPatch"
-              }
+              "schema": { "$ref": "#/components/schemas/TagPatch" }
             }
           }
         }
@@ -703,30 +495,16 @@
             "description": "Success",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
+                "schema": { "$ref": "#/components/schemas/Action" }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       }
     },
@@ -758,30 +536,18 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Template"
-                      }
+                      "items": { "$ref": "#/components/schemas/Template" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "post": {
@@ -798,46 +564,26 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Template"
-                    }
+                    "data": { "$ref": "#/components/schemas/Template" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TemplateInput"
-              }
+              "schema": { "$ref": "#/components/schemas/TemplateInput" }
             }
           }
         }
@@ -878,29 +624,17 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Template"
-                    }
+                    "data": { "$ref": "#/components/schemas/Template" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "patch": {
@@ -917,43 +651,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Template"
-                    }
+                    "data": { "$ref": "#/components/schemas/Template" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TemplatePatch"
-              }
+              "schema": { "$ref": "#/components/schemas/TemplatePatch" }
             }
           }
         }
@@ -965,30 +681,16 @@
             "description": "Success",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
+                "schema": { "$ref": "#/components/schemas/Action" }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       }
     },
@@ -1029,30 +731,18 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/TemplateItem"
-                      }
+                      "items": { "$ref": "#/components/schemas/TemplateItem" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "post": {
@@ -1069,46 +759,26 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/TemplateItem"
-                    }
+                    "data": { "$ref": "#/components/schemas/TemplateItem" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NameInput"
-              }
+              "schema": { "$ref": "#/components/schemas/NameInput" }
             }
           }
         }
@@ -1158,29 +828,17 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/TemplateItem"
-                    }
+                    "data": { "$ref": "#/components/schemas/TemplateItem" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "patch": {
@@ -1197,43 +855,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/TemplateItem"
-                    }
+                    "data": { "$ref": "#/components/schemas/TemplateItem" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NameInput"
-              }
+              "schema": { "$ref": "#/components/schemas/NameInput" }
             }
           }
         }
@@ -1245,30 +885,16 @@
             "description": "Success",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Action"
-                }
+                "schema": { "$ref": "#/components/schemas/Action" }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       }
     },
@@ -1289,44 +915,26 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Status"
-                      }
+                      "items": { "$ref": "#/components/schemas/Status" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatusOrder"
-              }
+              "schema": { "$ref": "#/components/schemas/StatusOrder" }
             }
           }
         }
@@ -1360,47 +968,27 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Template"
-                      }
+                      "items": { "$ref": "#/components/schemas/Template" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TemplateOrder"
-              }
+              "schema": { "$ref": "#/components/schemas/TemplateOrder" }
             }
           }
         }
@@ -1443,47 +1031,27 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/TemplateItem"
-                      }
+                      "items": { "$ref": "#/components/schemas/TemplateItem" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ItemOrder"
-              }
+              "schema": { "$ref": "#/components/schemas/ItemOrder" }
             }
           }
         }
@@ -1504,46 +1072,26 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Expedient"
-                    },
-                    "storage": {
-                      "$ref": "#/components/schemas/PhaseIStorageOutcome"
-                    }
+                    "data": { "$ref": "#/components/schemas/Expedient" },
+                    "storage": { "$ref": "#/components/schemas/PhaseIStorageOutcome" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExpedientCreate"
-              }
+              "schema": { "$ref": "#/components/schemas/ExpedientCreate" }
             }
           }
         }
@@ -1577,30 +1125,18 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Tag"
-                      }
+                      "items": { "$ref": "#/components/schemas/Tag" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "put": {
@@ -1617,43 +1153,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/TagMembership"
-                    }
+                    "data": { "$ref": "#/components/schemas/TagMembership" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TagMembership"
-              }
+              "schema": { "$ref": "#/components/schemas/TagMembership" }
             }
           }
         }
@@ -1676,27 +1194,17 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/BoardColumn"
-                      }
+                      "items": { "$ref": "#/components/schemas/BoardColumn" }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       }
     },
@@ -1726,29 +1234,17 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Preference"
-                    }
+                    "data": { "$ref": "#/components/schemas/Preference" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         }
       },
       "patch": {
@@ -1765,43 +1261,25 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Preference"
-                    }
+                    "data": { "$ref": "#/components/schemas/Preference" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HiddenInput"
-              }
+              "schema": { "$ref": "#/components/schemas/HiddenInput" }
             }
           }
         }
@@ -1833,46 +1311,26 @@
                     "data"
                   ],
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/MoveResult"
-                    }
+                    "data": { "$ref": "#/components/schemas/MoveResult" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Http401"
-          },
-          "403": {
-            "$ref": "#/components/responses/Http403"
-          },
-          "404": {
-            "$ref": "#/components/responses/Http404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Http409"
-          },
-          "419": {
-            "$ref": "#/components/responses/Http419"
-          },
-          "422": {
-            "$ref": "#/components/responses/Http422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Http429"
-          },
-          "500": {
-            "$ref": "#/components/responses/Http500"
-          }
+          "401": { "$ref": "#/components/responses/Http401" },
+          "403": { "$ref": "#/components/responses/Http403" },
+          "404": { "$ref": "#/components/responses/Http404" },
+          "409": { "$ref": "#/components/responses/Http409" },
+          "419": { "$ref": "#/components/responses/Http419" },
+          "422": { "$ref": "#/components/responses/Http422" },
+          "429": { "$ref": "#/components/responses/Http429" },
+          "500": { "$ref": "#/components/responses/Http500" }
         },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MoveInput"
-              }
+              "schema": { "$ref": "#/components/schemas/MoveInput" }
             }
           }
         }
@@ -1881,6 +1339,51 @@
   },
   "components": {
     "schemas": {
+      "PhaseIStorageOutcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "code",
+          "message",
+          "incident_id"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "failed"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "storage_ready",
+              "storage_unavailable",
+              "storage_configuration_invalid",
+              "storage_unsafe",
+              "storage_template_missing",
+              "storage_conflict",
+              "storage_directory_limit",
+              "storage_copy_limit",
+              "storage_transfer_failed",
+              "storage_busy",
+              "storage_not_ready",
+              "upload_name_conflict",
+              "storage_admission_changed"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "incident_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          }
+        }
+      },
       "Action": {
         "type": "object",
         "properties": {
@@ -2037,12 +1540,8 @@
             "type": "integer",
             "minimum": 1
           },
-          "type": {
-            "$ref": "#/components/schemas/ExpedientType"
-          },
-          "requester": {
-            "$ref": "#/components/schemas/ClientSummary"
-          },
+          "type": { "$ref": "#/components/schemas/ExpedientType" },
+          "requester": { "$ref": "#/components/schemas/ClientSummary" },
           "represented_client": {
             "type": "object",
             "additionalProperties": false,
@@ -2061,9 +1560,7 @@
             },
             "nullable": true
           },
-          "status": {
-            "$ref": "#/components/schemas/Status"
-          },
+          "status": { "$ref": "#/components/schemas/Status" },
           "column_position": {
             "type": "integer",
             "minimum": 0
@@ -2587,54 +2084,7 @@
           },
           "expedients": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BoardEntry"
-            }
-          }
-        }
-      },
-      "PhaseIStorageOutcome": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "status",
-          "code",
-          "message",
-          "incident_id"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "ready",
-              "failed"
-            ]
-          },
-          "code": {
-            "type": "string",
-            "enum": [
-              "storage_ready",
-              "storage_unavailable",
-              "storage_configuration_invalid",
-              "storage_unsafe",
-              "storage_template_missing",
-              "storage_conflict",
-              "storage_directory_limit",
-              "storage_copy_limit",
-              "storage_transfer_failed",
-              "storage_busy",
-              "storage_not_ready",
-              "upload_name_conflict",
-              "storage_admission_changed"
-            ]
-          },
-          "message": {
-            "type": "string"
-          },
-          "incident_id": {
-            "type": "integer",
-            "minimum": 1,
-            "nullable": true
+            "items": { "$ref": "#/components/schemas/BoardEntry" }
           }
         }
       }
@@ -2644,9 +2094,7 @@
         "description": "Unauthenticated",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+            "schema": { "$ref": "#/components/schemas/Error" }
           }
         }
       },
@@ -2654,9 +2102,7 @@
         "description": "Forbidden",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+            "schema": { "$ref": "#/components/schemas/Error" }
           }
         }
       },
@@ -2664,9 +2110,7 @@
         "description": "Not found",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+            "schema": { "$ref": "#/components/schemas/Error" }
           }
         }
       },
@@ -2674,9 +2118,7 @@
         "description": "Conflict",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+            "schema": { "$ref": "#/components/schemas/Error" }
           }
         }
       },
@@ -2684,9 +2126,7 @@
         "description": "Invalid CSRF",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+            "schema": { "$ref": "#/components/schemas/Error" }
           }
         }
       },
@@ -2694,9 +2134,7 @@
         "description": "Unprocessable",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+            "schema": { "$ref": "#/components/schemas/Error" }
           }
         }
       },
@@ -2704,9 +2142,7 @@
         "description": "Unexpected error",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+            "schema": { "$ref": "#/components/schemas/Error" }
           }
         }
       },
@@ -2714,9 +2150,7 @@
         "description": "Rate limited",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+            "schema": { "$ref": "#/components/schemas/Error" }
           }
         }
       }
