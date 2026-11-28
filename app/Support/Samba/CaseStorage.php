@@ -4,6 +4,9 @@ namespace App\Support\Samba;
 
 use App\Models\Expedient;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
 use App\Support\BusinessWrite;
 use App\Support\ExpedientLifecycle;
 use App\Support\IdentityError;
@@ -16,6 +19,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 final class CaseStorage
 {
@@ -25,6 +30,7 @@ final class CaseStorage
         private readonly CaseStorageLock $lock,
         private readonly SambaAdapter $adapter,
         private readonly IncidentRecorder $incidents,
+        private readonly AuditRecorder $audit,
     ) {}
 
     /** Call while the new case and its annual number are still in the same transaction. */
@@ -42,43 +48,45 @@ final class CaseStorage
         return $case;
     }
 
-    public function created(Request $request, Expedient $case): StorageOutcome
+    public function created(Request $request, Expedient $case, AuditContext $context): StorageOutcome
     {
-        return $this->perform($request, $case, Operation::Provision,
+        return $this->perform($request, $case, Operation::Provision, $context,
             fn (Expedient $active) => $this->provision($request, $active, Operation::Provision));
     }
 
     public function retry(Request $request, int $id): StorageOutcome
     {
-        $case = $this->admit($request, $id, Operation::Retry);
+        [$case, $context] = $this->admit($request, $id, Operation::Retry);
 
-        return $this->perform($request, $case, Operation::Retry,
+        return $this->perform($request, $case, Operation::Retry, $context,
             fn (Expedient $active) => $this->provision($request, $this->reserveLegacy($request, $active), Operation::Retry));
     }
 
     public function upload(Request $request, int $id, UploadedFile $file): StorageOutcome
     {
-        $case = $this->admit($request, $id, Operation::Upload);
+        [$case, $context] = $this->admit($request, $id, Operation::Upload);
 
-        return $this->perform($request, $case, Operation::Upload, function (Expedient $active) use ($file): void {
+        return $this->perform($request, $case, Operation::Upload, $context, function (Expedient $active) use ($file): bool {
             $size = UploadInput::validate($file, StorageConfiguration::uploadLimit(config()->array('samba')));
             $this->adapter->upload($this->intent($active), $active->samba_provisioning, $file, $size);
+
+            return true;
         });
     }
 
-    /** @param Closure(Expedient): void $work */
-    private function perform(Request $request, Expedient $case, Operation $operation, Closure $work): StorageOutcome
+    /** @param Closure(Expedient): bool $work Returns whether storage confirmed a new change. */
+    private function perform(Request $request, Expedient $case, Operation $operation, AuditContext $context, Closure $work): StorageOutcome
     {
         if (DB::transactionLevel() !== 0) {
             return new StorageOutcome(Failure::AdmissionChanged);
         }
 
-        $admitted = false;
+        $admitted = $confirmed = false;
         try {
-            $this->lock->run($case->id, function () use ($request, $case, $operation, $work, &$admitted): void {
-                $active = $this->admit($request, $case->id, $operation);
+            $this->lock->run($case->id, function () use ($request, $case, $operation, $work, &$admitted, &$confirmed): void {
+                $active = $this->admit($request, $case->id, $operation)[0];
                 $admitted = true;
-                $work($active);
+                $confirmed = $work($active);
                 $this->admit($request, $case->id, $operation);
             });
 
@@ -89,21 +97,44 @@ final class CaseStorage
                 : new StorageOutcome(Failure::AdmissionChanged);
         } catch (StorageFailure|QueryException $failure) {
             return $this->failed($request, $case, $operation, $failure);
+        } finally {
+            if ($confirmed) {
+                $this->recordConfirmed($context, $case, $operation);
+            }
+        }
+    }
+
+    private function recordConfirmed(AuditContext $context, Expedient $case, Operation $operation): void
+    {
+        $event = match ($operation) {
+            Operation::Provision => AuditEvent::StorageProvisioned,
+            Operation::Retry => AuditEvent::StorageRetried,
+            Operation::Upload => AuditEvent::StorageUploaded,
+        };
+
+        try {
+            DB::transaction(fn () => $this->audit->record($context, $event, $case, metadata: ['confirmed' => true]), 3);
+        } catch (Throwable) {
+            rescue(fn () => Log::error('Confirmed case storage operation could not be audited.', [
+                'operation' => $operation->value, 'operation_id' => $context->operationId,
+            ]), report: false);
+            rescue(fn () => $this->incidents->record($operation, Failure::AuditPersistence, $case, $context->actorId), report: false);
         }
     }
 
     private function reserveLegacy(Request $request, Expedient $case): Expedient
     {
         return $case->samba_relative_path === null
-            ? $this->admit($request, $case->id, Operation::Retry, reserve: true)
+            ? $this->admit($request, $case->id, Operation::Retry, reserve: true)[0]
             : $case;
     }
 
-    private function admit(Request $request, int $id, Operation $operation, ?string $state = null, bool $reserve = false): Expedient
+    /** @return array{Expedient, AuditContext} */
+    private function admit(Request $request, int $id, Operation $operation, ?string $state = null, bool $reserve = false): array
     {
         $permission = $operation === Operation::Provision ? PermissionKey::CreateExpedients : PermissionKey::UploadCaseFiles;
 
-        return $this->write->run($request, $permission, function (User $actor) use ($id, $operation, $state, $reserve): Expedient {
+        return $this->write->run($request, $permission, function (User $actor, AuditContext $context) use ($id, $operation, $state, $reserve): array {
             $gate = Gate::forUser($actor);
             $initial = $operation === Operation::Provision;
             $gate->authorize($initial ? 'create' : 'viewAny', Expedient::class);
@@ -117,13 +148,13 @@ final class CaseStorage
                 }
             }
 
-            return $reserve ? $this->reserve($case) : $case;
+            return [$reserve ? $this->reserve($case) : $case, $context];
         });
     }
 
-    private function provision(Request $request, Expedient $case, Operation $operation): void
+    private function provision(Request $request, Expedient $case, Operation $operation): bool
     {
-        $this->adapter->provision($this->intent($case), $case->samba_provisioning, function (string $state) use ($request, $case, $operation): void {
+        return $this->adapter->provision($this->intent($case), $case->samba_provisioning, function (string $state) use ($request, $case, $operation): void {
             $this->admit($request, $case->id, $operation, $state);
         });
     }

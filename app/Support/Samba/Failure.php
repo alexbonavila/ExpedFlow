@@ -16,6 +16,7 @@ enum Failure: string
     case NotReady = 'storage_not_ready';
     case NameConflict = 'upload_name_conflict';
     case AdmissionChanged = 'storage_admission_changed';
+    case AuditPersistence = 'storage_audit_unrecorded';
 
     public function status(): int
     {

@@ -20,7 +20,9 @@ final class IncidentRecorder
                 $incident = Incident::query()->forceCreate([
                     'type' => $reason->value,
                     'operation' => $operation->value,
-                    'message' => 'A case storage operation did not complete.',
+                    'message' => $reason === Failure::AuditPersistence
+                        ? 'A confirmed case storage operation could not be audited.'
+                        : 'A case storage operation did not complete.',
                     'user_id' => $user?->id,
                     'expedient_id' => $parent?->id,
                     'expedient_code' => $case->code,

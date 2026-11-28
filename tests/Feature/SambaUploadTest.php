@@ -10,6 +10,7 @@ use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Activitylog\Models\Activity;
 use Tests\Support\SambaFixture;
 use Tests\Support\SambaHttp;
 use Tests\Support\TestingDatabase;
@@ -50,6 +51,14 @@ test('writes verified multipart bytes once and rejects equivalent Unicode names 
             ->assertHeader('Cache-Control', 'no-store, private');
         $destination = $fixture->root.'/'.$case->samba_relative_path.'/Acta École.pdf';
         expect(file_get_contents($destination))->toBe($pdf);
+        $created = Activity::query()->where('event', 'case.created')->sole();
+        $provisioned = Activity::query()->where('event', 'storage.provisioned')->sole();
+        expect($provisioned->getProperty('operation_id'))->toBe($created->getProperty('operation_id'));
+        $upload = Activity::query()->where('event', 'storage.uploaded')->sole();
+        expect($upload->subject_id)->toBe($case->id);
+        expect($upload->causer_id)->toBe($created->causer_id);
+        expect($upload->getProperty('metadata'))->toBe(['confirmed' => true]);
+        expect(json_encode($upload->getAttributes()))->not->toContain('Acta École.pdf', $case->samba_relative_path, $case->samba_provisioning);
 
         $this->sambaMultipart($case->id, ['file' => $file("acta E\u{0301}COLE.PDF", $pdf)], $headers)
             ->assertConflict()->assertJsonPath('code', 'upload_name_conflict');
@@ -57,6 +66,7 @@ test('writes verified multipart bytes once and rejects equivalent Unicode names 
             ->assertStatus(413)->assertJsonPath('code', 'payload_too_large')->assertJsonValidationErrors('file');
         expect(file_get_contents($destination))->toBe($pdf)
             ->and(Incident::query()->sole()->type)->toBe('upload_name_conflict');
+        expect(Activity::query()->where('event', 'storage.uploaded')->count())->toBe(1);
     } finally {
         $fixture->clean();
     }
@@ -198,6 +208,39 @@ test('withholds confirmation when a token is revoked during a transfer and block
         expect(file_get_contents($destination))->toBe($pdf)
             ->and(Incident::query()->sole()->type)->toBe('storage_admission_changed');
         $this->sambaMultipart($case->id, ['file' => $file], $headers)->assertUnauthorized();
+    } finally {
+        $fixture->clean();
+    }
+});
+
+test('an audit outage after a confirmed upload preserves its bytes and successful response', function (): void {
+    $fixture = new SambaFixture;
+    try {
+        mkdir($fixture->root.'/PLANTILLAS/05', 0700, true);
+        mkdir($fixture->root.'/EXPEDIENTES');
+        config(['samba' => $fixture->settings()]);
+        $this->app->instance(MountVerifier::class, $fixture);
+        $actor = User::factory()->create()->assignRole('user');
+        $headers = $this->authorizationBearer($actor);
+        $input = $this->caseInput(['expedient_type_id' => ExpedientType::factory()->create(['code' => '05'])->id]);
+        $this->api('POST', '/api/v1/expedients', $input, $headers)->assertCreated()->assertJsonPath('storage.status', 'ready');
+        $case = Expedient::query()->sole();
+        Activity::creating(fn (Activity $entry): bool => $entry->event !== 'storage.uploaded');
+
+        $pdf = sambaSyntheticPdf();
+        $file = UploadedFile::fake()->createWithContent('private-sentinel.pdf', $pdf);
+        $this->sambaMultipart($case->id, ['file' => $file], $headers)
+            ->assertCreated()->assertJsonPath('code', 'upload_saved');
+        expect(file_get_contents($fixture->root.'/'.$case->samba_relative_path.'/private-sentinel.pdf'))->toBe($pdf);
+        expect(Activity::query()->where('event', 'storage.uploaded')->count())->toBe(0);
+
+        $incident = Incident::query()->sole();
+        expect($incident->type)->toBe('storage_audit_unrecorded');
+        expect($incident->user_id)->toBe($actor->id);
+        expect($incident->expedient_code)->toBe($case->code);
+        expect(json_encode($incident->getAttributes()))->not->toContain('private-sentinel.pdf', $case->samba_relative_path);
+        $this->sambaMultipart($case->id, ['file' => $file], $headers)
+            ->assertConflict()->assertJsonPath('code', 'upload_name_conflict');
     } finally {
         $fixture->clean();
     }

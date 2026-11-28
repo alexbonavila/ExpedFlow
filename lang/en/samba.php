@@ -20,5 +20,6 @@ return [
     'upload_invalid_name' => 'Use a safe filename with an allowed extension.',
     'upload_too_large' => 'The file exceeds the upload size limit.',
     'storage_directory_limit' => 'The case folder cannot safely accept another upload.',
+    'storage_audit_unrecorded' => 'The storage operation completed, but its audit entry could not be saved.',
     'incident_unknown' => 'An operational incident was recorded.',
 ];

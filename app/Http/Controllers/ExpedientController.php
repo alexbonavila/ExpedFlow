@@ -66,14 +66,14 @@ final class ExpedientController extends Controller
     {
         $input = $request->validated();
         try {
-            $case = $this->write->run($request, PermissionKey::CreateExpedients,
-                function (User $actor, AuditContext $context) use ($storage, $input): Expedient {
+            [$case, $context] = $this->write->run($request, PermissionKey::CreateExpedients,
+                function (User $actor, AuditContext $context) use ($storage, $input): array {
                     $case = $storage->reserve($this->writer->create($actor, $input, $context));
                     $this->audit->record($context, AuditEvent::CaseCreated, $case,
                         after: AuditSubject::CaseRecord->snapshot($case) + ['state' => 'active'],
                         metadata: ['storage_reserved' => true]);
 
-                    return $case->load(ExpedientResource::RELATIONS);
+                    return [$case->load(ExpedientResource::RELATIONS), $context];
                 });
         } catch (QueryException $exception) {
             if (! str_contains($exception->getSql(), 'samba_relative_path')) {
@@ -84,7 +84,7 @@ final class ExpedientController extends Controller
             throw new IdentityError(500, 'server_error');
         }
 
-        return (new ExpedientResource($case))->additional(['storage' => $storage->created($request, $case)->payload()])
+        return (new ExpedientResource($case))->additional(['storage' => $storage->created($request, $case, $context)->payload()])
             ->response()->setStatusCode(201);
     }
 

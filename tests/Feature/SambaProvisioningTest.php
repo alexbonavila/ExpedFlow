@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 use Tests\Support\CaseHttp;
@@ -130,6 +131,9 @@ test('retries the original target and type after reclassification and leaves rea
         $this->api('POST', $retry, [], $headers)->assertOk()->assertJsonPath('code', 'storage_ready');
         file_put_contents($path.'/nested/template.txt', 'operator updated');
         $this->api('POST', $retry, [], $headers)->assertOk()->assertJsonPath('status', 'ready');
+        $retryAudit = Activity::query()->where('log_name', 'storage')->sole();
+        expect($retryAudit->event)->toBe('storage.retried');
+        expect($retryAudit->subject_id)->toBe($id);
         expect(file_get_contents($path.'/nested/template.txt'))->toBe('operator updated')
             ->and(scandir($fixture->root.'/EXPEDIENTES'))->toBe(['.', '..', $code.' Original'])
             ->and(ExpedientSequence::query()->sole()->last_number)->toBe(1)

@@ -20,5 +20,6 @@ return [
     'upload_invalid_name' => 'Utilitza un nom de fitxer segur amb una extensió permesa.',
     'upload_too_large' => 'El fitxer supera el límit de mida de càrrega.',
     'storage_directory_limit' => 'La carpeta de l’expedient no pot acceptar una altra càrrega de manera segura.',
+    'storage_audit_unrecorded' => 'L’operació d’emmagatzematge s’ha completat, però no se n’ha pogut desar el registre d’auditoria.',
     'incident_unknown' => 'S’ha registrat una incidència operativa.',
 ];

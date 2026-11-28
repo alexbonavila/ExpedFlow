@@ -19,7 +19,7 @@ final class SambaAdapter
     }
 
     /** @param Closure(string): void $saveState External I/O never occurs within this callback. */
-    public function provision(StorageIntent $intent, ?string $state, Closure $saveState): void
+    public function provision(StorageIntent $intent, ?string $state, Closure $saveState): bool
     {
         $configuration = $this->configuration();
         $intent->validate($configuration);
@@ -44,7 +44,7 @@ final class SambaAdapter
 
                 $share->check();
 
-                return;
+                return false;
             }
         } elseif ($phase === 'r') {
             throw new StorageFailure(Failure::NotReady);
@@ -81,6 +81,8 @@ final class SambaAdapter
         $ready = hash_hmac('sha256', 'ready:'.$identity.':'.$claim, $key);
         $this->writeMarker($share, $destination, self::READY, $ready);
         $share->check();
+
+        return true;
     }
 
     public function upload(StorageIntent $intent, ?string $state, UploadedFile $file, int $size): void

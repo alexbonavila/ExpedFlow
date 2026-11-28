@@ -773,6 +773,7 @@
                             "storage_not_ready",
                             "upload_name_conflict",
                             "storage_admission_changed",
+                            "storage_audit_unrecorded",
                             "unknown"
                         ]
                     }
