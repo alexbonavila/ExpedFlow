@@ -264,3 +264,21 @@ The final isolated MySQL pass ran `APP_ENV=testing php tests/Support/check-datab
 ## G09 combined G/H regression
 
 `TaskCatalogIntegrationTest` creates cases from H templates and uses G endpoints to mutate and expose their independent copies. It covers rollback after an earlier copy was written, shared status order and deletion restrictions, calendar visibility, case deletion and restoration, and physical cleanup while retaining blueprints. It exercises the task, catalog and default error groups through the HTTP API in Spanish, Catalan and English. `CatalogContentionTest` verifies both commit orders for a G task move and H status deletion, plus a concurrent G task move and H global case move through independent guarded MySQL processes. The standalone F, G and H contract suites remain in the full regression.
+
+
+## G11 mutation regression and performance fixture
+
+Run the regression suite with `python3 -B -m unittest discover -s scripts/testing -p test_mutation.py`. It covers historical trust and fingerprints, source and test changes, changed dependencies and shared inputs, deterministic scheduling, mixed outcomes, evidence reconciliation and the required CI gate. The bounded native fixture runs with `python3 -B scripts/testing/benchmark_mutation.py`. It uses Pest and the existing mutation adapter in a disposable project and compares every reconciled outcome with an independent full run of the small fixture.
+
+The local fixture measured the following results. Preparation includes coverage and inventory plus the initial suite for any mutation worker. Runner seconds include fixture preparation and workers. These results measure the policy on a small fixture and provide no hosted PR latency claim.
+
+| Scenario | Inventory | Fresh | Reused | Hit rate | Workers | Prep (s) | Execution (s) | Wall (s) | Runner (s) | Fixture full wall (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| No relevant changes | 12 | 0 | 12 | 100% | 0 | 0.242 | 0 | 0.250 | 0.242 | 2.203 |
+| Documentation only | 12 | 0 | 12 | 100% | 0 | 0.254 | 0 | 0.261 | 0.254 | 2.355 |
+| Small application edit | 12 | 4 | 8 | 66.7% | 1 | 0.446 | 0.523 | 0.978 | 0.970 | 2.274 |
+| Changed test | 12 | 4 | 8 | 66.7% | 1 | 0.456 | 0.512 | 0.976 | 0.968 | 2.297 |
+| Isolated new module | 16 | 4 | 12 | 75% | 1 | 0.468 | 0.536 | 1.012 | 1.004 | 3.106 |
+| Shared fixture dependency | 12 | 4 | 8 | 66.7% | 1 | 0.463 | 0.580 | 1.055 | 1.043 | 2.539 |
+
+On the dependency edit, a previously detected mutant in the unchanged caller survived. Both paths reported the same classifications and the incremental gate failed on the fresh slice, as intended.

@@ -156,6 +156,10 @@ def history_index(history, candidate):
     require(history["total"] == len(result), "Historical inventory does not reconcile.")
     require(isinstance(history["snapshot"]["files"], dict) and valid(history["snapshot"]["environment"], DIGEST),
             "Invalid historical fingerprints.")
+    coverage = history["snapshot"].get("coverage")
+    if coverage is not None:
+        require({row["file"] for row in result.values()} <= coverage["files"].keys(),
+                "Historical coverage omits mutation source files.")
     for row in history["results"]:
         outcome(row)
         origin = row["origin"]
@@ -295,6 +299,8 @@ def plan(path, count, mode, impact_path=None):
     if impact:
         require(impact["context"] == execution and impact["runtime"] == runtime_info,
                 "Candidate impact coverage is from a different run, attempt or runtime.")
+        require({entry["file"] for entry in entries} <= impact["coverage"]["files"].keys(),
+                "Candidate coverage omits mutation source files.")
     snapshot = {"files": files, "runtime": runtime_info, "recipe": recipe,
                 "environment": snapshot_environment(files, runtime_info, recipe),
                 "coverage": impact.get("coverage"), "routes": impact.get("routes", []),

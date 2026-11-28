@@ -9,7 +9,7 @@ import re
 import subprocess
 from zipfile import BadZipFile, ZipFile
 
-from mutation_impact import ROOT, RUNTIME_FILES, changed_paths, git, ignored, tree_files, tree_id
+from mutation_impact import PEST_COMMAND, ROOT, RUNTIME_FILES, changed_paths, file_reasons, git, ignored, tree_files, tree_id
 
 
 HISTORY_ARTIFACT = 'mutation-history-v2'
@@ -153,6 +153,9 @@ def legacy_compatible(run, current, snapshot):
     if old.get(WORKFLOW, '').split(':')[-1] not in LEGACY_WORKFLOWS:
         return False
     new = snapshot['files']
+    if PEST_COMMAND != ('php', '-d', 'memory_limit=512M', 'vendor/bin/pest', '--mutate',
+                        '--path=app,routes,bootstrap/app.php', '--no-cache') or snapshot['recipe']['env']:
+        return False
     if any(old.get(path) != f'100644:{oid}' for path, oid in LEGACY_ENGINE.items()):
         return False
     if any(old.get(path) != new.get(path) for path in RUNTIME_FILES):
@@ -162,7 +165,7 @@ def legacy_compatible(run, current, snapshot):
     return (
         f"image: {snapshot['runtime']['mysql']}" in block and 'coverage: xdebug' in block
         and all(ignored(path) or path in METADATA_ONLY for path in changed_paths(old, new))
-        and all(line in block for line in snapshot['recipe'])
+        and all(line in block for line in snapshot['recipe']['worker'])
         and ancestor(run['head_sha'], current['commit'])
     )
 
@@ -238,8 +241,10 @@ def discover(current, snapshot, inventory):
                         for path in changed_paths(evidence['snapshot']['files'], snapshot['files']))
             if legacy:
                 evidence['snapshot'] = snapshot
-            compatible.append((exact, run['head_branch'] == 'main', evidence, artifact))
-            if exact and run['head_branch'] == 'main':
+            reasons = file_reasons(evidence['snapshot'], snapshot, {row['file'] for row in inventory.values()})
+            if 'verified-equivalent' in reasons.values():
+                compatible.append((exact, run['head_branch'] == 'main', evidence, artifact))
+            if exact and compatible:
                 break
         except (subprocess.SubprocessError, ValueError, KeyError, IndexError, TypeError, AttributeError, OSError, BadZipFile):
             print(f"Discarded incompatible mutation artifact from run {run.get('id')}.")

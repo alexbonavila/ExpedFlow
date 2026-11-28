@@ -72,11 +72,16 @@ def runtime():
 def work_recipe():
     workflow = (ROOT / '.github/workflows/phase-b.yml').read_text()
     worker = workflow.split('\n  mutation-shards:\n', 1)[1].split('\n  mutation:\n', 1)[0]
-    # Changing execution flags, runner platform, setup, or DB environment is semantic.
-    # Artifact paths, permissions, conditions, matrix size, and job budget are orchestration.
-    return [line.strip() for line in worker.splitlines() if re.match(
-        r'\s*(runs-on:|image:|coverage:|memory-limit:|MYSQL_[A-Z_]+:|run: bash scripts/testing/ci-mysql.sh)', line,
-    )]
+    backend = workflow.split('\n  backend-tests:\n', 1)[1].split('\n  database-tests:\n', 1)[0]
+    shared_env = workflow.split('\nenv:\n', 1)[1].split('\n\n', 1)[0] if '\nenv:\n' in workflow else ''
+    # Job budgets and artifact paths do not affect Pest or coverage collection.
+    relevant = r'\s*(runs-on:|image:|coverage:|memory-limit:|MYSQL_[A-Z_]+:|run: bash scripts/testing/ci-mysql.sh)'
+    return {
+        'worker': [line.strip() for line in worker.splitlines() if re.match(relevant, line)],
+        'impact': [line.strip() for line in backend.splitlines() if re.match(relevant, line)
+                   or 'composer test:coverage' in line or 'mutation.py prepare' in line],
+        'env': [line.strip() for line in shared_env.splitlines() if not line.strip().startswith('MUTATION_')],
+    }
 
 
 def clean_path(path):
@@ -104,12 +109,13 @@ def coverage_snapshot(directory, junit, root=ROOT):
     project = index.find('{*}project')
     if project is None:
         raise ValueError('Missing PHPUnit coverage index.')
+    source_root = Path(project.attrib['source']).resolve().relative_to(root.resolve())
     for node in project.iterfind('.//{*}file'):
         href = node.attrib['href']
         if not clean_path(href) or not href.endswith('.php.xml'):
             raise ValueError('Invalid PHPUnit coverage entry.')
         file = ElementTree.parse(directory / href).find('{*}file')
-        path = f"{file.attrib['path'].strip('/')}/{file.attrib['name']}".lstrip('/')
+        path = (source_root / file.attrib['path'].strip('/') / file.attrib['name']).as_posix()
         if not clean_path(path) or path in coverage:
             raise ValueError('Invalid or duplicate PHPUnit coverage source path.')
         by_test = defaultdict(list)

@@ -110,3 +110,8 @@ The owner accepted Phase F through PR #13 at `6dae36bf2b374f4c1b125b1fe1537eecfc
 G09 integrates H from protected main at `fdc75e2e251f736e5054382f4eddb9b8cc6298ab` into `feat/tasks-g` for PR #14. It combines the G and H route includes and uses H's explicit translation-group contract for task and catalog errors. H extends `ExpedientRequest` and `ExpedientWriter` for opt-in copying, updates F's status POST test and case creation fixture, and reuses the F contention helper from `CaseHttp`. I can retain the HTTP creation boundary for post-commit provisioning.
 
 G09 verifies G task writes against status deletion, case lifecycle, copied task positions and checklists. When integrating I, verify storage failures and retries preserve the same case, number and already committed database copy. J defines audit and retention rules for actual catalog, template, tag, association, copy and global move changes. K consolidates API contracts and case tag filtering. O consumes the full private board order.
+
+
+### G11 incremental mutation acceptance
+
+The existing Phase G pull request introduces incremental mutation validation with verified historical evidence. The scheduled and release workflows continue to measure the complete inventory in full mode. Hosted acceptance includes observing the automatic incremental run on the published candidate and measuring representative PR latency against the 15-minute operational target.
