@@ -10,14 +10,24 @@ on:
     types: [published]
   workflow_dispatch:
     inputs:
+      mutation_mode:
+        description: Mutation validation mode
+        type: choice
+        options: [incremental, full]
+        default: full
       mutation_shards:
-        description: Number of isolated mutation runners
+        description: Maximum number of isolated mutation runners
         type: choice
         options: ['4', '8']
         default: '8'
 
 permissions:
   contents: read
+
+env:
+  MUTATION_REF_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  MUTATION_REF_BASE: ${{ github.event.pull_request.base.sha || '' }}
+  MUTATION_TRUSTED_BRANCH: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (github.head_ref || github.ref_name) || '' }}
 
 concurrency:
   group: expedflow-ci-${{ github.event_name }}-${{ github.ref }}
@@ -65,6 +75,7 @@ jobs:
       - uses: ./.github/actions/php
         with:
           coverage: xdebug
+          memory-limit: 512M
       - name: Provision restricted MySQL user
         env:
           MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
@@ -72,7 +83,21 @@ jobs:
       - name: Run all Pest suites and line coverage
         env:
           XDEBUG_MODE: coverage
-        run: composer test:coverage
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            composer test:coverage
+          else
+            composer test:coverage -- --coverage-xml=test-results/mutation-coverage
+            python3 scripts/testing/mutation.py prepare test-results/mutation-coverage test-results/phpunit.xml test-results/mutation-impact.json
+          fi
+      - name: Upload candidate mutation impact metadata
+        if: github.event_name != 'push'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: mutation-impact
+          path: test-results/mutation-impact.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Capture suite evidence
         id: suites
         if: ${{ !cancelled() }}
@@ -319,22 +344,37 @@ jobs:
   mutation-plan:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    if: github.event_name != 'push'
+    needs: backend-tests
+    permissions:
+      contents: read
+      actions: read
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
+      work: ${{ steps.plan.outputs.work }}
+      mode: ${{ steps.plan.outputs.mode }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: ./.github/actions/php
         with:
           memory-limit: 512M
+          coverage: xdebug
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: mutation-impact
+          path: test-results/mutation-impact
       - id: plan
         env:
           SHARD_COUNT: ${{ inputs.mutation_shards || '8' }}
+          MUTATION_MODE: ${{ github.event_name == 'pull_request' && 'incremental' || inputs.mutation_mode || 'full' }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p test-results/mutation
-          python3 scripts/testing/mutation.py plan test-results/mutation/plan.json "$SHARD_COUNT"
+          python3 scripts/testing/mutation.py plan test-results/mutation/plan.json "$SHARD_COUNT" \
+            --mode "$MUTATION_MODE" --impact test-results/mutation-impact/mutation-impact.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: mutation-plan
@@ -347,7 +387,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     needs: mutation-plan
-    if: github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    if: needs.mutation-plan.outputs.work == 'yes'
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.mutation-plan.outputs.matrix) }}
@@ -369,6 +409,7 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: ./.github/actions/php
         with:
           coverage: xdebug
@@ -405,36 +446,44 @@ jobs:
   mutation:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'release' || github.event_name == 'workflow_dispatch') }}
+    if: ${{ always() && github.event_name != 'push' }}
     needs: [mutation-plan, mutation-shards]
     steps:
       - name: Require a successful plan and every matrix runner
         env:
           PLAN_RESULT: ${{ needs.mutation-plan.result }}
           SHARD_RESULT: ${{ needs.mutation-shards.result }}
-        run: test "$PLAN_RESULT" = success && test "$SHARD_RESULT" = success
+          WORK: ${{ needs.mutation-plan.outputs.work }}
+        run: |
+          test "$PLAN_RESULT" = success
+          case "$WORK:$SHARD_RESULT" in
+            yes:success|no:skipped) ;;
+            *) exit 1 ;;
+          esac
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: mutation-plan
           path: test-results/mutation-plan
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        if: needs.mutation-plan.outputs.work == 'yes'
         with:
           pattern: mutation-shard-*
           path: test-results/mutation-matrix
       - name: Enforce the global mutation score
         run: |
-          python3 scripts/testing/mutation.py aggregate test-results/mutation-plan/plan.json test-results/mutation-matrix test-results/mutation-summary.json
+          python3 scripts/testing/mutation.py aggregate test-results/mutation-plan/plan.json test-results/mutation-matrix test-results/mutation-history.json
       - name: Upload aggregated mutation results
-        if: ${{ !cancelled() && hashFiles('test-results/mutation-summary.json') != '' }}
+        if: success()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: mutation-results
-          path: test-results/mutation-summary.json
+          name: mutation-history-v2
+          path: test-results/mutation-history.json
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 90
           overwrite: true
 
   performance:
@@ -554,4 +603,5 @@ jobs:
       - name: Evaluate every required result
         env:
           NEEDS_RESULTS: ${{ toJSON(needs) }}
+          DISPATCH_MUTATION_MODE: ${{ inputs.mutation_mode || 'full' }}
         run: bash scripts/testing/quality-gate.sh "$GITHUB_EVENT_NAME"
