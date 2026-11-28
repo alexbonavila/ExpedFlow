@@ -6,6 +6,9 @@ use App\Http\Resources\TagResource;
 use App\Models\Expedient;
 use App\Models\Tag;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\CatalogInput;
@@ -20,7 +23,7 @@ use Illuminate\Validation\ValidationException;
 
 final class ExpedientTagController extends Controller
 {
-    public function __construct(private readonly BusinessWrite $write, private readonly ExpedientLifecycle $lifecycle) {}
+    public function __construct(private readonly BusinessWrite $write, private readonly ExpedientLifecycle $lifecycle, private readonly AuditRecorder $audit) {}
 
     public function index(string $expedient): AnonymousResourceCollection
     {
@@ -34,20 +37,21 @@ final class ExpedientTagController extends Controller
     {
         $id = AuthorizationInput::identifier($expedient);
         $ids = Arr::array(CatalogInput::validate($request, CatalogInput::identifiers('tag_ids')), 'tag_ids');
-        $membership = $this->write->run($request, PermissionKey::AssociateTags, function (User $actor) use ($id, $ids): array {
+        $membership = $this->write->run($request, PermissionKey::AssociateTags, function (User $actor, AuditContext $context) use ($id, $ids): array {
             Gate::forUser($actor)->authorize('viewAny', Expedient::class);
             $case = $this->lifecycle->lockParent($id);
             Gate::forUser($actor)->authorize('associateTags', $case);
 
-            $tags = Tag::query()->whereKey($ids)->orderBy('id')->lockForUpdate()->pluck('id')->all();
+            $tags = Tag::query()->whereKey($ids)->orderBy('id')->lockForUpdate()->pluck('id')->map(fn (mixed $tag): int => (int) $tag)->all();
             if (count($tags) !== count($ids)) {
                 throw ValidationException::withMessages(['tag_ids' => __('catalogs.tag_reference_invalid')]);
             }
 
             $relation = $case->tags();
-            $current = $relation->newPivotQuery()->orderBy('tag_id')->lockForUpdate()->pluck('tag_id')->all();
+            $current = $relation->newPivotQuery()->orderBy('tag_id')->lockForUpdate()->pluck('tag_id')->map(fn (mixed $tag): int => (int) $tag)->all();
             $relation->detach(array_diff($current, $tags));
             $relation->attach(array_diff($tags, $current));
+            $this->audit->recordSet($context, AuditEvent::CaseTagsChanged, $case, 'tags', $current, $tags);
 
             return ['tag_ids' => $tags];
         });

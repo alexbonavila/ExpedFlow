@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Gate;
 final class CatalogWrite
 {
     /** Call after BusinessWrite has checked the catalog management permission. */
-    public static function delete(User $actor, ExpedientType|Status $record, string $conflict): void
+    public static function delete(User $actor, ExpedientType|Status $record, string $conflict): bool
     {
         if (Gate::forUser($actor)->denies('delete', $record)) {
             throw new IdentityError(409, $conflict, 'catalogs');
         }
 
         try {
-            $record->newQuery()->whereKey($record->id)->delete();
+            return $record->newQuery()->whereKey($record->id)->delete() === 1;
         } catch (QueryException $error) {
             if (($error->errorInfo[1] ?? null) === 1451) {
                 throw new IdentityError(409, $conflict, 'catalogs');

@@ -62,6 +62,7 @@ enum AuditEvent: string
     case TagDetached = 'tag.detached';
     case TemplateCreated = 'template.created';
     case TemplateUpdated = 'template.updated';
+    case TemplateChecklistRemoved = 'template.checklist_removed';
     case TemplateDeleted = 'template.deleted';
     case TemplateReordered = 'template.reordered';
     case TemplateChecklistCreated = 'template_checklist.created';

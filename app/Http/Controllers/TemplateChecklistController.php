@@ -6,6 +6,10 @@ use App\Http\Resources\TemplateChecklistResource;
 use App\Models\TaskTemplate;
 use App\Models\TaskTemplateChecklistItem;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
+use App\Support\Audit\AuditSubject;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\CaseOrdering;
@@ -20,10 +24,11 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use RuntimeException;
 
 final class TemplateChecklistController extends Controller
 {
-    public function __construct(private readonly BusinessWrite $write, private readonly CaseOrdering $ordering) {}
+    public function __construct(private readonly BusinessWrite $write, private readonly CaseOrdering $ordering, private readonly AuditRecorder $audit, private readonly CatalogOrder $order) {}
 
     public function index(string $type, string $template): AnonymousResourceCollection
     {
@@ -42,13 +47,19 @@ final class TemplateChecklistController extends Controller
     public function store(Request $request, string $type, string $template): JsonResponse
     {
         $fields = CatalogInput::validate($request, ['name' => CatalogInput::name()]);
-        $item = $this->write->run($request, PermissionKey::ManageTaskTemplates, function (User $actor) use ($type, $template, $fields): TaskTemplateChecklistItem {
+        $item = $this->write->run($request, PermissionKey::ManageTaskTemplates, function (User $actor, AuditContext $context) use ($type, $template, $fields): TaskTemplateChecklistItem {
             $record = $this->lockTemplate($actor, $type, $template);
             $items = $record->checklistItems()->orderBy('id')->lockForUpdate()->get(['id', 'position']);
 
-            return $record->checklistItems()->forceCreate($fields + [
+            $item = $record->checklistItems()->forceCreate($fields + [
                 'position' => $this->ordering->increment($items->max('position') ?? 0),
             ]);
+            if (! $item->exists) {
+                throw new RuntimeException('Template creation did not complete.');
+            }
+            $this->audit->record($context, AuditEvent::TemplateChecklistCreated, $item, after: AuditSubject::TemplateChecklist->snapshot($item));
+
+            return $item;
         });
 
         return (new TemplateChecklistResource($item))->response()->setStatusCode(201);
@@ -57,10 +68,14 @@ final class TemplateChecklistController extends Controller
     public function update(Request $request, string $type, string $template, string $item): TemplateChecklistResource
     {
         $fields = CatalogInput::validate($request, ['name' => CatalogInput::name()]);
-        $updated = $this->write->run($request, PermissionKey::ManageTaskTemplates, function (User $actor) use ($type, $template, $item, $fields): TaskTemplateChecklistItem {
+        $updated = $this->write->run($request, PermissionKey::ManageTaskTemplates, function (User $actor, AuditContext $context) use ($type, $template, $item, $fields): TaskTemplateChecklistItem {
             $record = $this->lockTemplate($actor, $type, $template);
             $updated = $record->checklistItems()->lockForUpdate()->findOrFail(AuthorizationInput::identifier($item));
-            $updated->forceFill($fields)->save();
+            $before = AuditSubject::TemplateChecklist->snapshot($updated);
+            if (! $updated->forceFill($fields)->save()) {
+                throw new RuntimeException('Template update did not complete.');
+            }
+            $this->audit->record($context, AuditEvent::TemplateChecklistUpdated, $updated, $before, AuditSubject::TemplateChecklist->snapshot($updated));
 
             return $updated;
         });
@@ -70,9 +85,13 @@ final class TemplateChecklistController extends Controller
 
     public function destroy(Request $request, string $type, string $template, string $item): JsonResponse
     {
-        $this->write->run($request, PermissionKey::ManageTaskTemplates, function (User $actor) use ($type, $template, $item): void {
+        $this->write->run($request, PermissionKey::ManageTaskTemplates, function (User $actor, AuditContext $context) use ($type, $template, $item): void {
             $record = $this->lockTemplate($actor, $type, $template);
-            $record->checklistItems()->lockForUpdate()->findOrFail(AuthorizationInput::identifier($item))->delete();
+            $entry = $record->checklistItems()->lockForUpdate()->findOrFail(AuthorizationInput::identifier($item));
+            if ($entry->delete() !== true) {
+                throw new RuntimeException('Template checklist deletion did not complete.');
+            }
+            $this->audit->record($context, AuditEvent::TemplateChecklistDeleted, $entry, AuditSubject::TemplateChecklist->snapshot($entry));
         });
 
         return CatalogWrite::deleted('template_item_deleted');
@@ -81,10 +100,10 @@ final class TemplateChecklistController extends Controller
     public function reorder(Request $request, string $type, string $template): AnonymousResourceCollection
     {
         $ids = Arr::array(CatalogInput::validate($request, CatalogInput::identifiers('item_ids')), 'item_ids');
-        $items = $this->write->run($request, PermissionKey::ManageTaskTemplates, function (User $actor) use ($type, $template, $ids): Collection {
+        $items = $this->write->run($request, PermissionKey::ManageTaskTemplates, function (User $actor, AuditContext $context) use ($type, $template, $ids): Collection {
             $record = $this->lockTemplate($actor, $type, $template);
             $items = $record->checklistItems()->orderBy('id')->lockForUpdate()->get();
-            CatalogOrder::replace($items, $ids);
+            $this->order->replace($items, $ids, $context, AuditEvent::TemplateChecklistReordered);
 
             return $items->sortBy('position')->values();
         });
