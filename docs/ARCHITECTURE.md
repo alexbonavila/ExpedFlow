@@ -103,6 +103,24 @@ The existing `routes/api.php` Sanctum group loads `routes/expedients.php`. Clien
 
 Template copying, when H adds it, must persist its database rows inside the same creation transaction as the case and number. G/H/I may proceed together only after owner acceptance of F. Before their integration, jointly verify parent deletion versus task creation or modification, restore collisions and markers, shared status lock ordering, preference preservation and post-commit storage failures without renumbering.
 
+## Phase G audit handoff
+
+Comment writes run in `TaskCommentController` inside `BusinessWrite`. Phase J can record the fresh actor, action, task and comment IDs, original author ID and the authorized change inside that transaction. Capture old values before applying a change and record actual changed fields, keeping the original author on every update and deletion. Centralized recording and retention are pending Phase J.
+
+## Phase G integration with H and I
+
+Phase H's opt-in template copy supplies an explicit initial task status and creates ordered tasks in the newly inserted case. Those rows immediately use the same Phase G resources, policies and active-position constraint as manually created tasks. Task and checklist copies have independent IDs and remain available after changes to their source templates.
+
+I owns storage provisioning and incident behavior. Task transactions contain only database changes and return responses after commit. The authenticated API group includes both the G task and H catalog routes. Phase I still requires its own storage and lifecycle integration verification.
+
+## Phase H catalogs and personal Kanban
+
+Phase H starts from the owner-accepted Phase F integration at `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b`. Its routes are included in the existing authenticated and active-identity group through `routes/catalogs.php`. Phase F retains the existing type and status list routes and their resource projections. H owns catalog mutations, type-scoped template blueprints, tags and case associations, and personal case Kanban preferences. G owns ordinary tasks and their shared order. I owns storage provisioning after the case transaction returns.
+
+Every H HTTP mutation runs inside `BusinessWrite` and uses its freshly authorized actor. Parent scopes and composite grants are checked before dependent reads and rechecked in the transaction. H routes use strict JSON field validation and the existing localized error response. New behavior is registered only when implemented.
+
+`ExpedientWriter::create` locks both explicit statuses in one ascending acquisition and calls `TemplateCopier` within the existing creation transaction. Ordered templates and checklist items become independent, newly numbered tasks and incomplete checklist items. The new tasks have no schedule or assignees. The case, annual number and all copies commit together. G uses the existing task schema and active-position constraint. I can provision storage after the HTTP write returns and reuse the same case identity on retries.
+
 ## Phase I storage identity
 
 The Phase I adapter has dedicated settings in `config/samba.php`. Installation config identifies the exact private Linux CIFS mountpoint and expected UNC source. The template and case roots are separate, relative, case-insensitively disjoint subtrees. The installation provisions both roots. The last two digits of the assigned case code select the template directory, including on retries after type changes.

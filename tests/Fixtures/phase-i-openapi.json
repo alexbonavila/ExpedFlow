@@ -841,8 +841,48 @@
                     "status_id": {
                         "type": "integer",
                         "minimum": 1
+                    },
+                    "copy_template": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "template_status_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "Required when copy_template is true and omitted otherwise."
                     }
-                }
+                },
+                "oneOf": [
+                    {
+                        "properties": {
+                            "copy_template": {
+                                "type": "boolean",
+                                "enum": [
+                                    true
+                                ]
+                            }
+                        },
+                        "required": [
+                            "copy_template",
+                            "template_status_id"
+                        ]
+                    },
+                    {
+                        "properties": {
+                            "copy_template": {
+                                "type": "boolean",
+                                "enum": [
+                                    false
+                                ]
+                            }
+                        },
+                        "not": {
+                            "required": [
+                                "template_status_id"
+                            ]
+                        }
+                    }
+                ]
             }
         },
         "securitySchemes": {

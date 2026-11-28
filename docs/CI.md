@@ -70,7 +70,7 @@ Run all applicable checks on a specific commit. Use real PHP, MySQL, Vue, browse
 
 ## ExpedFlow CI configuration
 
-ExpedFlow CI runs on pull requests, pushes to `main`, a daily UTC schedule, release publication and manual dispatch. All events require the core jobs. The three mutation stages, performance and passive ZAP are required for scheduled, release and manual events. Pull requests and pushes expect those five job groups to be skipped. The aggregate gate enforces both the exact job inventory and every required outcome. See the filename transition below for the active dispatch path.
+ExpedFlow CI runs on pull requests, pushes to `main`, a daily UTC schedule, release publication and manual dispatch. All events require the core jobs. Pull requests require incremental mutation validation. Scheduled and release events require full mutation validation. Manual dispatch selects incremental or full mode. Performance and passive ZAP are required for scheduled, release and manual events. Main pushes run core checks. The aggregate gate enforces both the exact job inventory and every required outcome. See the filename transition below for the active dispatch path.
 
 The backend test job runs each Pest suite once and captures line coverage, type coverage and JUnit. The `database-tests` and `api-contract` jobs verify the nonempty Integration and Contract suite outcomes from that report. Each job that uses MySQL gets a separate service. It provisions a random password for the restricted testing account and passes values to later steps through the GitHub environment file with masking. Keep all credentials and reports scoped to synthetic data. Frontend and browser jobs install from the npm lock. The E2E and accessibility jobs each install all three browser engines. CodeQL analyzes JavaScript and TypeScript in a dedicated job. Laravel PHP gets Larastan, Pest and the dependency audit.
 
@@ -180,8 +180,8 @@ Pest 5.3.7 and mutation plugin 5.0.2 run an initial coverage suite, then spawn a
 
 ### Distribution and scoring
 
-- The planner asks the installed plugin to generate the full inventory under `app`, `routes` and `bootstrap/app.php` with its default operators. It assigns every portable ID to one worker. The ID hashes the repository-relative path, operator and complete rendered mutant. Each worker's artifact also records Pest's original checkout-specific ID.
-- Eight hosted jobs by default, or four by manual selection, start independent MySQL service containers. Each has its own credentials and schema guarded by the existing provisioning and safety checks. Each runs the full initial coverage suite and Pest's original subprocess runner serially. A version-pinned generation subscriber compares the entire native inventory with the plan and selects the assigned IDs.
+- The planner asks the installed plugin to generate the full inventory under `app`, `routes` and `bootstrap/app.php` with its default operators. It assigns each portable ID requiring fresh execution to exactly one worker. The ID hashes the repository-relative path, operator and complete rendered mutant. Each worker's artifact also records Pest's original checkout-specific ID.
+- The planner starts up to eight hosted workers by default, or up to four by manual selection. Each started worker uses an independent MySQL service container. Each has its own credentials and schema guarded by the existing provisioning and safety checks. Each runs the full initial coverage suite and Pest's original subprocess runner serially. A version-pinned generation subscriber compares the entire native inventory with the plan and selects the assigned IDs.
 - Assignments spread each file across runners with deterministic cost tie-breaking. Locally the four-runner plan assigned 209 IDs each with estimated weights of 604–607. The eight-runner plan assigned 103–106 IDs each with weights of 300–304. Those estimates measure distribution. The accepted hosted timings appear below.
 - Every result is bound to the commit, mutation configuration, run ID, attempt and exact plan SHA-256. The aggregate checks planned IDs against generated IDs and final outcomes, rejects duplicates, missing reports and invalid values, and computes detected divided by generated over the complete inventory. Shards have no individual minimum. The global gate requires at least 80%.
 - Pest's tested, untested, uncovered and timeout classifications are retained in diagnostic artifacts. The adapter checks fresh PHPUnit evidence and process exit status before admitting a result to the gate. It rejects infrastructure failures and unverified timeouts. Pest normally credits timeouts as detected, so timeout investigations require explicit evidence before considering an adapter change.
@@ -189,15 +189,80 @@ Pest 5.3.7 and mutation plugin 5.0.2 run an initial coverage suite, then spawn a
 
 ### CI efficiency and filename transition
 
-Composer caches only locked distribution archives. npm caches only registry downloads. Keys include the lockfile, platform, selected runtime and relevant setup configuration. Each job still installs from the lockfile. The successful Vite build uploads compiled assets once for the four same-run browser, performance and passive security consumers. Each browser job still installs Playwright and exercises Chromium, Firefox and WebKit against its own MySQL service. No test outcome is cached.
+Composer caches only locked distribution archives. npm caches only registry downloads. Keys include the lockfile, platform, selected runtime and relevant setup configuration. Each job still installs from the lockfile. The successful Vite build uploads compiled assets once for the four same-run browser, performance and passive security consumers. Each browser job still installs Playwright and exercises Chromium, Firefox and WebKit against its own MySQL service. Test outcomes are stored only as reconciled mutation evidence in the versioned artifact described below.
 
 The display name and concurrency prefix are now `ExpedFlow CI` and `expedflow-ci`. The required check retains the exact name `quality-gate`. Phase E.1 retains `.github/workflows/phase-b.yml` in PR #12 so GitHub can dispatch an existing default-branch workflow on the candidate ref. The obsolete Phase B feature-branch push trigger is removed.
 
-For the Phase F candidate, dispatch `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/clients-expedients-f -f mutation_shards=8`. The default for manual, scheduled and release events is eight. Manual dispatch also accepts four. The PR triggers core CI. Record both run URLs and the exact SHA, then leave the runs to finish independently. After a failed partial rerun, start a fresh dispatch so all mutation artifacts share one attempt.
+For the Phase F candidate, dispatch `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/clients-expedients-f -f mutation_shards=8`. The default for manual, scheduled and release events is eight. Manual dispatch also accepts four. The PR triggers core CI. Record both run URLs and the exact SHA, then leave the runs to finish independently. When extended mutation validation fails or is cancelled, start a fresh workflow dispatch on the intended candidate. The planner and every worker must share the same run ID and attempt. GitHub's failed-job rerun can reuse an earlier attempt's planner artifact, which the worker rejects before executing mutations.
 
 After owner-approved Phase F integration, complete the filename transition in an authorized follow-up by running `git mv .github/workflows/phase-b.yml .github/workflows/ci.yml` and updating the current dispatch instructions. Keep the workflow definition and job name `quality-gate` during that move. Check the renamed workflow's PR gate, then after its authorized integration dispatch `gh workflow run ci.yml --repo alexbonavila/ExpedFlow --ref main` and verify the new workflow's extended job results. Preserve historical workflow and run references.
 
 The owner accepted E and E.1 after [PR #12](https://github.com/alexbonavila/ExpedFlow/pull/12) integrated at `b16f3329813e884c7b2c4ec1a222cfc9c05d8620`. The [E.1 core](https://github.com/alexbonavila/ExpedFlow/actions/runs/46011773824), [four-runner extended](https://github.com/alexbonavila/ExpedFlow/actions/runs/46011765743), [eight-runner extended](https://github.com/alexbonavila/ExpedFlow/actions/runs/46016882808) and [post-merge main](https://github.com/alexbonavila/ExpedFlow/actions/runs/46019951613) runs passed. Both extended runs reproduced all aggregate counts and 88.88%. Four-runner logs also matched all 93 non-detected native IDs and classifications. Extended elapsed times were 20m 47s with four runners and 12m 33s with eight. The eight-runner aggregate recorded 631.4 seconds for the longest shard and 3,554.2 mutation-command runner-seconds. This evidence supports the eight-runner default.
+
+## Phase G validation and publication
+
+Phase G uses protected Phase F integration `6dae36bf2b374f4c1b125b1fe1537eecfc428a9b` (PR #13). [Accepted post-merge run](https://github.com/alexbonavila/ExpedFlow/actions/runs/46041291123)
+
+Push each verified Phase G checkpoint to `feat/tasks-g`. The final PR to main triggers core CI. For the exact published branch head, dispatch `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/tasks-g -f mutation_shards=8` once. Record the run IDs and candidates. The coordinated workflow filename maintenance remains pending. Preserve `phase-b.yml`, the eight-runner default and the existing gate thresholds during G/H/I integration. Hosted acceptance and owner review are required before integration.
+
+### Phase G mutation evidence correction
+
+The initial extended run produced 2,078 outcomes and rejected five claimed detections. Pest's `RemoveArrayItem` operator changed the five task-only assignments from `[$record] = $this->scope->read(AuthorizationInput::identifier($task));` to `[] = $this->scope->read(AuthorizationInput::identifier($task));`. PHP lint rejected each generated source with `Cannot use empty list`. The shard reports classified each as `tested`. Local Pest reproductions exited 1 with empty stdout and stderr and a zero-byte JUnit file. The hosted reports did not retain per-mutant subprocess streams or JUnit files. [Initial extended run](https://github.com/alexbonavila/ExpedFlow/actions/runs/46045351194)
+
+| Worker | Original source | Mutation ID | Tests selected in the local reproduction |
+| --- | --- | --- | --- |
+| 2 | `TaskAssigneeController.php:25` | `6420f4db69f5a46f4621237f5bbf099aaad527667e0750f0e32516676a97844b` | Assignment replacement and reader permissions, combined lifecycle, bearer contract |
+| 2 | `TaskController.php:48` | `2910c9061dd53dc56d19dc065f940fa272665ab6662410c25e1b30d77a415e79` | Task read permissions and scope, combined lifecycle, bearer contract |
+| 6 | `TaskChecklistController.php:36` | `c71c426e5ea399f52c84990c4452f98e30ce6dc4275ff8da9a06dab25111ee47` | Checklist CRUD and ordering, checklist grants and rollback, combined lifecycle, bearer contract |
+| 7 | `TaskChecklistController.php:43` | `e12f46f02e6c94ac577ce2a1ee65e377a80af836184741dd8874eb943380a6ee` | Checklist CRUD and ordering, combined lifecycle, bearer contract |
+| 8 | `TaskCommentController.php:27` | `9283835f973099cc966ce24345791630bf6968815d86e69ffbf152c63ea65f51` | Peer editing and comment trash, comment grants and rollback, combined lifecycle, bearer contract |
+
+The controllers now call `TaskScope::readTask`, which uses the existing authorized task-and-case lookup. The tooling unit suite generates and lints array-item removals in the four affected controllers. This regression failed for all five original sites and passes with the typed lookup. The adapter still requires a fresh PHPUnit report and rejects unexpected process outcomes. The planner regenerates the full inventory under the same operators and measured scope. Use a fresh eight-worker dispatch to gather consistent evidence for the corrected candidate.
+
+The correction passed the guarded MySQL regression with 239 tests, 2,874 assertions and 98.7% line coverage, including all 79 integration and 10 contract tests. Composer strict validation, Pint, Larastan level 8, 100% measurable type coverage and all 15 mutation-tooling tests passed. The regenerated plan contained 2,075 unique mutations across 87 files. Three targeted mutations of the corrected lookup and assignment response each produced a fresh PHPUnit assertion failure accepted by the existing adapter.
+
+## Phase H candidate validation
+
+Phase H retains `.github/workflows/phase-b.yml`, its triggers, the protected `quality-gate` and existing mutation scope and thresholds. Feature-branch checkpoints precede the PR. The final PR triggers core CI. Dispatch the extended validation from the final branch head with `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/catalogs-h -f mutation_shards=8`. Candidate acceptance requires the exact-SHA core and extended results, including the eight-runner aggregate. Combined integration requires fresh regression and hosted evidence. The published-release trigger and independent CodeQL alert inventory remain operational follow-up.
+
+### G09 combined candidate
+
+Protected main at `fdc75e2e251f736e5054382f4eddb9b8cc6298ab` already includes Phase H. The corrected standalone G run on `7b55e64a4edfc23412deee95c8292132556bc009` passed with 1,728 detections of 2,075 mutations (83.28%), 306 survivors and 41 uncovered. [Main post-merge CI](https://github.com/alexbonavila/ExpedFlow/actions/runs/46058055338) · [Standalone G extended CI](https://github.com/alexbonavila/ExpedFlow/actions/runs/46077567565)
+
+Use the new core PR run and a fresh eight-worker extended run on the exact combined candidate for G09 acceptance.
+
+
+### G10 hosted mutation worker budget
+
+Each `mutation-shards` job has a 90-minute execution budget, including setup, the initial test suite, assigned mutations and artifact upload. Pest retains its existing per-mutant subprocess timeout. Worker selection remains eight by default, with four available on manual dispatch. The global gate requires at least 80% over the complete reconciled inventory.
+
+On the G09 extended run, five mutation workers completed and workers 1, 2 and 8 were cancelled about 50 minutes after starting, consistent with the previous 50-minute job budget. Their partial rerun reused the attempt 1 plan and failed the attempt check before running mutations. Dispatch a fresh run with `gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/tasks-g -f mutation_shards=8` so the planner and every worker execute together. [Original attempt](https://github.com/alexbonavila/ExpedFlow/actions/runs/46084721566/attempts/1) · [Partial rerun](https://github.com/alexbonavila/ExpedFlow/actions/runs/46084721566/attempts/2)
+
+
+## G11 incremental mutation validation
+
+Pull requests use incremental validation automatically. A scheduled run, published release or manual `mutation_mode=full` runs the complete inventory. A manual dispatch can also request incremental mode. Both manual modes retain the performance and passive security jobs. The default worker limit is eight and the alternative is four. Start a new dispatch after a timeout or failure so the planner and workers share one run attempt.
+
+```bash
+gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/tasks-g -f mutation_mode=full -f mutation_shards=8
+gh workflow run phase-b.yml --repo alexbonavila/ExpedFlow --ref feat/tasks-g -f mutation_mode=incremental -f mutation_shards=4
+```
+
+### History and trust
+
+The successful aggregate uploads `mutation-history-v2` with up to 90 days of retention. It records the complete inventory, per-file Git content fingerprints, operator and rendered-mutant SHA-256, coverage grouped by test source with test and line signatures, lexical dependency references, and the runtime fingerprint. Each outcome retains its original execution commit, PR lineage when applicable, run ID, attempt, execution date and duration. Legacy rows are explicitly labeled. Internally, the planner records the reason for fresh execution or reuse of every ID and retains the artifact ID it consulted.
+
+Discovery checks GitHub's run, repository, branch, job conclusions and artifact metadata. It searches successfully validated ancestors of protected main, then eligible runs of the same in-repository branch. Only successful runs of this workflow with successful planner, aggregate and required quality gate qualify. For historical PRs, the recorded head and base must be ancestors of the candidate and reconstruct the recorded checkout tree. Same-branch native history also requires matching verification scripts and workflow apart from job budgets and artifact retention. Fork artifacts and other branches are outside this trust policy. The aggregator recalculates the eligibility of each row from the plan and checks exact candidate, configuration, run, attempt, plan digest, inventory and assignments for fresh reports.
+
+The protected-main full run measured 1,608 / 1,972 (81.54%). G10 measured 2,229 / 2,730 (81.65%). Legacy outcomes can seed v2 only for known old workflow and engine revisions, equivalent PHP-affecting Git trees, identical portable inventories, and matching PHP and Xdebug versions observed in all successful hosted worker logs. The pinned MySQL image and setup contract must match. Legacy artifacts lack test fingerprints. The planner uses the current coverage snapshot only after establishing exact behavioral-tree compatibility and retains the earlier execution provenance. A historical full score can still be reported for a trusted ancestor whose outcomes are incompatible for reuse. [Protected-main full run](https://github.com/alexbonavila/ExpedFlow/actions/runs/46135841287) · [G10 full run](https://github.com/alexbonavila/ExpedFlow/actions/runs/46140423375)
+
+### Impact and execution
+
+The planner compares committed Git blobs across the verified baseline and the candidate. Removed files exit the denominator. Renames replace the old identity with a new path. Changes to controller, request and resource files invalidate their mutants, lexical callers and sources exercised by relevant tests. Changed, added and deleted test files invalidate their prior and current coverage, including changed line relationships and previously uncovered code. Shared test setup and fixtures, database changes, authorization, service binding, configuration, localization and unknown inputs broaden invalidation to the complete inventory. Literal require-only route additions with existing registrations intact and a new static prefix can stay isolated. The route census and source restrictions must both pass. Dynamic PHP dependencies beyond observed coverage and lexical references cannot be proven precisely. Keep shared behavior in the conservative scope and use the scheduled full result to check the incremental analysis.
+
+The existing backend quality job exports PHPUnit's per-test coverage as plain JSON impact metadata. Pest's pinned mutation runner generates and consumes coverage internally. Workers keep their own initial suite, MySQL service, guard and `--no-cache` execution. The initial suite in G10 worker 1 took about 137 seconds from mutation-step start to the test summary. G10 recorded 22,823.81 worker-seconds and 3,381.40 seconds for the longest mutation command. G11 records preparation and execution separately for each started worker. It uses deterministic longest-processing-time-first allocation with prior actual durations and file estimates for new IDs.
+
+A zero-work plan launches no workers. The aggregate must independently reconcile every outcome and prove the worker skip. Its fresh score is absent. Missing, expired or incompatible evidence requires fresh execution. Both the evaluated incremental scope and the complete reconciled inventory must reach 80%. Full mode measures and gates the actual global score. PR CI displays the fresh and reconciled scores separately from the latest verified full result. Scheduled, release and explicit full runs remain independent acceptance evidence.
 
 ## Phase I CIFS validation
 

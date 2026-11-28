@@ -44,6 +44,8 @@ Route::prefix('v1')->group(function (): void {
             });
         });
         require __DIR__.'/expedients.php';
+        require __DIR__.'/tasks.php';
+        require __DIR__.'/catalogs.php';
         require __DIR__.'/samba.php';
 
         Route::get('expedient-types', [CaseLookupController::class, 'types'])

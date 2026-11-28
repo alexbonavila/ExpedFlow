@@ -7,7 +7,7 @@ use Pest\Mutate\Mutation;
 
 const MUTATION_SCOPE = ['app', 'routes', 'bootstrap/app.php'];
 
-/** @return array{id: string, file: string, mutator: string, start: int, end: int} */
+/** @return array{id: string, file: string, mutator: string, start: int, end: int, mutated_sha256: string} */
 function mutationIdentity(Mutation $mutation): array
 {
     $path = $mutation->file->getRealPath();
@@ -17,14 +17,17 @@ function mutationIdentity(Mutation $mutation): array
     }
 
     $file = substr($path, strlen($root));
+
+    $mutated = $mutation->modifiedSource();
     $site = $mutation instanceof LocatedMutation ? "\0".$mutation->sourceOffset : '';
 
     return [
-        'id' => hash('sha256', $file."\0".$mutation->mutator."\0".$mutation->modifiedSource().$site),
+        'id' => hash('sha256', $file."\0".$mutation->mutator."\0".$mutated.$site),
         'file' => $file,
         'mutator' => $mutation->mutator,
         'start' => $mutation->startLine,
         'end' => $mutation->endLine,
+        'mutated_sha256' => hash('sha256', $mutated),
     ];
 }
 

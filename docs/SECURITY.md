@@ -128,6 +128,20 @@ The write boundary locks and rereads the actor and compares its current credenti
 
 Case filters use validated field and sort allowlists and bound literal search terms. Client name conflicts and catalog references are reported with localized JSON. Case force deletion still requires the reserved administrator role and an explicit grant. Only owned database dependents are removed. Audit and incident history are retained and storage access stays in Phase I.
 
+## Phase G API authorization
+
+Task access requires case access and the task view grant. Creation uses case access and the create grant. Assignment is independent of access. Each mutation passes through the Phase F `BusinessWrite` credential and effective permission recheck. Reads of trash require the applicable restore or force-delete grant. Permanent task and comment deletion requires the reserved active administrator role plus its explicit restricted grant and a trashed record under active parents. Child lookups are scoped after the general permission check, including trash and wrong-parent paths. Session and bearer operations use the existing identity middleware and localized errors.
+
+Assignment candidates are restricted to callers who can assign the task and expose only active users' IDs and names. Calendar scope always derives from the actor and the current assignment pivot, including for administrators. It also requires all three grants `calendar.view`, `expedients.view` and `tasks.view`. Authored description and comment content is plain text. Audit capture with the fresh actor remains Phase J work.
+
+## Phase H catalog, template and board authorization
+
+H routes inherit Sanctum, active identity, localization and the standard JSON error envelope. Every mutation uses the Phase F guarded write and freshly authenticated actor. Admission happens before numeric IDs are probed. Status management requires the active reserved administrator and an explicit grant. Type, template, tag and board grants are delegable. Template writes recheck type view before locking the parent. The nested scopes and template policies apply to each blueprint and checklist operation.
+
+Opt-in copy rechecks case and task permissions inside the case transaction. Template management is independent of using a visible template. Case-tag reads require tag view, while replacement returns only the submitted membership IDs after it succeeds. Board reads and mutations use the authenticated owner. Only a global move adds the case update policy. Board and association endpoints accept only active cases. Standard case visibility is independent of the actor's hidden preference.
+
+G09 uses the shared error renderer's explicit translation groups. Task domain exceptions select `tasks`, catalog exceptions select `catalogs`, and default errors and validation envelopes select `identity`. The authenticated task and catalog route includes inherit the same active identity boundary.
+
 ## Phase I mount boundary
 
 Use Linux with a writable CIFS/SMB3 mount using nodev, nosuid, noexec and cache=none. Keep strict SMB flushes enabled. The application process reads its own mount namespace and requires the exact mountpoint and source. It rejects duplicate aliases of the mounted device and nested mounts. Procfs must be accessible to PHP. The mountpoint and its parents must be canonical, with no symlinks. Use an unprivileged PHP worker and keep the underlying mountpoint root-owned and unwritable to that worker. Mount and unmount remain the operator's responsibility.

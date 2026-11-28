@@ -47,12 +47,21 @@ final class TaskPolicy
         return $this->view($actor, $task, $expedient) && $this->permissions->allows($actor, PermissionKey::ReorderTasks);
     }
 
+    public function viewCalendar(User $actor): bool
+    {
+        $grants = $this->permissions->for($actor);
+
+        return in_array(PermissionKey::ViewCalendar->value, $grants, true)
+            && in_array(PermissionKey::ViewTasks->value, $grants, true)
+            && in_array(PermissionKey::ViewExpedients->value, $grants, true);
+    }
+
     public function calendar(User $actor, Task $task, Expedient $expedient, User $owner): bool
     {
         return $actor->is($owner)
             && $task->scheduled_date !== null
             && $this->view($actor, $task, $expedient)
-            && $this->permissions->allows($actor, PermissionKey::ViewCalendar)
+            && $this->viewCalendar($actor)
             && $task->assignees()->whereKey($actor->id)->exists();
     }
 
