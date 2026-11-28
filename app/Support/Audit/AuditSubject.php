@@ -64,7 +64,7 @@ enum AuditSubject: string
             ],
             self::Task => [
                 'name' => 'text', 'description' => 'redact', 'expedient_id' => 'id', 'status_id' => 'id',
-                'scheduled_date' => 'date', 'scheduled_time' => 'time', 'position' => 'id', 'state' => 'state', 'assignees' => 'ids',
+                'scheduled_date' => 'date', 'scheduled_time' => 'time', 'position' => 'id', 'rank' => 'id', 'state' => 'state', 'assignees' => 'ids',
             ],
             self::Comment => ['task_id' => 'id', 'body' => 'redact', 'state' => 'state'],
             self::Checklist => ['task_id' => 'id', 'name' => 'text', 'completed' => 'flag', 'position' => 'id'],

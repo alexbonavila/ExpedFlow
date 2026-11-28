@@ -6,6 +6,10 @@ use App\Http\Resources\TaskResource;
 use App\Models\Expedient;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
+use App\Support\Audit\AuditTaskDescendants;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\IdentityError;
@@ -25,6 +29,8 @@ final class TaskLifecycleController extends Controller
         private readonly TaskScope $scope,
         private readonly TaskOrdering $ordering,
         private readonly BusinessWrite $write,
+        private readonly AuditRecorder $audit,
+        private readonly AuditTaskDescendants $descendants,
     ) {}
 
     public function trash(string $expedient): AnonymousResourceCollection
@@ -48,12 +54,13 @@ final class TaskLifecycleController extends Controller
     public function destroy(Request $request, string $task): JsonResponse
     {
         $id = AuthorizationInput::identifier($task);
-        $this->write->run($request, PermissionKey::DeleteTasks, function (User $actor) use ($id): void {
+        $this->write->run($request, PermissionKey::DeleteTasks, function (User $actor, AuditContext $context) use ($id): void {
             [$record, $case] = $this->scope->lockActive($id, $actor);
             Gate::forUser($actor)->authorize('delete', [$record, $case]);
             if (! $record->delete()) {
                 throw new RuntimeException('Task deletion did not complete.');
             }
+            $this->audit->record($context, AuditEvent::TaskDeleted, $record, ['state' => 'active'], ['state' => 'trashed'], $case);
         });
 
         return response()->json(['message' => __('tasks.task_deleted'), 'code' => 'task_deleted']);
@@ -62,7 +69,7 @@ final class TaskLifecycleController extends Controller
     public function restore(Request $request, string $task): TaskResource
     {
         $id = AuthorizationInput::identifier($task);
-        $record = $this->write->run($request, PermissionKey::RestoreTasks, function (User $actor) use ($id): Task {
+        $record = $this->write->run($request, PermissionKey::RestoreTasks, function (User $actor, AuditContext $context) use ($id): Task {
             $case = $this->scope->lockParent($id, trashed: true);
             $observed = $this->independentTrash($case)->findOrFail($id, ['status_id'])->status_id;
             $this->ordering->lockStatuses($observed);
@@ -75,6 +82,7 @@ final class TaskLifecycleController extends Controller
             }
             Gate::forUser($actor)->authorize('restore', [$record, $case]);
 
+            $previous = $record->position;
             $occupied = $column->reject(fn (Task $task): bool => $task->trashed())->keyBy('position');
             if ($occupied->has($record->position)) {
                 $position = 1;
@@ -86,6 +94,9 @@ final class TaskLifecycleController extends Controller
             if (! $record->restore()) {
                 throw new RuntimeException('Task restoration did not complete.');
             }
+            $this->audit->record($context, AuditEvent::TaskRestored, $record,
+                ['state' => 'trashed', 'position' => $previous],
+                ['state' => 'active', 'position' => $record->position], $case);
 
             return $record->load(TaskResource::RELATIONS);
         });
@@ -96,13 +107,15 @@ final class TaskLifecycleController extends Controller
     public function forceDelete(Request $request, string $task): JsonResponse
     {
         $id = AuthorizationInput::identifier($task);
-        $this->write->run($request, PermissionKey::ForceDeleteTasks, function (User $actor) use ($id): void {
+        $this->write->run($request, PermissionKey::ForceDeleteTasks, function (User $actor, AuditContext $context) use ($id): void {
             $case = $this->scope->lockParent($id, trashed: true);
             $record = $this->independentTrash($case)->lockForUpdate()->findOrFail($id);
             Gate::forUser($actor)->authorize('forceDelete', [$record, $case]);
+            $this->descendants->record($context, $case, $record);
             if (! $record->forceDelete()) {
                 throw new RuntimeException('Permanent task deletion did not complete.');
             }
+            $this->audit->record($context, AuditEvent::TaskForceDeleted, $record, ['state' => 'trashed'], ['state' => 'deleted'], $case);
         });
 
         return response()->json(['message' => __('tasks.task_force_deleted'), 'code' => 'task_force_deleted']);

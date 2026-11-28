@@ -6,6 +6,9 @@ use App\Http\Requests\TaskAssigneeRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\PermissionKey;
@@ -18,7 +21,7 @@ use Illuminate\Validation\ValidationException;
 
 final class TaskAssigneeController extends Controller
 {
-    public function __construct(private readonly TaskScope $scope, private readonly BusinessWrite $write) {}
+    public function __construct(private readonly TaskScope $scope, private readonly BusinessWrite $write, private readonly AuditRecorder $audit) {}
 
     public function index(string $task): JsonResponse
     {
@@ -42,12 +45,12 @@ final class TaskAssigneeController extends Controller
         $id = AuthorizationInput::identifier($task);
         /** @var list<int> $desired */
         $desired = Arr::array($request->validated(), 'user_ids');
-        $summaries = $this->write->run($request, PermissionKey::AssignTasks, function (User $actor) use ($id, $desired): array {
+        $summaries = $this->write->run($request, PermissionKey::AssignTasks, function (User $actor, AuditContext $context) use ($id, $desired): array {
             [$record, $case] = $this->scope->lockActive($id, $actor);
             Gate::forUser($actor)->authorize('assign', [$record, $case]);
 
             $existing = DB::table('task_user')->where('task_id', $record->id)->orderBy('user_id')->lockForUpdate()
-                ->pluck('user_id')->all();
+                ->pluck('user_id')->map(fn (mixed $userId): int => (int) $userId)->all();
             $users = User::query()->whereKey(array_unique([...$existing, ...$desired]))
                 ->orderBy('id')->lockForUpdate()->get(['id', 'name', 'disabled_at'])->keyBy('id');
 
@@ -67,7 +70,10 @@ final class TaskAssigneeController extends Controller
                 $record->assignees()->attach($add);
             }
 
-            return $this->summaries($record);
+            $summaries = $this->summaries($record);
+            $this->audit->recordSet($context, AuditEvent::TaskAssignmentsChanged, $record, 'assignees', $existing, array_column($summaries, 'id'), $case);
+
+            return $summaries;
         });
 
         return response()->json(['data' => $summaries]);

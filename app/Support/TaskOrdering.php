@@ -64,19 +64,20 @@ final class TaskOrdering
      * Move within the locked columns. An explicit changed order compacts the destination.
      *
      * @param  Collection<int, Task>  $columns
+     * @return array{before: int, after: int}|null
      */
-    public function move(Task $task, Collection $columns, int $statusId, ?int $index): void
+    public function move(Task $task, Collection $columns, int $statusId, ?int $index): ?array
     {
         $destination = $columns->where('status_id', $statusId)
             ->sortBy([['position', 'asc'], ['id', 'asc']])->values();
         $ordered = $destination->reject(fn (Task $item): bool => $item->is($task))->values();
         if ($index === null) {
             if ($destination->last()?->is($task)) {
-                return;
+                return null;
             }
             $this->savePosition($task, $statusId, $this->appendPosition($ordered));
 
-            return;
+            return null;
         }
 
         if ($index > $ordered->count() + 1) {
@@ -84,8 +85,10 @@ final class TaskOrdering
         }
         $ordered->splice($index - 1, 0, [$task]);
         if ($destination->modelKeys() === $ordered->modelKeys()) {
-            return;
+            return null;
         }
+
+        $previousRank = $destination->search(fn (Task $entry): bool => $entry->is($task));
 
         // Allocate above both occupied and final positions before issuing any UPDATE.
         $highest = $destination->max('position') ?? 0;
@@ -99,6 +102,8 @@ final class TaskOrdering
         foreach ($ordered as $offset => $item) {
             $this->savePosition($item, $statusId, $offset + 1);
         }
+
+        return $previousRank === false ? null : ['before' => $previousRank + 1, 'after' => $index];
     }
 
     private function savePosition(Task $task, int $statusId, int $position): void

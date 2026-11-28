@@ -6,6 +6,9 @@ use App\Http\Requests\TaskCommentRequest;
 use App\Http\Resources\TaskCommentResource;
 use App\Models\TaskComment;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\PermissionKey;
@@ -20,7 +23,7 @@ use RuntimeException;
 
 final class TaskCommentController extends Controller
 {
-    public function __construct(private readonly TaskScope $scope, private readonly BusinessWrite $write) {}
+    public function __construct(private readonly TaskScope $scope, private readonly BusinessWrite $write, private readonly AuditRecorder $audit) {}
 
     public function index(string $task): AnonymousResourceCollection
     {
@@ -64,13 +67,17 @@ final class TaskCommentController extends Controller
     {
         $id = AuthorizationInput::identifier($task);
         $body = Arr::string($request->validated(), 'body');
-        $entry = $this->write->run($request, PermissionKey::CreateTaskComments, function (User $actor) use ($id, $body): TaskComment {
+        $entry = $this->write->run($request, PermissionKey::CreateTaskComments, function (User $actor, AuditContext $context) use ($id, $body): TaskComment {
             [$record, $case] = $this->scope->lockActive($id, $actor);
             Gate::forUser($actor)->authorize('create', [TaskComment::class, $record, $case]);
             $entry = $record->comments()->forceCreate(['author_user_id' => $actor->id, 'body' => $body]);
             if (! $entry->exists) {
                 throw new RuntimeException('Comment creation did not complete.');
             }
+
+            $this->audit->record($context, AuditEvent::CommentCreated, $entry,
+                after: ['task_id' => $record->id, 'body' => true, 'state' => 'active'], case: $case,
+                metadata: ['task_id' => $record->id, 'author_id' => $entry->author_user_id]);
 
             return $entry->load(TaskCommentResource::AUTHOR);
         });
@@ -111,7 +118,10 @@ final class TaskCommentController extends Controller
         return response()->json(['message' => __('tasks.task_comment_force_deleted'), 'code' => 'task_comment_force_deleted']);
     }
 
-    /** @param Closure(TaskComment): (bool|null) $operation */
+    /**
+     * @param  'update'|'delete'|'restore'|'forceDelete'  $ability
+     * @param  Closure(TaskComment): (bool|null)  $operation
+     */
     private function change(
         Request $request,
         string $task,
@@ -124,7 +134,7 @@ final class TaskCommentController extends Controller
         $taskId = AuthorizationInput::identifier($task);
         $commentId = AuthorizationInput::identifier($comment);
 
-        return $this->write->run($request, $permission, function (User $actor) use ($taskId, $commentId, $ability, $operation, $trashed): TaskComment {
+        return $this->write->run($request, $permission, function (User $actor, AuditContext $context) use ($taskId, $commentId, $ability, $operation, $trashed): TaskComment {
             [$record, $case] = $this->scope->lockActive($taskId, $actor);
             $query = $record->comments();
             if ($trashed) {
@@ -132,9 +142,19 @@ final class TaskCommentController extends Controller
             }
             $entry = $query->lockForUpdate()->findOrFail($commentId);
             Gate::forUser($actor)->authorize($ability, [$entry, $record, $case]);
+            $oldBody = $entry->body;
             if ($operation($entry) !== true) {
                 throw new RuntimeException('Comment change did not complete.');
             }
+
+            [$event, $before, $after] = match ($ability) {
+                'update' => [AuditEvent::CommentUpdated, ['body' => $oldBody], ['body' => $entry->body]],
+                'delete' => [AuditEvent::CommentDeleted, ['state' => 'active'], ['state' => 'trashed']],
+                'restore' => [AuditEvent::CommentRestored, ['state' => 'trashed'], ['state' => 'active']],
+                'forceDelete' => [AuditEvent::CommentForceDeleted, ['state' => 'trashed'], ['state' => 'deleted']],
+            };
+            $this->audit->record($context, $event, $entry, $before, $after, $case,
+                ['task_id' => $record->id, 'author_id' => $entry->author_user_id]);
 
             return $entry;
         });

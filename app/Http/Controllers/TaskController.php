@@ -8,6 +8,10 @@ use App\Http\Resources\TaskResource;
 use App\Models\Expedient;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Audit\AuditContext;
+use App\Support\Audit\AuditEvent;
+use App\Support\Audit\AuditRecorder;
+use App\Support\Audit\AuditSubject;
 use App\Support\AuthorizationInput;
 use App\Support\BusinessWrite;
 use App\Support\EffectivePermissions;
@@ -30,6 +34,7 @@ final class TaskController extends Controller
         private readonly BusinessWrite $write,
         private readonly ExpedientLifecycle $lifecycle,
         private readonly TaskOrdering $ordering,
+        private readonly AuditRecorder $audit,
     ) {}
 
     public function index(string $expedient): AnonymousResourceCollection
@@ -54,14 +59,18 @@ final class TaskController extends Controller
     {
         $id = AuthorizationInput::identifier($expedient);
         $input = $request->validated();
-        $record = $this->write->run($request, PermissionKey::CreateTasks, function (User $actor) use ($id, $input): Task {
+        $record = $this->write->run($request, PermissionKey::CreateTasks, function (User $actor, AuditContext $context) use ($id, $input): Task {
             $case = $this->lifecycle->lockParent($id);
             Gate::forUser($actor)->authorize('create', [Task::class, $case]);
             $status = Arr::integer($input, 'status_id');
             $this->ordering->lockStatuses($status);
             $fields = $this->schedule(Arr::except($input, 'status_id'));
 
-            return $this->ordering->append($case, $status, $fields)->refresh()->load(TaskResource::RELATIONS);
+            $record = $this->ordering->append($case, $status, $fields)->refresh();
+            $this->audit->record($context, AuditEvent::TaskCreated, $record,
+                after: AuditSubject::Task->snapshot($record) + ['state' => 'active'], case: $case);
+
+            return $record->load(TaskResource::RELATIONS);
         });
 
         return (new TaskResource($record))->response()->setStatusCode(201);
@@ -71,7 +80,7 @@ final class TaskController extends Controller
     {
         $id = AuthorizationInput::identifier($task);
         $input = $request->validated();
-        $record = $this->write->run($request, PermissionKey::UpdateTasks, function (User $actor) use ($id, $input): Task {
+        $record = $this->write->run($request, PermissionKey::UpdateTasks, function (User $actor, AuditContext $context) use ($id, $input): Task {
             $case = $this->scope->lockParent($id);
             $observed = $case->tasks()->findOrFail($id, ['status_id'])->status_id;
             $destination = Arr::integer($input, 'status_id', $observed);
@@ -87,6 +96,7 @@ final class TaskController extends Controller
                 throw new IdentityError(409, 'task_status_changed', 'tasks');
             }
 
+            $before = AuditSubject::Task->snapshot($record);
             $fields = $this->schedule(Arr::except($input, 'status_id'), $record);
             if ($destination !== $observed) {
                 $gate->authorize('reorder', [$record, $case]);
@@ -96,7 +106,10 @@ final class TaskController extends Controller
                 throw new RuntimeException('Task update did not complete.');
             }
 
-            return $record->refresh()->load(TaskResource::RELATIONS);
+            $record->refresh();
+            $this->audit->record($context, AuditEvent::TaskUpdated, $record, $before, AuditSubject::Task->snapshot($record), $case);
+
+            return $record->load(TaskResource::RELATIONS);
         });
 
         return new TaskResource($record);
@@ -108,7 +121,7 @@ final class TaskController extends Controller
         $input = $request->validated();
         $destination = Arr::integer($input, 'status_id');
         $position = isset($input['position']) ? Arr::integer($input, 'position') : null;
-        $record = $this->write->run($request, PermissionKey::ReorderTasks, function (User $actor) use ($id, $destination, $position): Task {
+        $record = $this->write->run($request, PermissionKey::ReorderTasks, function (User $actor, AuditContext $context) use ($id, $destination, $position): Task {
             $case = $this->scope->lockParent($id);
             $observed = $case->tasks()->findOrFail($id, ['status_id'])->status_id;
             $this->ordering->lockStatuses($observed, $destination);
@@ -119,7 +132,14 @@ final class TaskController extends Controller
                 throw new IdentityError(409, 'task_status_changed', 'tasks');
             }
 
-            $this->ordering->move($record, $columns, $destination, $position);
+            $before = ['status_id' => $record->status_id, 'position' => $record->position];
+            $ranks = $this->ordering->move($record, $columns, $destination, $position);
+            $after = ['status_id' => $record->status_id, 'position' => $record->position];
+            if ($before === $after && $ranks !== null) {
+                $before['rank'] = $ranks['before'];
+                $after['rank'] = $ranks['after'];
+            }
+            $this->audit->record($context, AuditEvent::TaskMoved, $record, $before, $after, $case);
 
             return $record->load(TaskResource::RELATIONS);
         });
