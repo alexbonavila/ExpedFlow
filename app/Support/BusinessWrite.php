@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\User;
+use App\Support\Audit\AuditContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,14 +18,15 @@ final class BusinessWrite
     /**
      * @template TResult
      *
-     * @param  Closure(User): TResult  $operation
+     * @param  Closure(User, AuditContext): TResult  $operation
      * @return TResult
      */
     public function run(Request $request, PermissionKey $permission, Closure $operation): mixed
     {
         $actor = $request->user() ?? throw new IdentityError(401, 'unauthenticated');
+        $audit = AuditContext::authenticated($actor);
 
-        return DB::transaction(function () use ($request, $actor, $permission, $operation): mixed {
+        return DB::transaction(function () use ($request, $actor, $permission, $operation, $audit): mixed {
             AuthorizationCatalog::lockAdministratorRole();
             $account = User::query()->lockForUpdate()->find($actor->id);
 
@@ -35,7 +37,7 @@ final class BusinessWrite
 
             Gate::forUser($account)->allowIf(fn (User $user): bool => $this->permissions->allows($user, $permission));
 
-            return $operation($account);
+            return $operation($account, $audit);
         }, 3);
     }
 

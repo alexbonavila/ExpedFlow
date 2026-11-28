@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\User;
+use App\Support\Audit\AuditContext;
 use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -15,12 +16,14 @@ final class AdministrativeWrite
     /**
      * @template TResult
      *
-     * @param  Closure(User, Role): TResult  $operation
+     * @param  Closure(User, Role, AuditContext, User): TResult  $operation
      * @return TResult
      */
     public function run(User $actor, PermissionKey $permission, Closure $operation, ?User $target = null): mixed
     {
-        return DB::transaction(function () use ($actor, $permission, $operation, $target): mixed {
+        $audit = AuditContext::authenticated($actor);
+
+        return DB::transaction(function () use ($actor, $permission, $operation, $target, $audit): mixed {
             $adminRole = AuthorizationCatalog::lockAdministratorRole();
             $targetId = $target->id ?? $actor->id;
             $accounts = User::query()->whereKey([$actor->id, $targetId])->orderBy('id')->lockForUpdate()->get();
@@ -31,7 +34,7 @@ final class AdministrativeWrite
             }
             Gate::forUser($account)->allowIf(fn (User $user): bool => $this->permissions->allows($user, $permission));
 
-            return $operation($accounts->findOrFail($targetId), $adminRole);
+            return $operation($accounts->findOrFail($targetId), $adminRole, $audit, $account);
         }, 3);
     }
 
