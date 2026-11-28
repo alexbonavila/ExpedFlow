@@ -164,6 +164,34 @@ Case responses contain numeric ID and foreign keys, string `code`, name, descrip
 
 Install the shared status catalog through the existing seeder. Before H, creating cases requires a type already provisioned in the deployment database under owner control. Phase F exposes read-only lookups and ships no example types or clients. [Verified OpenAPI fixture](../tests/Fixtures/phase-f-openapi.json)
 
+## Phase G tasks and calendar
+
+The [Phase G OpenAPI fixture](../tests/Fixtures/phase-g-openapi.json) describes the request and response shapes. All paths below are relative to `/api/v1`. Lists return all matching data without pagination. Successful resources use the `data` envelope. Creates return 201. Deletion actions return `message` and `code`. Other successful actions return 200.
+
+| Method and path | Behavior |
+| --- | --- |
+| GET, POST `/expedients/{expedient}/tasks` | List or create active tasks. Lists sort by shared status position and ID, then task position and ID. |
+| GET `/expedients/{expedient}/tasks/trash`, GET `/expedients/{expedient}/tasks/trash/{task}` | List or read independently trashed tasks in an active case. Lists sort by deletion time descending, then ID ascending. |
+| GET, PATCH, DELETE `/tasks/{task}` | Read, update or independently soft-delete an active task. |
+| POST `/tasks/{task}/move` | Set the shared status and optionally insert at a visible one-based index after removing the moving task. Omit `position` to append. Changed explicit moves compact the destination. Source positions and an unchanged order are preserved. |
+| POST `/tasks/{task}/restore`, POST `/tasks/{task}/force-delete` | Restore or permanently delete an independently trashed task under an active case. |
+| GET, PUT `/tasks/{task}/assignees` | Read current assignments or replace the entire set with `user_ids`. An empty list clears assignments. Summaries expose `id`, `name` and `active`. Existing disabled assignees can be retained or removed. |
+| GET `/tasks/{task}/assignee-candidates` | List active users under the assign grant, exposing `id` and `name` only. |
+| GET, POST `/tasks/{task}/comments` | List comments oldest first with ascending ID as a tie-breaker, or add a comment as the authenticated actor. |
+| GET, PATCH, DELETE `/tasks/{task}/comments/{comment}` | Read, edit or soft-delete an active comment. An authorized peer can edit and delete it. |
+| GET `/tasks/{task}/comments/trash`, GET `/tasks/{task}/comments/trash/{comment}` | List or read trashed comments. Lists sort by deletion time descending, then ID ascending. |
+| POST `/tasks/{task}/comments/{comment}/restore`, POST `/tasks/{task}/comments/{comment}/force-delete` | Restore or permanently delete a trashed comment under an active task and case. |
+| GET, POST `/tasks/{task}/checklist` | List items ordered by position and ID, or append an item. |
+| GET, PATCH, DELETE `/tasks/{task}/checklist/{item}` | Read, edit or physically delete a checklist item. |
+| PUT `/tasks/{task}/checklist/order` | Replace the order with `item_ids` containing each current item exactly once. A stale set returns 409. |
+| GET `/calendar/tasks` | List the current actor's assigned active dated tasks in active cases, with inclusive optional `from` and `to` filters. Sort by civil date, null time first, then time and ID. |
+
+Task creation requires a trimmed 1–255 character name and an explicit positive JSON integer `status_id`. PATCH applies supplied fields only. It also requires `tasks.reorder` when changing the status. Names preserve internal spacing. Optional description is nullable text up to 65,535 UTF-8 bytes. Civil dates use strict `YYYY-MM-DD` within MySQL DATE range `1000-01-01` to `9999-12-31`. Time accepts `HH:mm` or `HH:mm:ss`, and responses return seconds. Clear a task's date and any existing time in the same PATCH. The calendar exposes `all_day` to distinguish null time from explicit midnight. There are no task-list query filters in this phase.
+
+Comment writes require a nonblank plain-text `body` with the same byte limit and preserve authored spacing. Comment responses expose the original author's ID and name. Checklist items use a trimmed 1–255 character name and a JSON boolean `completed`, default false. Their position is managed by the server, and completion has no effect on the task status.
+
+Write bodies that describe resources or operation parameters use JSON objects. Accepted fields are allowlisted. Technical fields such as task parent, stored position and comment author are ignored. Task create and PATCH reject `assignees`, `user_ids`, `start_date` and `end_date`. Calendar requests use the authenticated actor and reject owner/user override fields. Task responses include a localized status, minimal assigned users and UTC ISO 8601 timestamps. Trash includes `deleted_at`. The database's internal position and case cascade marker stay private. Render authored fields as text.
+
 ## Phase H catalogs and personal Kanban
 
 `GET /expedient-types/{type}` uses the existing type projection and view grant. The manage grant permits creation with a boundary-trimmed `name` and a two-digit ASCII string `code`. PATCH accepts only `name`. A duplicate code returns `type_code_conflict`. Deleting a type referenced by a case (including trash) or template returns `type_referenced`. Successful deletion returns `type_deleted`.
@@ -179,3 +207,7 @@ Case POST adds optional strict boolean `copy_template` (default false). With tru
 `GET /expedients/board` requires case view and personal Kanban management. The complete response contains shared statuses with `id`, localized `name`, catalog `position` and `expedients`, each with `id`, `code`, `name` and the actor's `hidden` flag. The entries include hidden active cases. Valid actor ranks sort first by rank, then by base position and ID. Entries with absent or stale ranks follow by base position and ID. Status columns sort by catalog position and ID. Reads leave preferences unchanged.
 
 `GET|PATCH /expedients/{expedient}/preferences` returns `expedient_id`, the actor's valid `position` or null, and `hidden`. PATCH takes only an explicit boolean `hidden`. `POST /expedients/{expedient}/move` takes a strict integer `status_id` and optional positive integer `position`. The requested index includes hidden entries and is applied after removing the moving case. Omission appends. Same-column moves update personal ranks. Cross-column moves also require case update and use the Phase F global status writer. The response contains the preference projection and `status_id`. The client must convert a visible-only drag position to the full column index.
+
+### G09 combined task and catalog behavior
+
+Tasks copied at case creation are immediately available through the Phase G task and checklist routes. Later template changes affect future copies. Global case moves retain each task's status and order. Personal board visibility applies to the case board, while ordinary task listing and the assigned calendar retain their own access rules.

@@ -231,6 +231,21 @@ Initiate the candidate's hosted checks and record exact URLs and SHA. Let long-r
 
 Use the guarded MySQL connection before destructive tests. Full mutation verification runs in the hosted matrix. Phase F tests use synthetic data and independent database processes with query barriers for contention.
 
+## Phase G requirement-to-test matrix
+
+| Requirement | Evidence |
+| --- | --- |
+| R02 identity and permissions | `TaskApiTest`, `TaskAssigneeTest`, `TaskCommentTest`, `TaskChecklistTest`, `TaskLifecycleTest` and `PhaseGContractTest` cover policy scope, custom grants, disabled and roleless users, bearer authentication, real session CSRF and localized errors. `TaskContentionTest` covers grant and credential revocation after request admission. |
+| R05, R06 and R07 tasks and shared order | `TaskApiTest` covers allowlisted writes, explicit status, strict civil values, date/time combination, shared ordering, rank overflow and rollback. `TaskContentionTest` covers competing moves and appends. |
+| R05 assignments, comments and checklist | The corresponding feature suites cover assignment replacement, disabled users and rollback, peer comment edits with original author, comment trash, and checklist ordering and completion. `TaskContentionTest` checks replacement, disable and stale checklist membership in separate MySQL processes. |
+| R08 scope and calendar | `TaskCalendarTest` covers private calendar scope, shared assignments, date filters, missing dates, null time versus midnight, personal board preferences, and deleted cases or tasks. |
+| R09 lifecycle | `TaskLifecycleTest` covers repeated case cycles with actual task API writes, position reuse, preserved descendants, independent trash and FK cascades. `TaskContentionTest` covers active parent checks for all task-writing paths and a task creation that commits before deletion. |
+| R11 audit handoff and R12 API | `TaskCommentTest` verifies actor and author behavior. `PhaseGContractTest` validates live request and response shapes against the OpenAPI fixture. Centralized event recording and retention stay with J. |
+
+Guard the dedicated MySQL schema before Pest. The full local coverage run executes Feature, Integration, Contract, Architecture and Unit in one pass. The browser, accessibility, Samba, mutation, security and load gates run in hosted CI.
+
+The Phase G local regression passed 239 tests and 2,874 assertions with 98.7% line coverage and 100% measurable type coverage. The guarded run used `APP_ENV=testing php tests/Support/check-database.php`, then `XDEBUG_MODE=coverage php -d memory_limit=512M vendor/bin/pest --coverage --min=90 --coverage-clover=coverage/clover.xml --log-junit=test-results/phpunit.xml`. Composer strict validation, Pint, Larastan level 8, `composer test:types` and all 14 mutation-tooling unit tests passed. The full run included the database and contract suites.
+
 ## Phase H requirement-to-test matrix
 
 | Requirements | Evidence |
@@ -242,6 +257,28 @@ Use the guarded MySQL connection before destructive tests. Full mutation verific
 | R08 tags | `TagCatalogTest` covers collation uniqueness, exact RGB input, private response fields, replacement rollback and link lifecycle. |
 | R04, R06–R09 MySQL contention | `CatalogContentionTest` uses independent processes, query barriers and guarded MySQL to exercise type uniqueness and references, status references and removal, template snapshots, tag replacement and same/cross-column ordering. |
 
-Run the dedicated database guard before destructive tests. Phase H uses the existing isolated test schema and the accepted lifecycle and task schema. The integrated candidate still needs joint H/G/I regression for actual task endpoints and post-commit storage recovery.
+Run the dedicated database guard before destructive tests. Phase H uses the existing isolated test schema and the accepted lifecycle and task schema. G09 adds joint G/H regression for actual task endpoints. Post-commit storage recovery remains a Phase I integration check.
 
 The final isolated MySQL pass ran `APP_ENV=testing php tests/Support/check-database.php` followed by `XDEBUG_MODE=coverage php -d memory_limit=512M vendor/bin/pest --coverage --min=90 --coverage-clover=coverage/clover.xml --log-junit=test-results/phpunit.xml --compact`. All 237 tests passed with 2,720 assertions and 99.0% line coverage. `composer test:types` passed at 100% measurable declaration coverage. `composer validate --strict --no-check-publish`, `vendor/bin/pint --dirty --format agent`, `composer analyse --no-ansi` at Larastan level 8, and the 14 tests from `python3 -B -m unittest discover -s scripts/testing -p test_mutation.py` also passed.
+
+## G09 combined G/H regression
+
+`TaskCatalogIntegrationTest` creates cases from H templates and uses G endpoints to mutate and expose their independent copies. It covers rollback after an earlier copy was written, shared status order and deletion restrictions, calendar visibility, case deletion and restoration, and physical cleanup while retaining blueprints. It exercises the task, catalog and default error groups through the HTTP API in Spanish, Catalan and English. `CatalogContentionTest` verifies both commit orders for a G task move and H status deletion, plus a concurrent G task move and H global case move through independent guarded MySQL processes. The standalone F, G and H contract suites remain in the full regression.
+
+
+## G11 mutation regression and performance fixture
+
+Run the regression suite with `python3 -B -m unittest discover -s scripts/testing -p test_mutation.py`. It covers historical trust and fingerprints, source and test changes, changed dependencies and shared inputs, deterministic scheduling, mixed outcomes, evidence reconciliation and the required CI gate. The bounded native fixture runs with `python3 -B scripts/testing/benchmark_mutation.py`. It uses Pest and the existing mutation adapter in a disposable project and compares every reconciled outcome with an independent full run of the small fixture.
+
+The local fixture measured the following results. Preparation includes coverage and inventory plus the initial suite for any mutation worker. Runner seconds include fixture preparation and workers. These results measure the policy on a small fixture and provide no hosted PR latency claim.
+
+| Scenario | Inventory | Fresh | Reused | Hit rate | Workers | Prep (s) | Execution (s) | Wall (s) | Runner (s) | Fixture full wall (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| No relevant changes | 12 | 0 | 12 | 100% | 0 | 0.242 | 0 | 0.250 | 0.242 | 2.203 |
+| Documentation only | 12 | 0 | 12 | 100% | 0 | 0.254 | 0 | 0.261 | 0.254 | 2.355 |
+| Small application edit | 12 | 4 | 8 | 66.7% | 1 | 0.446 | 0.523 | 0.978 | 0.970 | 2.274 |
+| Changed test | 12 | 4 | 8 | 66.7% | 1 | 0.456 | 0.512 | 0.976 | 0.968 | 2.297 |
+| Isolated new module | 16 | 4 | 12 | 75% | 1 | 0.468 | 0.536 | 1.012 | 1.004 | 3.106 |
+| Shared fixture dependency | 12 | 4 | 8 | 66.7% | 1 | 0.463 | 0.580 | 1.055 | 1.043 | 2.539 |
+
+On the dependency edit, a previously detected mutant in the unchanged caller survived. Both paths reported the same classifications and the incremental gate failed on the fresh slice, as intended.

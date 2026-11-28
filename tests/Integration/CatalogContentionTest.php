@@ -221,3 +221,58 @@ test('the type foreign key protects a reference committed after the policy snaps
     $this->assertModelExists($case);
     $this->assertModelExists($type);
 });
+
+test('status deletion and an actual task move see the committed reference in either order', function (bool $moveFirst): void {
+    $admin = $this->authorizationBearer($this->authorizationAdmin());
+    $actor = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $case = Expedient::factory()->create();
+    $destination = Status::factory()->create();
+    $taskId = $this->api('POST', "/api/v1/expedients/{$case->id}/tasks",
+        ['name' => 'Moving task', 'status_id' => $case->status_id], $actor)->assertCreated()->json('data.id');
+    $move = "/api/v1/tasks/$taskId/move";
+    $catalog = "/api/v1/statuses/{$destination->id}";
+    $input = ['status_id' => $destination->id];
+    DB::beginTransaction();
+    AuthorizationCatalog::lockAdministratorRole();
+
+    if ($moveFirst) {
+        $result = $this->commitAgainstCaseContender([
+            'method' => 'DELETE', 'path' => $catalog, 'authorization' => $admin['Authorization'], 'barrier' => 'for update',
+        ], fn () => $this->api('POST', $move, $input, $actor)->assertOk());
+        expect($result['status'])->toBe(409)->and($result['code'])->toBe('status_referenced');
+        $this->assertModelExists($destination);
+        $this->assertDatabaseHas('tasks', ['id' => $taskId, 'status_id' => $destination->id, 'position' => 1]);
+    } else {
+        $result = $this->commitAgainstCaseContender([
+            'method' => 'POST', 'path' => $move, 'authorization' => $actor['Authorization'],
+            'barrier' => 'for update', 'body' => $input,
+        ], fn () => $this->api('DELETE', $catalog, headers: $admin)->assertOk());
+        expect($result['status'])->toBe(422)->and($result['code'])->toBe('validation_failed');
+        $this->assertModelMissing($destination);
+        $this->assertDatabaseHas('tasks', ['id' => $taskId, 'status_id' => $case->status_id, 'position' => 1]);
+    }
+})->with(['task move first' => true, 'status removal first' => false]);
+
+test('a cross-column personal board move serializes with a task move under the same case', function (): void {
+    $owner = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $editor = $this->authorizationBearer(User::factory()->create()->assignRole('user'));
+    $case = Expedient::factory()->create();
+    $destination = Status::factory()->create();
+    $task = Task::factory()->create(['expedient_id' => $case->id, 'status_id' => $destination->id]);
+    $casePath = "/api/v1/expedients/{$case->id}";
+    DB::beginTransaction();
+    AuthorizationCatalog::lockAdministratorRole();
+
+    $result = $this->commitAgainstCaseContender([
+        'method' => 'POST', 'path' => "/api/v1/tasks/{$task->id}/move", 'authorization' => $editor['Authorization'],
+        'barrier' => 'for update', 'body' => ['status_id' => $case->status_id],
+    ], fn () => $this->api('POST', "$casePath/move", ['status_id' => $destination->id, 'position' => 1], $owner)
+        ->assertOk()->assertJsonPath('data.status_id', $destination->id));
+
+    expect($result['status'])->toBe(200)->and($result['data']['status_id'])->toBe($case->status_id);
+    $this->api('GET', "$casePath/tasks", headers: $owner)->assertOk()->assertJsonPath('data.0.position', 1)
+        ->assertJsonPath('data.0.id', $task->id)->assertJsonPath('data.0.status_id', $case->status_id);
+    expect($case->fresh()->status_id)->toBe($destination->id);
+    $this->api('GET', "$casePath/preferences", headers: $owner)->assertOk()->assertJsonPath('data.position', 1);
+    $this->api('GET', "$casePath/preferences", headers: $editor)->assertOk()->assertJsonPath('data.position', null);
+});

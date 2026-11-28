@@ -103,6 +103,12 @@ The lock order for domain writes is authorization row, actor user row, current c
 
 The case parent must be locked before child operations. Case deletion atomically marks only then-active tasks. Restoration reserves free original positions of all eligible tasks before relocating collisions in ascending task ID order. Each collision receives the smallest free positive position within its case and status. The marker and deletion timestamp clear together. Previously individually deleted tasks and all their relationships remain untouched. Permanent removal uses existing FKs. Incident snapshots and prior audit records survive, and Samba storage remains independent.
 
+## Phase G task writers
+
+Phase G uses the existing task schemas and foreign keys. Inside `BusinessWrite`, G locks the active case, then relevant status rows in ascending ID, then affected task rows ordered by ID. A task-ID-only write resolves a candidate parent before locking, then scopes a locking read to that parent. Status-changing writes recheck the task's status after acquiring locks. Assignment replacement reads the current pivots and locks involved account rows in ID order. The shared authorization role lock serializes these checks with account disable and grant changes. Comment and checklist writers lock their task before touching descendants. Checklist reorder locks its item rows in ID order.
+
+New task positions append after active rows in the chosen case and status. In explicit reorders, the destination moves through temporary positions above existing and final ranks, then into its final order while the generated unique key remains enforced. Overflow returns 409 and rolls back. A separately restored task keeps its old rank when free or takes the smallest free positive rank. Existing Phase F cascade ownership and restoration behavior apply to case trash. Physical task and case deletion use the existing dependent FKs.
+
 ## Phase H catalog and preference lock order
 
 After the Phase F authorization locks, use the annual row for creation or active case rows in ascending ID for existing cases. Lock statuses next in ascending ID, then type and client references in the established order. Template mutations lock the type, then templates and checklist entries in ascending ID within their tables. Case-tag mutations lock the case before tag rows and pivot writes. Personal Kanban mutations lock affected cases before statuses and actor-owned preference rows. A catalog-only removal relies on its policy and foreign keys for references.
